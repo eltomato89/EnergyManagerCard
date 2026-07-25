@@ -36,7 +36,7 @@ für die Aufnahme nachgebildet und sehen in einer echten Installation minimal an
 
 1. `energy-manager-card.js` aus dem [neuesten Release](../../releases/latest) nach `/config/www/`
 2. Einstellungen → Dashboards → ⋮ → Ressourcen → Hinzufügen:
-   URL `/local/energy-manager-card.js?v=0.3.0`, Typ **JavaScript-Modul**
+   URL `/local/energy-manager-card.js?v=0.4.0`, Typ **JavaScript-Modul**
 
 ## Konfiguration
 
@@ -153,9 +153,13 @@ unterschiedlichen Stellen und ersetzen einander **nicht**:
 Ein Kompressor braucht typischerweise `min_off_time: 600`, eine Wallbox eher `turn_on_delay: 120`
 zusammen mit `min_runtime: 900`.
 
-**Wichtig:** Durchgesetzt werden diese Zeiten erst von der Integration. Die Karte zeigt für
-`min_runtime` und `min_off_time` einen Countdown an (berechnet aus `last_changed` der
-Schalt-Entität) — ein **Hinweis**, keine Sperre. Ein manueller Klick geht immer durch.
+**Wichtig:** Durchgesetzt werden diese Zeiten von der Integration. Mit ihr sind die vier Felder Teil
+der Verbraucher-Konfiguration in der Integration, und der Countdown in der Karte zeigt deren exakten
+Zeitstempel.
+
+Ohne Integration stehen sie in `devices[]`, werden aber von niemandem durchgesetzt — die Karte
+schätzt den Countdown dann aus `last_changed` der Schalt-Entität. Das ist ein **Hinweis**, keine
+Sperre: ein manueller Klick geht immer durch.
 
 ## Hausbatterie
 

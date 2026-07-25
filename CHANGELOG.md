@@ -2,9 +2,46 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
-## [0.3.0] — unveröffentlicht
+## [0.4.0] — 2026-07-26
 
-Bedienen direkt im Dashboard, ohne den Bearbeitungsmodus.
+Verbraucher werden nur noch an **einer** Stelle gepflegt.
+
+### Geändert — betrifft bestehende Konfigurationen
+
+- **Ist die [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)
+  installiert, liest die Karte alles von dort**: Überschuss, Verbraucher, Rangfolge, Ampelzustand
+  und Sperrzeiten. `devices` und die Sensorfelder werden dann nicht mehr gebraucht; der Editor
+  blendet sie aus und verweist auf die Integration. Bestehende Konfigurationen bleiben lesbar — die
+  Felder werden nur ignoriert.
+  Wer die Integration installiert hat, sie für eine Karte aber nicht nutzen will, setzt
+  `use_integration: false`.
+- **Die Helfer-Funktion ist entfallen.** Der Knopf legte je Verbraucher zwei echte HA-Helfer an;
+  genau der Wildwuchs, den die Integration abschafft. Ohne Integration bleibt der Weg über von Hand
+  angelegte Helfer bestehen.
+- `setConfig` wirft nicht mehr, wenn Zählersensoren fehlen. Lovelace ruft es **vor** dem
+  `hass`-Setter auf — dort ist nicht zu sehen, ob die Integration die Sensoren stellt. Fehlt
+  tatsächlich jede Datenquelle, zeigt die Karte jetzt einen Hinweis statt einer roten Fehlerkarte.
+
+### Neu
+
+- **Hauptschalter der Automatik** im Kartenkopf, sobald die Integration läuft. Ist er aus, wird
+  nichts geschaltet.
+- **Sperrzeiten sind exakt statt geschätzt.** Bisher rechnete die Karte aus `last_changed`, was
+  manuelles Schalten und Neustarts verfälschen. Mit Integration nimmt sie deren Zeitstempel.
+- Sortieren im Dashboard funktioniert mit Integration ohne Vorbereitung — sie legt je Verbraucher
+  eine Prioritäts-Entität an. Die Karte leitet die Service-Domain aus der Entitäts-ID ab, `number`
+  und `input_number` kennen beide `set_value`.
+
+### Hintergrund
+
+Ohne diesen Umbau müssten Verbraucher zweimal gepflegt werden: in der Karte und in der Integration.
+Zwei Listen für dieselbe Sache laufen unweigerlich auseinander — dann zeigt die Karte etwas anderes
+an, als die Automatik tut.
+
+## [0.3.0] — zurückgezogen
+
+Bedienen direkt im Dashboard, ohne den Bearbeitungsmodus. **Nie veröffentlicht:** der hier
+beschriebene Weg über Helfer-Variablen wurde durch die Integration ersetzt (siehe 0.4.0).
 
 ### Neu
 
