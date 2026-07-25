@@ -1,7 +1,11 @@
 # Konfiguration
 
 Alle Optionen lassen sich im grafischen Editor setzen. Diese Tabelle ist die Referenz für alle,
-die YAML bevorzugen — und die Grundlage für die spätere Integration.
+die YAML bevorzugen.
+
+> **Mit installierter [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)
+> braucht es davon fast nichts.** Zählerquelle, Batterie, Glättung und `devices` kommen dann von
+> dort; übrig bleiben die Darstellungsoptionen. Der Editor blendet die übrigen Felder aus.
 
 ## Karte
 
@@ -9,8 +13,9 @@ die YAML bevorzugen — und die Grundlage für die spätere Integration.
 | ------------------ | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------- |
 | `type`             | string   | —                | `custom:energy-manager-card`                                                                               |
 | `title`            | string   | —                | Überschrift der Karte                                                                                      |
-| `meter_mode`       | string   | abgeleitet       | `grid` oder `split`. Ohne Angabe `grid`, sobald `grid_entity` gesetzt ist                                  |
-| `devices`          | Liste    | `[]`             | Verbraucher. **Die Reihenfolge ist die Priorität**                                                         |
+| `use_integration`  | bool     | `true`           | Die Integration als Datenquelle nutzen, falls installiert. `false` erzwingt eigene Berechnung              |
+| `meter_mode`       | string   | abgeleitet       | `grid` oder `split`. Ohne Angabe `grid`, sobald `grid_entity` gesetzt ist. Ohne Integration Pflicht        |
+| `devices`          | Liste    | —                | Verbraucher. **Die Reihenfolge ist die Priorität.** Entfällt mit Integration                               |
 | `scale_max`        | Zahl (W) | abgeleitet       | Obergrenze der Leiste. Ohne Angabe aus Σ `max_power`, min. 3000                                            |
 | `compact`          | bool     | `false`          | Engere Abstände                                                                                            |
 | `show_surplus_bar` | bool     | `true`           | Überschussleiste anzeigen                                                                                  |
@@ -52,24 +57,24 @@ die YAML bevorzugen — und die Grundlage für die spätere Integration.
 
 ## Verbraucher (`devices[]`)
 
-| Option            | Typ      | Standard      | Wer wertet es aus           | Bedeutung                                                          |
-| ----------------- | -------- | ------------- | --------------------------- | ------------------------------------------------------------------ |
-| `switch_entity`   | Entity   | —             | Karte + Integration         | **Pflicht.** Was geschaltet wird                                   |
-| `power_entity`    | Entity   | —             | Karte + Integration         | Aktuelle Leistungsaufnahme                                         |
-| `priority_entity` | Entity   | —             | Karte + Integration         | `input_number` mit dem Rang. Gesetzt schlägt er die Array-Position |
-| `auto_entity`     | Entity   | —             | Karte + Integration         | `input_boolean` für die Teilnahme an der Automatik                 |
-| `id`              | string   | automatisch   | Karte + Integration         | Stabile UUID; vom Editor vergeben, nicht ändern                    |
-| `name`            | string   | friendly_name | Karte                       | Anzeigename                                                        |
-| `icon`            | string   | Entity-Icon   | Karte                       | Symbol                                                             |
-| `min_power`       | Zahl (W) | `max_power`   | Karte + Integration         | Ab so viel Überschuss lohnt sich das Einschalten                   |
-| `max_power`       | Zahl (W) | —             | Karte + Integration         | Nennleistung; geht in die Skala ein                                |
-| `hysteresis`      | Zahl (W) | `0`           | Karte + Integration         | Totband gegen Flackern                                             |
-| `turn_on_delay`   | Zahl (s) | `0`           | **nur Integration**         | So lange muss der Überschuss reichen, bevor eingeschaltet wird     |
-| `turn_off_delay`  | Zahl (s) | `0`           | **nur Integration**         | So lange muss das Defizit anhalten, bevor ausgeschaltet wird       |
-| `min_runtime`     | Zahl (s) | `0`           | Integration; Karte zeigt an | Mindestlaufzeit nach dem Einschalten                               |
-| `min_off_time`    | Zahl (s) | `0`           | Integration; Karte zeigt an | Mindest-Aus-Zeit nach dem Ausschalten                              |
-| `managed`         | bool     | `true`        | **nur Integration**         | Nimmt an der Automatik teil                                        |
-| `confirm`         | bool     | `false`       | Karte                       | Sicherheitsabfrage vor dem Schalten                                |
+| Option            | Typ      | Standard      | Wer wertet es aus           | Bedeutung                                                                          |
+| ----------------- | -------- | ------------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| `switch_entity`   | Entity   | —             | Karte + Integration         | **Pflicht.** Was geschaltet wird                                                   |
+| `power_entity`    | Entity   | —             | Karte + Integration         | Aktuelle Leistungsaufnahme                                                         |
+| `priority_entity` | Entity   | —             | nur ohne Integration        | `input_number` (oder `number`) mit dem Rang. Gesetzt schlägt er die Array-Position |
+| `auto_entity`     | Entity   | —             | nur ohne Integration        | `input_boolean` (oder `switch`) für die Teilnahme an der Automatik                 |
+| `id`              | string   | automatisch   | Karte + Integration         | Stabile UUID; vom Editor vergeben, nicht ändern                                    |
+| `name`            | string   | friendly_name | Karte                       | Anzeigename                                                                        |
+| `icon`            | string   | Entity-Icon   | Karte                       | Symbol                                                                             |
+| `min_power`       | Zahl (W) | `max_power`   | Karte + Integration         | Ab so viel Überschuss lohnt sich das Einschalten                                   |
+| `max_power`       | Zahl (W) | —             | Karte + Integration         | Nennleistung; geht in die Skala ein                                                |
+| `hysteresis`      | Zahl (W) | `0`           | Karte + Integration         | Totband gegen Flackern                                                             |
+| `turn_on_delay`   | Zahl (s) | `0`           | **nur Integration**         | So lange muss der Überschuss reichen, bevor eingeschaltet wird                     |
+| `turn_off_delay`  | Zahl (s) | `0`           | **nur Integration**         | So lange muss das Defizit anhalten, bevor ausgeschaltet wird                       |
+| `min_runtime`     | Zahl (s) | `0`           | Integration; Karte zeigt an | Mindestlaufzeit nach dem Einschalten                                               |
+| `min_off_time`    | Zahl (s) | `0`           | Integration; Karte zeigt an | Mindest-Aus-Zeit nach dem Ausschalten                                              |
+| `managed`         | bool     | `true`        | **nur Integration**         | Nimmt an der Automatik teil                                                        |
+| `confirm`         | bool     | `false`       | Karte                       | Sicherheitsabfrage vor dem Schalten                                                |
 
 Ohne `power_entity` **und** ohne `max_power`/`min_power` rechnet die Ampel mit 500 W Schätzwert und
 der Editor weist darauf hin.

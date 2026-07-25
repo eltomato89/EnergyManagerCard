@@ -60,8 +60,22 @@ describe('validateConfig', () => {
     ).toThrow(/consumption_entity/);
   });
 
-  it('verlangt eine Geraeteliste', () => {
-    expect(() => validateConfig({ ...config(), devices: undefined as never })).toThrow(/devices/);
+  it('weist eine Geraeteliste zurueck, die keine Liste ist', () => {
+    expect(() => validateConfig({ ...config(), devices: 'switch.a' as never })).toThrow(/devices/);
+  });
+
+  it('laesst die Geraeteliste ganz weg, wenn die Integration sie liefert', () => {
+    // Genau die Konfiguration, die entsteht, sobald die Verbraucher nur noch in
+    // der Integration gepflegt werden: keine Sensoren, keine Geraete.
+    expect(() =>
+      validateConfig({ type: 'custom:energy-manager-card' }, { standalone: false }),
+    ).not.toThrow();
+  });
+
+  it('verlangt ohne Integration weiterhin einen Sensor', () => {
+    expect(() =>
+      validateConfig({ type: 'custom:energy-manager-card' }, { standalone: true }),
+    ).toThrow(/production_entity/);
   });
 
   it('nennt den Index eines Geraets ohne Schalt-Entity', () => {

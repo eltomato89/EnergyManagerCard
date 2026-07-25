@@ -22,29 +22,47 @@ export function hasBattery(config: Partial<EnergyManagerCardConfig>): boolean {
  * Harte Validierung fuer setConfig. Wirft bei allem, was die Karte nicht
  * sinnvoll darstellen kann — HA zeigt die Meldung dann direkt in der Karte an.
  */
-export function validateConfig(config: EnergyManagerCardConfig | undefined): void {
+export interface ValidateOptions {
+  /**
+   * true, wenn die Karte ohne die Energy-Manager-Integration arbeitet.
+   *
+   * Nur dann braucht sie eigene Sensoren. Laeuft die Integration, liefert sie
+   * Ueberschuss und Verbraucher — eine Karte ganz ohne Felder ist dann gueltig.
+   */
+  standalone?: boolean;
+}
+
+export function validateConfig(
+  config: EnergyManagerCardConfig | undefined,
+  options: ValidateOptions = {},
+): void {
   if (!config) throw new Error('Konfiguration fehlt');
 
+  const standalone = options.standalone ?? true;
   const mode = resolveMeterMode(config);
 
-  if (mode === 'grid') {
-    if (!config.grid_entity) {
-      throw new Error('grid_entity ist erforderlich (oder Modus "split" mit getrennten Sensoren)');
-    }
-  } else {
-    const missing: string[] = [];
-    if (!config.production_entity) missing.push('production_entity');
-    if (!config.consumption_entity) missing.push('consumption_entity');
-    if (missing.length > 0) {
-      throw new Error(`Im Modus "split" erforderlich: ${missing.join(', ')}`);
+  if (standalone) {
+    if (mode === 'grid') {
+      if (!config.grid_entity) {
+        throw new Error(
+          'grid_entity ist erforderlich (oder Modus "split" mit getrennten Sensoren)',
+        );
+      }
+    } else {
+      const missing: string[] = [];
+      if (!config.production_entity) missing.push('production_entity');
+      if (!config.consumption_entity) missing.push('consumption_entity');
+      if (missing.length > 0) {
+        throw new Error(`Im Modus "split" erforderlich: ${missing.join(', ')}`);
+      }
     }
   }
 
-  if (!Array.isArray(config.devices)) {
+  if (config.devices !== undefined && !Array.isArray(config.devices)) {
     throw new Error('devices muss eine Liste sein');
   }
 
-  config.devices.forEach((device, index) => {
+  (config.devices ?? []).forEach((device, index) => {
     if (!device || typeof device.switch_entity !== 'string' || device.switch_entity === '') {
       throw new Error(`devices[${index}]: switch_entity fehlt`);
     }

@@ -20,81 +20,105 @@ const seconds = (max: number, step: number) => ({
   number: { min: 0, max, step, unit_of_measurement: 's', mode: 'box' as const },
 });
 
+export interface SchemaOptions {
+  /**
+   * false, wenn die Energy-Manager-Integration die Datenquelle ist.
+   *
+   * Dann entfallen alle Felder, die sie bereits fuehrt: Zaehler, Batterie,
+   * Glaettung. Sie doppelt anzubieten waere schlimmer als sie wegzulassen —
+   * zwei Stellen fuer dieselbe Angabe, von denen nur eine wirkt.
+   */
+  standalone?: boolean;
+}
+
 /**
  * Hauptschema. Bewusst eine Funktion: der Zaehlermodus blendet Felder um, und
  * `visible`-Conditions gibt es erst in neueren HA-Versionen.
  */
-export function mainSchema(config: Partial<EnergyManagerCardConfig>) {
+export function mainSchema(config: Partial<EnergyManagerCardConfig>, options: SchemaOptions = {}) {
   const mode = resolveMeterMode(config);
+  const standalone = options.standalone ?? true;
 
-  return [
-    { name: 'title', selector: { text: {} } },
-    {
-      name: 'meter_mode',
-      selector: {
-        select: {
-          mode: 'dropdown',
-          options: [
-            { value: 'grid', label: 'grid' },
-            { value: 'split', label: 'split' },
-          ],
-        },
-      },
-    },
-    ...(mode === 'grid'
-      ? [
-          { name: 'grid_entity', required: true, selector: powerSensor },
-          { name: 'invert_grid', selector: { boolean: {} } },
-        ]
-      : [
-          { name: 'production_entity', required: true, selector: powerSensor },
-          { name: 'consumption_entity', required: true, selector: powerSensor },
-          { name: 'consumption_includes_battery', selector: { boolean: {} } },
-        ]),
-    {
-      name: 'battery',
-      type: 'expandable',
-      iconPath: mdiBattery,
-      flatten: true,
-      schema: [
-        { name: 'battery_soc_entity', selector: batterySensor },
-        { name: 'battery_power_entity', selector: powerSensor },
-        { name: 'battery_invert', selector: { boolean: {} } },
-        { name: 'battery_charge_entity', selector: powerSensor },
-        { name: 'battery_discharge_entity', selector: powerSensor },
+  const sources = standalone
+    ? ([
         {
-          name: 'battery_mode',
+          name: 'meter_mode',
           selector: {
             select: {
               mode: 'dropdown',
               options: [
-                { value: 'charge_only', label: 'charge_only' },
-                { value: 'full', label: 'full' },
+                { value: 'grid', label: 'grid' },
+                { value: 'split', label: 'split' },
               ],
             },
           },
         },
+        ...(mode === 'grid'
+          ? [
+              { name: 'grid_entity', required: true, selector: powerSensor },
+              { name: 'invert_grid', selector: { boolean: {} } },
+            ]
+          : [
+              { name: 'production_entity', required: true, selector: powerSensor },
+              { name: 'consumption_entity', required: true, selector: powerSensor },
+              { name: 'consumption_includes_battery', selector: { boolean: {} } },
+            ]),
         {
-          name: 'battery_min_soc',
-          selector: {
-            number: { min: 0, max: 100, step: 1, unit_of_measurement: '%', mode: 'slider' },
-          },
+          name: 'battery',
+          type: 'expandable',
+          iconPath: mdiBattery,
+          flatten: true,
+          schema: [
+            { name: 'battery_soc_entity', selector: batterySensor },
+            { name: 'battery_power_entity', selector: powerSensor },
+            { name: 'battery_invert', selector: { boolean: {} } },
+            { name: 'battery_charge_entity', selector: powerSensor },
+            { name: 'battery_discharge_entity', selector: powerSensor },
+            {
+              name: 'battery_mode',
+              selector: {
+                select: {
+                  mode: 'dropdown',
+                  options: [
+                    { value: 'charge_only', label: 'charge_only' },
+                    { value: 'full', label: 'full' },
+                  ],
+                },
+              },
+            },
+            {
+              name: 'battery_min_soc',
+              selector: {
+                number: { min: 0, max: 100, step: 1, unit_of_measurement: '%', mode: 'slider' },
+              },
+            },
+            { name: 'battery_reserve_w', selector: watts(20000) },
+          ],
         },
-        { name: 'battery_reserve_w', selector: watts(20000) },
-      ],
-    },
-    {
-      name: 'advanced',
-      type: 'expandable',
-      iconPath: mdiCog,
-      flatten: true,
-      schema: [
+      ] as const)
+    : ([] as const);
+
+  const smoothing = standalone
+    ? ([
         {
           name: 'smoothing_window',
           selector: {
             number: { min: 0, max: 900, step: 5, unit_of_measurement: 's', mode: 'slider' },
           },
         },
+      ] as const)
+    : ([] as const);
+
+  return [
+    { name: 'title', selector: { text: {} } },
+    ...sources,
+    {
+      name: 'advanced',
+      type: 'expandable',
+      iconPath: mdiCog,
+      flatten: true,
+      schema: [
+        ...smoothing,
         { name: 'update_interval', selector: seconds(60, 1) },
         {
           name: 'scale_max',
@@ -161,11 +185,13 @@ export function deviceSchema() {
         { name: 'icon', selector: { icon: {} }, context: { icon_entity: 'switch_entity' } },
       ],
     },
-    // Die beiden Helfer machen Reihenfolge und Automatik im Dashboard
+    // Die beiden Entitaeten machen Reihenfolge und Automatik im Dashboard
     // bedienbar — ohne sie bleibt beides an der Konfiguration haengen.
+    // `number` ist mit aufgefuehrt, damit sich auch die Prioritaets-Entitaet
+    // der Integration von Hand zuordnen laesst.
     {
       name: 'priority_entity',
-      selector: { entity: { filter: [{ domain: 'input_number' }] } },
+      selector: { entity: { filter: [{ domain: ['input_number', 'number'] }] } },
     },
     {
       name: 'auto_entity',

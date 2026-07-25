@@ -164,12 +164,9 @@
     "name": { "label": "Name" },
     "icon": { "label": "Symbol" },
     "automation": { "label": "Für die Automatik (Integration)" },
-    "helpers": {
-      "explain": "Zum Sortieren im Dashboard und für den Automatik-Schalter braucht jeder Verbraucher zwei Helfer. Die lassen sich hier auf einen Schlag anlegen.",
-      "create": "{count} Verbraucher mit Helfern ausstatten",
-      "creating": "Wird angelegt …",
-      "needs_admin": "Helfer anlegen können nur Administratoren. Alternativ unter Einstellungen → Geräte & Dienste → Helfer je Verbraucher ein input_number und ein input_boolean anlegen und oben eintragen.",
-      "failed": "Nicht alle Helfer konnten angelegt werden: {detail}"
+    "integration": {
+      "detected": "Die Energy-Manager-Integration ist installiert. Verbraucher, Priorität und Sensoren werden dort gepflegt — diese Karte zeigt sie nur an.",
+      "open": "Integration öffnen"
     },
     "min_power": {
       "label": "Einschaltschwelle",

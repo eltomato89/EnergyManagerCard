@@ -44,6 +44,19 @@ export type SwitchAction = 'device' | 'automation' | 'auto';
 export interface EnergyManagerCardConfig extends LovelaceCardConfig {
   type: string;
 
+  /**
+   * Die Energy-Manager-Integration als Datenquelle nutzen, sofern installiert.
+   * Default true.
+   *
+   * Ist sie aktiv, stammen Ueberschuss, Verbraucher, Rangfolge und Sperrzeiten
+   * von dort — `devices` und die Sensorfelder werden dann nicht gebraucht. So
+   * gibt es genau einen Ort, an dem Verbraucher gepflegt werden.
+   *
+   * Auf `false` gesetzt rechnet die Karte wie zuvor selbst; das ist der Weg
+   * fuer alle, die die Karte ohne Integration einsetzen.
+   */
+  use_integration?: boolean;
+
   /* Darstellung */
   title?: string;
   /** W; Obergrenze der Ueberschussleiste. Default: max(3000, Summe max_power), auf 500 aufgerundet. */
@@ -102,8 +115,13 @@ export interface EnergyManagerCardConfig extends LovelaceCardConfig {
   /** s; Sampling- und Render-Takt. Default 5. */
   update_interval?: number;
 
-  /** Array-Reihenfolge = Prioritaet, Index 0 = hoechste. */
-  devices: DeviceConfig[];
+  /**
+   * Array-Reihenfolge = Prioritaet, Index 0 = hoechste.
+   *
+   * Entfaellt, sobald die Integration die Verbraucher liefert — dann werden sie
+   * dort gepflegt und die Karte fuehrt keine zweite Liste.
+   */
+  devices?: DeviceConfig[];
 }
 
 export interface DeviceConfig {

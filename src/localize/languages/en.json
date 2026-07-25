@@ -164,12 +164,9 @@
     "name": { "label": "Name" },
     "icon": { "label": "Icon" },
     "automation": { "label": "For the automation (integration)" },
-    "helpers": {
-      "explain": "Reordering from the dashboard and the automation switch each need two helpers per load. They can be created here in one go.",
-      "create": "Create helpers for {count} loads",
-      "creating": "Creating …",
-      "needs_admin": "Only administrators can create helpers. Alternatively create an input_number and an input_boolean per load under Settings → Devices & Services → Helpers and select them above.",
-      "failed": "Not all helpers could be created: {detail}"
+    "integration": {
+      "detected": "The Energy Manager integration is installed. Loads, priority and sensors are maintained there — this card only displays them.",
+      "open": "Open integration"
     },
     "min_power": {
       "label": "Switch-on threshold",

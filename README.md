@@ -3,9 +3,15 @@
 Lovelace-Karte für Home Assistant, die den aktuellen **PV-Überschuss** anzeigt und Verbraucher
 **nach Priorität** auflistet. Auf einen Blick erkennbar: reicht der Überschuss für dieses Gerät?
 
-Die Karte schaltet **nichts automatisch**. Sie zeigt an und lässt manuell schalten. Die Reihenfolge
-der Verbraucher im Editor ist die **Priorität**, die eine später folgende Integration für die
-automatische Überschusssteuerung übernimmt.
+Es gibt zwei Betriebsarten:
+
+- **Mit der [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)**
+  (empfohlen): Die Integration rechnet den Überschuss, kennt die Verbraucher und schaltet sie
+  automatisch nach Priorität. Die Karte findet sie von selbst und zeigt sie an —
+  **Verbraucher werden dann ausschließlich in der Integration gepflegt**, nicht im Kartenkonfigurator.
+- **Ohne Integration**: Die Karte rechnet selbst aus den konfigurierten Sensoren und zeigt an.
+  Sie schaltet dann nichts automatisch; die Reihenfolge im Editor ist die Priorität, geschaltet wird
+  von Hand.
 
 ![Die Karte im hellen und im dunklen Theme](docs/images/preview.png)
 
@@ -36,7 +42,26 @@ für die Aufnahme nachgebildet und sehen in einer echten Installation minimal an
 
 Die Karte ist vollständig über den grafischen Editor konfigurierbar; YAML ist nirgends nötig.
 
-### Zählerquelle — zwei Varianten
+### Mit Integration: nichts zu konfigurieren
+
+Ist die Energy Manager Integration installiert, genügt:
+
+```yaml
+type: custom:energy-manager-card
+```
+
+Zählersensoren, Batterie, Glättung und die Verbraucherliste kommen aus der Integration; der Editor
+blendet diese Felder aus und verweist dorthin. Gepflegt wird unter **Einstellungen → Geräte &
+Dienste → Energy Manager → Verbraucher hinzufügen**. Damit gibt es genau eine Stelle für jede
+Angabe — dieselbe Liste an zwei Orten zu führen, ginge unweigerlich auseinander.
+
+Der Kartenkopf bekommt zusätzlich den **Hauptschalter der Automatik**. Ist er aus, wird nichts
+geschaltet.
+
+Wer die Integration installiert hat, sie für eine bestimmte Karte aber nicht nutzen will, setzt
+`use_integration: false` — die Karte rechnet dann wie unten beschrieben selbst.
+
+### Ohne Integration: Zählerquelle — zwei Varianten
 
 **Ein bidirektionaler Netzsensor** (Standard):
 
@@ -67,10 +92,14 @@ Siehe [`docs/examples.yaml`](docs/examples.yaml) und die Optionstabelle in
 
 ## Im Dashboard sortieren und die Automatik schalten
 
+**Mit Integration funktioniert das ohne Zutun** — sie legt je Verbraucher ein
+`number.…_prioritaet` und ein `switch.…_automatik` an, und die Karte bedient beide. Der Rest dieses
+Abschnitts beschreibt, wie man dasselbe ohne Integration erreicht.
+
 Standardmäßig ist die Reihenfolge im `devices`-Array die Priorität, änderbar nur im Editor. Der
 Grund ist technisch: **eine Lovelace-Karte kann ihre eigene Konfiguration zur Laufzeit nicht
-speichern.** Wer direkt im Dashboard sortieren will, braucht deshalb einen Speicherort außerhalb
-der Karte — zwei Helfer pro Verbraucher:
+speichern.** Wer ohne Integration direkt im Dashboard sortieren will, braucht deshalb einen
+Speicherort außerhalb der Karte — zwei Helfer pro Verbraucher:
 
 | Helfer            | Typ             | Wofür                                                                        |
 | ----------------- | --------------- | ---------------------------------------------------------------------------- |
@@ -105,8 +134,9 @@ devices:
 ```
 
 Die Helfer legst du unter **Einstellungen → Geräte & Dienste → Helfer** an (`input_number` mit
-Minimum 1, Maximum = Anzahl der Verbraucher, Schrittweite 1). Sie sind zugleich das, was die
-spätere Integration ausliest — genau dafür sind sie gedacht.
+Minimum 1, Maximum = Anzahl der Verbraucher, Schrittweite 1) und trägst sie im Verbraucher-Detail
+ein. Das sind zwei echte Helfer je Verbraucher, die sich in der Instanz ansammeln — der Grund,
+warum die Integration diese Zustände stattdessen als eigene Entitäten führt.
 
 ## Die vier Zeitfelder pro Verbraucher
 

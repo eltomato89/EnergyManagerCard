@@ -89,6 +89,26 @@ export const cardStyles = css`
     gap: 8px;
   }
 
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    /* Schrumpft zuerst: das Batterie-Badge rechts soll ungekuerzt bleiben. */
+    min-width: 0;
+  }
+
+  .automation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--secondary-text-color);
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .devices {
     display: flex;
     flex-direction: column;

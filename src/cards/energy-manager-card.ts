@@ -7,10 +7,18 @@ import { haveTrackedStatesChanged } from '../lib/diff';
 import { computeDeviceViews, computeGrossSurplus, resolveScaleMax } from '../lib/device-status';
 import { loadSortable } from '../lib/ha-elements';
 import {
+  batteryReadingFromIntegration,
+  findIntegration,
+  surplusFromIntegration,
+  trackedFromIntegration,
+  viewsFromIntegration,
+  type IntegrationHandle,
+} from '../lib/integration';
+import {
   hasCompletePriorityEntities,
   moveItem,
-  orderDevices,
   priorityUpdates,
+  readPriority,
 } from '../lib/priority';
 import { TimeWeightedWindow } from '../lib/smoothing';
 import { combineBatteryReadings, invertReading, readPercent, readPowerW } from '../lib/state';
@@ -64,6 +72,14 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
 
   private _hass?: HomeAssistant;
   private _tracked: Set<string> = new Set();
+  /**
+   * Die zuletzt gerenderte Verbraucherliste — aus der Integration oder aus der
+   * eigenen Konfiguration.
+   *
+   * Sortieren und Schalten beziehen sich darauf statt auf `config.devices`:
+   * verschoben werden soll genau das, was der Nutzer vor sich sieht.
+   */
+  private _views: DeviceView[] = [];
   private _window = new TimeWeightedWindow(DEFAULT_SMOOTHING_WINDOW * 1000);
   private _timer?: number;
   private _localize: LocalizeFn = localizer('en');
@@ -94,25 +110,49 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
   }
 
   public setConfig(config: EnergyManagerCardConfig): void {
-    validateConfig(config);
+    // Ohne Integration braucht die Karte eigene Sensoren; mit ihr nicht. Was
+    // Pflicht ist, entscheidet sich deshalb erst zur Laufzeit — hier wird nur
+    // geprueft, was in beiden Faellen gelten muss.
+    validateConfig(config, { standalone: findIntegration(this._hass) === null });
 
     // Die Config aus Lovelace wird geteilt — immer klonen, nie in-place aendern.
-    this._config = { ...config, devices: [...(config.devices ?? [])] };
+    this._config = config.devices ? { ...config, devices: [...config.devices] } : { ...config };
     this._tracked = trackedEntities(this._config);
 
     this._window = new TimeWeightedWindow(this._smoothingWindowS() * 1000);
     this._restartTimer();
   }
 
+  /**
+   * Die Integration, sofern sie laeuft.
+   *
+   * Wird bei jedem Rendern neu bestimmt — sie kann waehrend der Laufzeit
+   * hinzukommen oder verschwinden, und die Karte soll das ohne Neuladen
+   * mitbekommen.
+   */
+  private _source(): IntegrationHandle | null {
+    if (this._config?.use_integration === false) return null;
+    return findIntegration(this._hass);
+  }
+
+  /**
+   * Zahl der Zeilen. Vor dem ersten Rendern ist nur die eigene Konfiguration
+   * bekannt — mit Integration ergibt das 0, was Lovelace als Startgroesse
+   * genuegt und sich nach dem ersten Rendern korrigiert.
+   */
+  private _deviceCount(): number {
+    return this._views.length || (this._config?.devices?.length ?? 0);
+  }
+
   public getCardSize(): number {
-    return 2 + (this._config?.devices.length ?? 0);
+    return 2 + this._deviceCount();
   }
 
   public getGridOptions(): LovelaceGridOptions {
     return {
       columns: 12,
       min_columns: 6,
-      rows: 2 + (this._config?.devices.length ?? 0),
+      rows: 2 + this._deviceCount(),
       min_rows: 3,
     };
   }
@@ -133,11 +173,35 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
     const config = this._config;
     if (!config) return nothing;
 
-    const surplus = this._computeSurplus();
+    const now = Date.now();
+    const source = this._source();
+
+    // Die beobachteten Entitaeten stehen erst hier fest: welche das sind,
+    // bestimmt die Integration, und sie kann waehrend der Laufzeit dazukommen.
+    if (source) {
+      this._tracked = new Set([
+        ...trackedEntities(config),
+        ...trackedFromIntegration(this._hass!, source),
+      ]);
+    }
+
+    // Liegt die Integration vor, liefert sie Ueberschuss UND Verbraucher. Sie
+    // rechnet mit derselben Formel; zwei Rechenwege nebeneinander koennten nur
+    // auseinanderlaufen.
+    const surplus = source ? surplusFromIntegration(this._hass!, source) : this._computeSurplus();
     const availableW = surplus.available;
-    const views = computeDeviceViews(config.devices, this._hass, availableW, Date.now());
+
+    const views = source
+      ? viewsFromIntegration(this._hass!, source, now)
+      : computeDeviceViews(config.devices ?? [], this._hass, availableW, now);
+    this._views = views;
+
     const { grossW, allocatedW } = computeGrossSurplus(views, availableW);
-    const scaleMax = resolveScaleMax(config.devices, config.scale_max, grossW);
+    const scaleMax = resolveScaleMax(
+      views.map((view) => view.config),
+      config.scale_max,
+      grossW,
+    );
 
     return html`
       <ha-card .header=${config.title}>
@@ -151,8 +215,16 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
                     .availableW=${availableW}
                     .allocatedW=${allocatedW}
                     .scaleMax=${scaleMax}
-                    .smoothingWindow=${this._smoothingWindowS()}
-                    .coverage=${this._window.coverage(Date.now())}
+                    .smoothingWindow=${
+                      source
+                        ? (surplus as ReturnType<typeof surplusFromIntegration>).smoothingWindow
+                        : this._smoothingWindowS()
+                    }
+                    .coverage=${
+                      source
+                        ? (surplus as ReturnType<typeof surplusFromIntegration>).coverage
+                        : this._window.coverage(now)
+                    }
                     .degraded=${surplus.degraded}
                     .gridW=${surplus.gridW}
                     .batteryW=${surplus.batteryW}
@@ -168,27 +240,55 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
   }
 
   private renderHeader(config: EnergyManagerCardConfig, surplus: SurplusResult) {
-    const showBattery = config.show_battery ?? hasBattery(config);
+    const source = this._source();
+    // Mit Integration entscheidet der gemeldete Ladestand, ob ein Badge
+    // sinnvoll ist — die Karte kennt die Batteriesensoren dann gar nicht.
+    const soc = source
+      ? (surplus as ReturnType<typeof surplusFromIntegration>).batterySoc
+      : readPercent(this._hass, config.battery_soc_entity);
+    const showBattery = config.show_battery ?? (source ? soc !== null : hasBattery(config));
     const canReorder = this._canReorder();
-    if (!showBattery && !surplus.degraded && !canReorder) return nothing;
+    const automation = source?.automationEntity;
+    if (!showBattery && !surplus.degraded && !canReorder && !automation) return nothing;
 
     return html`
       <div class="header-row">
-        ${
-          canReorder
-            ? html`<ha-icon-button
-                class="reorder-toggle ${this._reordering ? 'active' : ''}"
-                .path=${this._reordering ? mdiCheck : mdiSortVariant}
-                .label=${this._localize(this._reordering ? 'card.reorder_done' : 'card.reorder_start')}
-                @click=${this._toggleReordering}
-              ></ha-icon-button>`
-            : html`<span></span>`
-        }
+        <div class="header-left">
+          ${
+            canReorder
+              ? html`<ha-icon-button
+                  class="reorder-toggle ${this._reordering ? 'active' : ''}"
+                  .path=${this._reordering ? mdiCheck : mdiSortVariant}
+                  .label=${this._localize(this._reordering ? 'card.reorder_done' : 'card.reorder_start')}
+                  @click=${this._toggleReordering}
+                ></ha-icon-button>`
+              : nothing
+          }
+          ${
+            // Der Hauptschalter der Integration. Ohne ihn hier waere die
+            // Automatik nur ueber eine zweite Karte erreichbar — und genau
+            // dieser Schalter entscheidet, ob ueberhaupt etwas geschaltet wird.
+            automation
+              ? html`<label class="automation">
+                  <ha-switch
+                    .checked=${this._hass?.states?.[automation]?.state === 'on'}
+                    .disabled=${!this._hass?.states?.[automation]}
+                    @change=${this._toggleAutomation}
+                  ></ha-switch>
+                  <span>${this._localize('card.automation')}</span>
+                </label>`
+              : nothing
+          }
+        </div>
         ${
           showBattery
             ? html`<energy-manager-battery-badge
-                .soc=${readPercent(this._hass, config.battery_soc_entity)}
-                .powerW=${this._batteryReading().w}
+                .soc=${soc}
+                .powerW=${
+                  source
+                    ? batteryReadingFromIntegration(this._hass!, source).w
+                    : this._batteryReading().w
+                }
                 .locale=${this._hass?.locale}
                 .localize=${this._localize}
               ></energy-manager-battery-badge>`
@@ -276,25 +376,37 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
   /* ---------------------------------------------------------------- */
 
   /**
-   * Sortieren im Dashboard geht nur, wenn ALLE Verbraucher einen
-   * Prioritaets-Helfer haben — sonst waere die neue Reihenfolge nach dem
+   * Sortieren im Dashboard geht nur, wenn ALLE Verbraucher eine
+   * Prioritaets-Entitaet haben — sonst waere die neue Reihenfolge nach dem
    * Neuladen teilweise wieder weg, und das ist schlimmer als gar kein
    * Sortieren.
+   *
+   * Mit Integration ist das immer der Fall: sie legt je Verbraucher ein
+   * `number.…_prioritaet` an.
    */
   private _canReorder(): boolean {
     const config = this._config;
     if (!config) return false;
     if (config.allow_reorder === false) return false;
-    return hasCompletePriorityEntities(config.devices);
+    return hasCompletePriorityEntities(this._views.map((view) => view.config));
   }
 
   private _switchAction(): 'device' | 'automation' {
     const config = this._config as EnergyManagerCardConfig;
     const mode = config.switch_action ?? 'auto';
     if (mode === 'device' || mode === 'automation') return mode;
-    // 'auto': Automatik nur, wenn ueberhaupt ein Helfer da ist.
-    return config.devices.some((device) => device.auto_entity) ? 'automation' : 'device';
+    // 'auto': Automatik nur, wenn ueberhaupt eine Automatik-Entitaet da ist.
+    return this._views.some((view) => view.config.auto_entity) ? 'automation' : 'device';
   }
+
+  private _toggleAutomation = (ev: Event): void => {
+    ev.stopPropagation();
+    const entityId = this._source()?.automationEntity;
+    if (!entityId || !this._hass) return;
+
+    const on = (ev.target as { checked?: boolean }).checked === true;
+    void this._hass.callService('switch', on ? 'turn_on' : 'turn_off', { entity_id: entityId });
+  };
 
   private _toggleReordering = async (): Promise<void> => {
     this._reordering = !this._reordering;
@@ -318,16 +430,22 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
   };
 
   /**
-   * Schreibt die neue Reihenfolge in die Prioritaets-Helfer.
+   * Schreibt die neue Reihenfolge in die Prioritaets-Entitaeten.
    *
    * Die Karte kann ihre eigene Konfiguration nicht speichern — die Reihenfolge
-   * lebt deshalb ausschliesslich in den input_number-Entitaeten.
+   * lebt deshalb ausschliesslich in Entitaeten: mit Integration in deren
+   * `number.…_prioritaet`, ohne sie in einem `input_number`-Helfer.
    */
   private async _applyOrder(from: number, to: number): Promise<void> {
-    const config = this._config;
-    if (!config || !this._hass) return;
+    if (!this._hass) return;
 
-    const ordered = orderDevices(config.devices, this._hass);
+    // Auf der angezeigten Liste arbeiten, nicht auf der Konfiguration: mit
+    // Integration gibt es dort gar keine Verbraucher.
+    const ordered = this._views.map((view) => ({
+      device: view.config,
+      configIndex: view.configIndex,
+      priority: readPriority(this._hass, view.config),
+    }));
     if (to < 0 || to >= ordered.length || from === to) return;
 
     const updates = priorityUpdates(moveItem(ordered, from, to), this._hass);
@@ -348,15 +466,17 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
     // acht Round-Trips — ueber eine entfernte Verbindung sekundenlang.
     const results = await Promise.allSettled(
       updates.map((update) =>
-        this._hass!.callService('input_number', 'set_value', {
+        // `number` und `input_number` haben beide `set_value` — die Domain aus
+        // der Entitaets-ID zu nehmen bedient damit Integration und Helfer.
+        this._hass!.callService(update.entityId.split('.')[0], 'set_value', {
           entity_id: update.entityId,
           value: update.value,
         }),
       ),
     );
 
-    // Typischer Grund fuer eine Ablehnung: der Wert liegt ausserhalb des beim
-    // Helfer eingestellten Bereichs. input_number clampt nicht, es weist ab.
+    // Typischer Grund fuer eine Ablehnung: der Wert liegt ausserhalb des
+    // eingestellten Bereichs. set_value clampt nicht, es weist ab.
     this._reorderError = results.some((result) => result.status === 'rejected');
     this._tick++;
   }
