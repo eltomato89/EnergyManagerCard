@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { EDITOR_TAG } from '../const';
 import { fireEvent } from '../lib/events';
 import { loadHaComponents } from '../lib/ha-elements';
+import { applyHelperResults, canCreateHelpers, createMissingHelpers } from '../lib/helpers';
 import { collectWarnings } from '../lib/validate';
 import { localizer, type LocalizeFn } from '../localize/localize';
 import type { DeviceConfig, EnergyManagerCardConfig } from '../types/config';
@@ -20,6 +21,8 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
   @state() private _config?: EnergyManagerCardConfig;
   /** Index des Geraets im Detailformular, oder null fuer die Listenansicht. */
   @state() private _editing: number | null = null;
+  @state() private _creatingHelpers = false;
+  @state() private _helperError?: string;
 
   private _localize: LocalizeFn = localizer('en');
 
@@ -72,11 +75,82 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
           @devices-changed=${this._devicesChanged}
           @device-edit=${this._openDetail}
         ></energy-manager-device-list-editor>
+        ${this.renderHelperSetup(config)}
       </div>
 
       ${this.renderWarnings(config)}
     `;
   }
+
+  /**
+   * Anlegen der Helfer, ohne die es weder Sortieren im Dashboard noch einen
+   * Automatik-Schalter gibt. Von Hand waeren das zwei Helfer je Verbraucher —
+   * samt passender Grenzen, an denen man sich leicht vertut.
+   */
+  private renderHelperSetup(config: EnergyManagerCardConfig) {
+    if (config.devices.length === 0) return nothing;
+
+    const missing = config.devices.filter(
+      (device) => !device.priority_entity || !device.auto_entity,
+    ).length;
+    if (missing === 0) return nothing;
+
+    if (!canCreateHelpers(this.hass)) {
+      return html`<ha-alert alert-type="info"
+        >${this._localize('editor.helpers.needs_admin')}</ha-alert
+      >`;
+    }
+
+    return html`
+      <div class="helper-setup">
+        <div class="section-helper">${this._localize('editor.helpers.explain')}</div>
+        <mwc-button
+          raised
+          .disabled=${this._creatingHelpers}
+          @click=${this._createHelpers}
+          .label=${
+            this._creatingHelpers
+              ? this._localize('editor.helpers.creating')
+              : this._localize('editor.helpers.create', { count: missing })
+          }
+        ></mwc-button>
+        ${
+          this._helperError
+            ? html`<ha-alert alert-type="error">${this._helperError}</ha-alert>`
+            : nothing
+        }
+      </div>
+    `;
+  }
+
+  private _createHelpers = async (): Promise<void> => {
+    if (!this.hass || !this._config || this._creatingHelpers) return;
+
+    this._creatingHelpers = true;
+    this._helperError = undefined;
+
+    try {
+      const results = await createMissingHelpers(this.hass, this._config.devices);
+      const failed = results.filter((result) => result.error);
+
+      // Auch bei Teilfehlern uebernehmen, was angelegt wurde — sonst waeren die
+      // erzeugten Helfer verwaist und der naechste Versuch legte sie doppelt an.
+      this._emit({
+        ...this._config,
+        devices: applyHelperResults(this._config.devices, results),
+      });
+
+      if (failed.length > 0) {
+        this._helperError = this._localize('editor.helpers.failed', {
+          detail: failed[0].error ?? '',
+        });
+      }
+    } catch (err) {
+      this._helperError = err instanceof Error ? err.message : String(err);
+    } finally {
+      this._creatingHelpers = false;
+    }
+  };
 
   private renderWarnings(config: EnergyManagerCardConfig) {
     const warnings = collectWarnings(config);
@@ -170,6 +244,19 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+
+    .helper-setup {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--divider-color, #e0e0e0);
+    }
+
+    .helper-setup mwc-button {
+      align-self: flex-start;
     }
   `;
 }

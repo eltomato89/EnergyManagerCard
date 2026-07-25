@@ -1,9 +1,9 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { mdiLockClock } from '@mdi/js';
+import { mdiArrowDown, mdiArrowUp, mdiDragHorizontalVariant, mdiLockClock } from '@mdi/js';
 import { DEVICE_ROW_TAG, OPTIMISTIC_TIMEOUT_MS } from '../const';
 import { formatDuration, formatPower } from '../lib/format';
-import { fireMoreInfo } from '../lib/events';
+import { fireEvent, fireMoreInfo } from '../lib/events';
 import type { LocalizeFn } from '../localize/localize';
 import { statusColor, statusOpacity, themeVariables } from '../styles';
 import type { SecondaryInfo } from '../types/config';
@@ -19,6 +19,16 @@ export class EnergyManagerDeviceRow extends LitElement {
   @property({ attribute: false }) public localize!: LocalizeFn;
   @property({ attribute: false }) public secondaryInfo: SecondaryInfo = 'both';
   @property({ attribute: false }) public showPriority = true;
+  /**
+   * Was der Schalter bedient. Bei 'automation' bleibt das Geraet selbst nur
+   * ueber den Detail-Dialog schaltbar — der Zustandspunkt zeigt trotzdem, ob
+   * es gerade laeuft.
+   */
+  @property({ attribute: false }) public switchAction: 'device' | 'automation' = 'device';
+  /** Sortiermodus: blendet Griff und Pfeiltasten ein. */
+  @property({ type: Boolean, reflect: true }) public reordering = false;
+  @property({ attribute: false }) public isFirst = false;
+  @property({ attribute: false }) public isLast = false;
 
   /**
    * Optimistischer Schaltzustand. Ohne ihn haengt der Schalter sichtbar, bis
@@ -36,13 +46,23 @@ export class EnergyManagerDeviceRow extends LitElement {
   protected override willUpdate(changed: Map<string, unknown>): void {
     // Sobald der echte Zustand nachgezogen hat, den optimistischen verwerfen.
     if (changed.has('view') && this._optimistic !== undefined) {
-      if (this.view.isOn === this._optimistic) this._clearOptimistic();
+      if (this._switchState() === this._optimistic) this._clearOptimistic();
     }
+  }
+
+  /** Zustand, den der Schalter abbildet — Geraet oder Automatik. */
+  private _switchState(): boolean {
+    return this.switchAction === 'automation' ? this.view.managed : this.view.isOn;
+  }
+
+  private _switchEnabled(): boolean {
+    return this.switchAction === 'automation' ? this.view.autoSwitchable : this.view.available;
   }
 
   protected override render() {
     const view = this.view;
-    const isOn = this._optimistic ?? view.isOn;
+    const checked = this._optimistic ?? this._switchState();
+    const automation = this.switchAction === 'automation';
 
     return html`
       <div class="row">
@@ -51,37 +71,96 @@ export class EnergyManagerDeviceRow extends LitElement {
           style=${`background:${statusColor(view.status)};opacity:${statusOpacity(view.status)}`}
         ></div>
 
-        ${
-          this.showPriority
-            ? html`<span
-                class="priority"
-                title=${this.localize('card.priority', {
-                  index: view.index + 1,
-                })}
-                >${view.index + 1}</span
-              >`
-            : nothing
-        }
+        ${this.reordering ? this.renderHandle() : this.renderPriority()}
 
-        <ha-state-icon
-          class="icon"
-          .hass=${this.hass}
-          .stateObj=${this.hass?.states?.[view.config.switch_entity]}
-          .icon=${view.icon}
-          @click=${this._openMoreInfo}
-        ></ha-state-icon>
+        <div class="icon-wrap" @click=${this._openMoreInfo}>
+          <ha-state-icon
+            class="icon"
+            .hass=${this.hass}
+            .stateObj=${this.hass?.states?.[view.config.switch_entity]}
+            .icon=${view.icon}
+          ></ha-state-icon>
+          ${
+            // Der Punkt zeigt den Geraetezustand — noetig, sobald der Schalter
+            // die Automatik bedient und nicht mehr das Geraet.
+            automation
+              ? html`<span
+                  class="dot ${view.isOn ? 'on' : 'off'}"
+                  title=${this.localize(view.isOn ? 'card.device_on' : 'card.device_off')}
+                ></span>`
+              : nothing
+          }
+        </div>
 
         <div class="text" @click=${this._openMoreInfo}>
           <div class="name">${view.name}</div>
           ${this.renderSecondary()}
         </div>
 
+        ${this.reordering ? this.renderArrows() : this.renderSwitch(checked, automation)}
+      </div>
+    `;
+  }
+
+  private renderPriority() {
+    if (!this.showPriority) return nothing;
+    return html`<span
+      class="priority"
+      title=${this.localize('card.priority', { index: this.view.index + 1 })}
+      >${this.view.index + 1}</span
+    >`;
+  }
+
+  private renderHandle() {
+    return html`<div
+      class="handle"
+      role="button"
+      tabindex="-1"
+      aria-label=${this.localize('editor.devices.drag')}
+    >
+      <ha-svg-icon .path=${mdiDragHorizontalVariant}></ha-svg-icon>
+    </div>`;
+  }
+
+  private renderArrows() {
+    // Tastatur- und Touch-Pfad. Zugleich die Rueckfallebene, falls ha-sortable
+    // in einer kuenftigen HA-Version fehlt.
+    return html`
+      <div class="arrows">
+        <ha-icon-button
+          .path=${mdiArrowUp}
+          .label=${this.localize('editor.devices.move_up')}
+          .disabled=${this.isFirst}
+          @click=${() => this._move(-1)}
+        ></ha-icon-button>
+        <ha-icon-button
+          .path=${mdiArrowDown}
+          .label=${this.localize('editor.devices.move_down')}
+          .disabled=${this.isLast}
+          @click=${() => this._move(1)}
+        ></ha-icon-button>
+      </div>
+    `;
+  }
+
+  private renderSwitch(checked: boolean, automation: boolean) {
+    return html`
+      <div class="switch-wrap">
         <ha-switch
-          .checked=${isOn}
-          .disabled=${!view.available}
+          .checked=${checked}
+          .disabled=${!this._switchEnabled()}
           @change=${this._toggle}
-          aria-label=${view.name}
+          aria-label=${
+            automation
+              ? this.localize('card.automation_for', { name: this.view.name })
+              : this.view.name
+          }
         ></ha-switch>
+        ${
+          automation
+            ? html`<span class="switch-label">${this.localize('card.automation')}</span>`
+            : nothing
+        }
       </div>
     `;
   }
@@ -109,6 +188,10 @@ export class EnergyManagerDeviceRow extends LitElement {
     if (this.secondaryInfo === 'status' || this.secondaryInfo === 'both') {
       parts.push(this.localize(`status.${view.status}`));
     }
+
+    // Ohne Teilnahme an der Automatik ist der Ampelstatus nur noch eine
+    // Information, keine Ankuendigung — das gehoert dazugesagt.
+    if (!view.managed) parts.push(this.localize('card.not_managed'));
 
     const hasLock = view.lock.kind !== 'none';
     if (parts.length === 0 && !hasLock) return nothing;
@@ -145,17 +228,24 @@ export class EnergyManagerDeviceRow extends LitElement {
     `;
   }
 
+  private _move(delta: number): void {
+    fireEvent(this, 'device-move', { index: this.view.index, delta });
+  }
+
   private _openMoreInfo = (): void => {
+    // Auch im Automatik-Modus der Weg zum Geraet selbst: dort laesst es sich
+    // von Hand schalten.
     fireMoreInfo(this, this.view.config.switch_entity);
   };
 
   private _toggle = (ev: Event): void => {
     const target = ev.target as HTMLInputElement;
     const next = target.checked;
+    const automation = this.switchAction === 'automation';
 
     // Der Klick des Nutzers geht immer durch — min_runtime/min_off_time sind
     // Hinweise an die Automatik, keine Bedienschranke.
-    if (this.view.config.confirm) {
+    if (!automation && this.view.config.confirm) {
       const ok = confirm(this.localize('editor.confirm_switch', { name: this.view.name }));
       if (!ok) {
         target.checked = !next;
@@ -163,12 +253,18 @@ export class EnergyManagerDeviceRow extends LitElement {
       }
     }
 
+    const entityId = automation ? this.view.config.auto_entity : this.view.config.switch_entity;
+    if (!entityId) {
+      target.checked = !next;
+      return;
+    }
+
     this._setOptimistic(next);
 
     // homeassistant.turn_on/off gilt domaenenuebergreifend — damit entfaellt
-    // jede Fallunterscheidung fuer light/script/climate.
+    // jede Fallunterscheidung fuer light/script/climate und input_boolean.
     void this.hass?.callService('homeassistant', next ? 'turn_on' : 'turn_off', {
-      entity_id: this.view.config.switch_entity,
+      entity_id: entityId,
     });
   };
 
@@ -222,10 +318,51 @@ export class EnergyManagerDeviceRow extends LitElement {
         text-align: end;
       }
 
-      .icon {
+      .handle {
         flex: 0 0 auto;
-        color: var(--state-icon-color, #44739e);
+        display: flex;
+        align-items: center;
+        color: var(--secondary-text-color);
+        cursor: move;
+        cursor: grab;
+        /* Sonst scrollt die Seite, statt die Zeile zu ziehen. */
+        touch-action: none;
+      }
+
+      /* Ohne das schluckt das SVG den Drag-Start. */
+      .handle > * {
+        pointer-events: none;
+      }
+
+      .icon-wrap {
+        position: relative;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
         cursor: pointer;
+      }
+
+      .icon {
+        color: var(--state-icon-color, #44739e);
+      }
+
+      .dot {
+        position: absolute;
+        inset-block-end: -1px;
+        inset-inline-end: -3px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        border: 2px solid var(--card-background-color, #fff);
+        box-sizing: content-box;
+      }
+
+      .dot.on {
+        background: var(--emc-on-ok);
+      }
+
+      .dot.off {
+        background: var(--emc-unavailable);
       }
 
       .text {
@@ -261,8 +398,28 @@ export class EnergyManagerDeviceRow extends LitElement {
         --mdc-icon-size: 14px;
       }
 
-      ha-switch {
+      .switch-wrap {
         flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+      }
+
+      .switch-label {
+        color: var(--secondary-text-color);
+        font-size: 0.7em;
+        line-height: 1;
+      }
+
+      .arrows {
+        flex: 0 0 auto;
+        display: flex;
+      }
+
+      .arrows ha-icon-button {
+        --mdc-icon-button-size: 36px;
+        --mdc-icon-size: 20px;
       }
     `,
   ];

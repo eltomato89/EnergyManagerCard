@@ -67,7 +67,9 @@ export type WarningCode =
   | 'min-power-above-max'
   | 'no-devices'
   | 'battery-soc-without-power'
-  | 'smoothing-below-interval';
+  | 'smoothing-below-interval'
+  | 'mixed-priority-entities'
+  | 'reorder-without-priority-entities';
 
 export interface ConfigWarning {
   code: WarningCode;
@@ -106,6 +108,17 @@ export function collectWarnings(config: EnergyManagerCardConfig): ConfigWarning[
 
   if (config.battery_soc_entity && !config.battery_power_entity && !config.battery_charge_entity) {
     warnings.push({ code: 'battery-soc-without-power' });
+  }
+
+  // Teils Helfer, teils Array-Position ergibt eine Reihenfolge, die kaum
+  // jemand vorhersagen kann — und Sortieren im Dashboard bliebe unvollstaendig.
+  const withPriority = devices.filter((device) => Boolean(device.priority_entity)).length;
+  if (withPriority > 0 && withPriority < devices.length) {
+    warnings.push({ code: 'mixed-priority-entities' });
+  }
+
+  if (config.allow_reorder === true && withPriority < devices.length) {
+    warnings.push({ code: 'reorder-without-priority-entities' });
   }
 
   // Ein Mittelungsfenster unterhalb des Abtasttakts kann nie mehr als eine

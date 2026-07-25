@@ -15,6 +15,15 @@
     "battery_charging": "lädt",
     "battery_discharging": "entlädt",
     "no_devices": "Noch keine Verbraucher konfiguriert.",
+    "automation": "Automatik",
+    "automation_for": "Automatik für {name}",
+    "not_managed": "nicht in der Automatik",
+    "device_on": "Gerät läuft",
+    "device_off": "Gerät aus",
+    "reorder_start": "Reihenfolge ändern",
+    "reorder_done": "Fertig",
+    "reorder_hint": "Ziehen oder Pfeile nutzen — die Reihenfolge ist die Priorität.",
+    "reorder_failed": "Reihenfolge konnte nicht gespeichert werden. Prüfe, ob alle Prioritäts-Helfer existieren und ihr Bereich bis zur Anzahl der Verbraucher reicht.",
     "priority": "Priorität {index}",
     "locked_runtime": "Mindestlaufzeit noch {time}",
     "locked_off": "Sperre noch {time}",
@@ -44,7 +53,9 @@
     "min-power-above-max": "{detail}: Einschaltschwelle liegt über der Nennleistung.",
     "no-devices": "Es ist noch kein Verbraucher konfiguriert.",
     "battery-soc-without-power": "Ladestand ist konfiguriert, aber keine Batterieleistung — die Überschusskorrektur bleibt wirkungslos.",
-    "smoothing-below-interval": "Das Mittelungsfenster ist kleiner als der Abtasttakt und wirkt dadurch nicht."
+    "smoothing-below-interval": "Das Mittelungsfenster ist kleiner als der Abtasttakt und wirkt dadurch nicht.",
+    "mixed-priority-entities": "Nur ein Teil der Verbraucher hat einen Prioritäts-Helfer. Die Reihenfolge mischt dann Helferwerte und Listenpositionen — schwer vorhersagbar. Entweder alle ausstatten oder keinen.",
+    "reorder-without-priority-entities": "Sortieren im Dashboard ist eingeschaltet, aber nicht jeder Verbraucher hat einen Prioritäts-Helfer. Ohne ihn wäre die neue Reihenfolge nach dem Neuladen wieder weg."
   },
   "editor": {
     "title": { "label": "Titel" },
@@ -131,9 +142,35 @@
       "label": "Leistungssensor",
       "helper": "Aktuelle Leistungsaufnahme dieses Verbrauchers."
     },
+    "priority_entity": {
+      "label": "Prioritäts-Helfer",
+      "helper": "input_number mit dem Rang (1 = höchste). Nur damit lässt sich die Reihenfolge direkt im Dashboard ändern — sonst zählt die Position in dieser Liste."
+    },
+    "auto_entity": {
+      "label": "Automatik-Helfer",
+      "helper": "input_boolean, das die Teilnahme an der Automatik steuert. Ist er gesetzt, schaltet der Schalter in der Karte diesen Helfer statt des Geräts."
+    },
+    "switch_action": {
+      "label": "Was der Schalter tut",
+      "helper": "„Automatisch\" heißt: Automatik, sobald ein Automatik-Helfer gesetzt ist, sonst das Gerät.",
+      "auto": "Automatisch entscheiden",
+      "device": "Das Gerät schalten",
+      "automation": "Die Automatik schalten"
+    },
+    "allow_reorder": {
+      "label": "Sortieren im Dashboard",
+      "helper": "Nur möglich, wenn alle Verbraucher einen Prioritäts-Helfer haben."
+    },
     "name": { "label": "Name" },
     "icon": { "label": "Symbol" },
     "automation": { "label": "Für die Automatik (Integration)" },
+    "helpers": {
+      "explain": "Zum Sortieren im Dashboard und für den Automatik-Schalter braucht jeder Verbraucher zwei Helfer. Die lassen sich hier auf einen Schlag anlegen.",
+      "create": "{count} Verbraucher mit Helfern ausstatten",
+      "creating": "Wird angelegt …",
+      "needs_admin": "Helfer anlegen können nur Administratoren. Alternativ unter Einstellungen → Geräte & Dienste → Helfer je Verbraucher ein input_number und ein input_boolean anlegen und oben eintragen.",
+      "failed": "Nicht alle Helfer konnten angelegt werden: {detail}"
+    },
     "min_power": {
       "label": "Einschaltschwelle",
       "helper": "Ab so viel Überschuss lohnt sich das Einschalten."

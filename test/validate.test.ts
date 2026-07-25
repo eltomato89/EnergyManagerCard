@@ -128,6 +128,45 @@ describe('collectWarnings', () => {
     expect(codes).toContain('smoothing-below-interval');
   });
 
+  it('warnt vor teilweise ausgestatteten Prioritäts-Helfern', () => {
+    const codes = collectWarnings(
+      config({
+        devices: [
+          { switch_entity: 'switch.a', max_power: 100, priority_entity: 'input_number.a' },
+          { switch_entity: 'switch.b', max_power: 100 },
+        ],
+      }),
+    ).map((w) => w.code);
+    expect(codes).toContain('mixed-priority-entities');
+  });
+
+  it('schweigt, wenn alle oder keiner einen Prioritäts-Helfer hat', () => {
+    const alle = collectWarnings(
+      config({
+        devices: [
+          { switch_entity: 'switch.a', max_power: 100, priority_entity: 'input_number.a' },
+          { switch_entity: 'switch.b', max_power: 100, priority_entity: 'input_number.b' },
+        ],
+      }),
+    ).map((w) => w.code);
+    expect(alle).not.toContain('mixed-priority-entities');
+
+    const keiner = collectWarnings(
+      config({ devices: [{ switch_entity: 'switch.a', max_power: 100 }] }),
+    ).map((w) => w.code);
+    expect(keiner).not.toContain('mixed-priority-entities');
+  });
+
+  it('warnt, wenn Sortieren ohne vollständige Helfer eingeschaltet ist', () => {
+    const codes = collectWarnings(
+      config({
+        allow_reorder: true,
+        devices: [{ switch_entity: 'switch.a', max_power: 100 }],
+      }),
+    ).map((w) => w.code);
+    expect(codes).toContain('reorder-without-priority-entities');
+  });
+
   it('meldet nichts bei sinnvoller Konfiguration', () => {
     const warnings = collectWarnings(
       config({

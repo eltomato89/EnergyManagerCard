@@ -125,6 +125,20 @@ export function mainSchema(config: Partial<EnergyManagerCardConfig>) {
             },
           },
         },
+        {
+          name: 'switch_action',
+          selector: {
+            select: {
+              mode: 'dropdown',
+              options: [
+                { value: 'auto', label: 'auto' },
+                { value: 'device', label: 'device' },
+                { value: 'automation', label: 'automation' },
+              ],
+            },
+          },
+        },
+        { name: 'allow_reorder', selector: { boolean: {} } },
       ],
     },
   ] as const;
@@ -146,6 +160,16 @@ export function deviceSchema() {
         { name: 'name', selector: { text: {} } },
         { name: 'icon', selector: { icon: {} }, context: { icon_entity: 'switch_entity' } },
       ],
+    },
+    // Die beiden Helfer machen Reihenfolge und Automatik im Dashboard
+    // bedienbar — ohne sie bleibt beides an der Konfiguration haengen.
+    {
+      name: 'priority_entity',
+      selector: { entity: { filter: [{ domain: 'input_number' }] } },
+    },
+    {
+      name: 'auto_entity',
+      selector: { entity: { filter: [{ domain: ['input_boolean', 'switch'] }] } },
     },
     {
       name: 'automation',

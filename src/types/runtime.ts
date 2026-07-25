@@ -102,12 +102,22 @@ export interface LockState {
 
 export interface DeviceView {
   config: DeviceConfig;
-  /** Position in der Config = Prioritaet, 0-basiert. */
+  /** Rang in der Prioritaetsreihenfolge, 0-basiert (0 = hoechste). */
   index: number;
+  /** Position im devices-Array. Fuer Umsortieren und stabile Keys noetig. */
+  configIndex: number;
   name: string;
   icon?: string;
   isOn: boolean;
   available: boolean;
+  /**
+   * Nimmt an der Automatik teil. Aus `auto_entity`, sonst aus `managed`.
+   * Beeinflusst die Ampel NICHT — ein nicht verwaltetes Geraet zeigt weiter
+   * an, ob der Ueberschuss reichen wuerde.
+   */
+  managed: boolean;
+  /** Automatik ist ueber eine Entitaet steuerbar (Toggle statt nur Anzeige). */
+  autoSwitchable: boolean;
   /** Ist-Leistung in W, oder null. */
   powerW: number | null;
   /** Angenommener Bedarf in W fuer die Ampel. */

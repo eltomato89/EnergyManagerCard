@@ -141,6 +141,91 @@ describe('computeDeviceViews — fehlende Daten', () => {
   });
 });
 
+describe('computeDeviceViews — Automatik-Teilnahme', () => {
+  it('liest die Teilnahme aus dem Helfer', () => {
+    const devices = [device({ switch_entity: 'switch.a', auto_entity: 'input_boolean.a' })];
+    const hass = makeHass({
+      'switch.a': { state: 'off' },
+      'input_boolean.a': { state: 'off' },
+    });
+
+    const view = computeDeviceViews(devices, hass, 1000, NOW)[0];
+    expect(view.managed).toBe(false);
+    expect(view.autoSwitchable).toBe(true);
+  });
+
+  it('fällt ohne Helfer auf das statische managed zurück', () => {
+    const hass = makeHass({ 'switch.a': { state: 'off' } });
+
+    expect(
+      computeDeviceViews([device({ switch_entity: 'switch.a', managed: false })], hass, 0, NOW)[0]
+        .managed,
+    ).toBe(false);
+    expect(
+      computeDeviceViews([device({ switch_entity: 'switch.a' })], hass, 0, NOW)[0].managed,
+    ).toBe(true);
+  });
+
+  it('meldet einen ausgefallenen Helfer als nicht schaltbar', () => {
+    const devices = [device({ switch_entity: 'switch.a', auto_entity: 'input_boolean.a' })];
+    const hass = makeHass({
+      'switch.a': { state: 'off' },
+      'input_boolean.a': { state: 'unavailable' },
+    });
+
+    const view = computeDeviceViews(devices, hass, 0, NOW)[0];
+    expect(view.autoSwitchable).toBe(false);
+    expect(view.managed).toBe(true); // Rückfall auf den Standard
+  });
+
+  it('lässt ein nicht verwaltetes Gerät weiterhin in der Ampel erscheinen', () => {
+    // Wer nicht an der Automatik teilnimmt, soll trotzdem sehen, ob der
+    // Überschuss reichen würde — sonst ist die Anzeige wertlos.
+    const devices = [
+      device({ switch_entity: 'switch.a', auto_entity: 'input_boolean.a', max_power: 500 }),
+    ];
+    const hass = makeHass({
+      'switch.a': { state: 'off' },
+      'input_boolean.a': { state: 'off' },
+    });
+
+    expect(computeDeviceViews(devices, hass, 1000, NOW)[0].status).toBe('off_ready');
+  });
+});
+
+describe('computeDeviceViews — Reihenfolge aus Prioritäts-Helfern', () => {
+  it('verteilt das Budget nach Helferwert, nicht nach Array-Position', () => {
+    const devices = [
+      device({
+        switch_entity: 'switch.spaet',
+        priority_entity: 'input_number.spaet',
+        max_power: 900,
+      }),
+      device({
+        switch_entity: 'switch.frueh',
+        priority_entity: 'input_number.frueh',
+        max_power: 900,
+      }),
+    ];
+    const hass = makeHass({
+      'switch.spaet': { state: 'off' },
+      'switch.frueh': { state: 'off' },
+      'input_number.spaet': { state: 2 },
+      'input_number.frueh': { state: 1 },
+    });
+
+    // 1000 W reichen nur für eines der beiden.
+    const views = computeDeviceViews(devices, hass, 1000, NOW);
+
+    expect(views[0].config.switch_entity).toBe('switch.frueh');
+    expect(views[0].status).toBe('off_ready');
+    expect(views[1].status).toBe('off_insufficient');
+    // configIndex bleibt die Array-Position, index der Rang.
+    expect(views[0].configIndex).toBe(1);
+    expect(views[0].index).toBe(0);
+  });
+});
+
 describe('computeGrossSurplus', () => {
   it('rechnet die laufenden Verbraucher zurueck', () => {
     const devices = [

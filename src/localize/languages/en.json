@@ -15,6 +15,15 @@
     "battery_charging": "charging",
     "battery_discharging": "discharging",
     "no_devices": "No loads configured yet.",
+    "automation": "Automation",
+    "automation_for": "Automation for {name}",
+    "not_managed": "not in the automation",
+    "device_on": "Device running",
+    "device_off": "Device off",
+    "reorder_start": "Change order",
+    "reorder_done": "Done",
+    "reorder_hint": "Drag or use the arrows — the order is the priority.",
+    "reorder_failed": "Could not save the new order. Check that all priority helpers exist and that their range covers the number of loads.",
     "priority": "Priority {index}",
     "locked_runtime": "minimum runtime {time} left",
     "locked_off": "locked for {time}",
@@ -44,7 +53,9 @@
     "min-power-above-max": "{detail}: switch-on threshold is above the rated power.",
     "no-devices": "No load configured yet.",
     "battery-soc-without-power": "State of charge is configured but no battery power — the surplus correction has no effect.",
-    "smoothing-below-interval": "The averaging window is smaller than the sampling interval and therefore has no effect."
+    "smoothing-below-interval": "The averaging window is smaller than the sampling interval and therefore has no effect.",
+    "mixed-priority-entities": "Only some loads have a priority helper. The order then mixes helper values and list positions — hard to predict. Either give all of them one, or none.",
+    "reorder-without-priority-entities": "Reordering from the dashboard is enabled, but not every load has a priority helper. Without it the new order would be gone after a reload."
   },
   "editor": {
     "title": { "label": "Title" },
@@ -131,9 +142,35 @@
       "label": "Power sensor",
       "helper": "Current power draw of this load."
     },
+    "priority_entity": {
+      "label": "Priority helper",
+      "helper": "input_number holding the rank (1 = highest). Only with this can the order be changed from the dashboard — otherwise the position in this list counts."
+    },
+    "auto_entity": {
+      "label": "Automation helper",
+      "helper": "input_boolean controlling whether this load takes part in the automation. When set, the switch in the card toggles this helper instead of the device."
+    },
+    "switch_action": {
+      "label": "What the switch does",
+      "helper": "\"Automatic\" means: the automation when an automation helper is set, otherwise the device.",
+      "auto": "Decide automatically",
+      "device": "Switch the device",
+      "automation": "Switch the automation"
+    },
+    "allow_reorder": {
+      "label": "Reorder from the dashboard",
+      "helper": "Only possible when every load has a priority helper."
+    },
     "name": { "label": "Name" },
     "icon": { "label": "Icon" },
     "automation": { "label": "For the automation (integration)" },
+    "helpers": {
+      "explain": "Reordering from the dashboard and the automation switch each need two helpers per load. They can be created here in one go.",
+      "create": "Create helpers for {count} loads",
+      "creating": "Creating …",
+      "needs_admin": "Only administrators can create helpers. Alternatively create an input_number and an input_boolean per load under Settings → Devices & Services → Helpers and select them above.",
+      "failed": "Not all helpers could be created: {detail}"
+    },
     "min_power": {
       "label": "Switch-on threshold",
       "helper": "Surplus required before switching on is worthwhile."

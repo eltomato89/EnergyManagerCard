@@ -30,7 +30,7 @@ für die Aufnahme nachgebildet und sehen in einer echten Installation minimal an
 
 1. `energy-manager-card.js` aus dem [neuesten Release](../../releases/latest) nach `/config/www/`
 2. Einstellungen → Dashboards → ⋮ → Ressourcen → Hinzufügen:
-   URL `/local/energy-manager-card.js?v=0.2.0`, Typ **JavaScript-Modul**
+   URL `/local/energy-manager-card.js?v=0.3.0`, Typ **JavaScript-Modul**
 
 ## Konfiguration
 
@@ -64,6 +64,49 @@ Beide Varianten liefern denselben Überschuss — die Formel ist gegen beide Weg
 
 Siehe [`docs/examples.yaml`](docs/examples.yaml) und die Optionstabelle in
 [`docs/configuration.md`](docs/configuration.md).
+
+## Im Dashboard sortieren und die Automatik schalten
+
+Standardmäßig ist die Reihenfolge im `devices`-Array die Priorität, änderbar nur im Editor. Der
+Grund ist technisch: **eine Lovelace-Karte kann ihre eigene Konfiguration zur Laufzeit nicht
+speichern.** Wer direkt im Dashboard sortieren will, braucht deshalb einen Speicherort außerhalb
+der Karte — zwei Helfer pro Verbraucher:
+
+| Helfer            | Typ             | Wofür                                                                        |
+| ----------------- | --------------- | ---------------------------------------------------------------------------- |
+| `priority_entity` | `input_number`  | Rang (1 = höchste). Ist er gesetzt, **schlägt sein Wert die Array-Position** |
+| `auto_entity`     | `input_boolean` | Nimmt der Verbraucher an der Automatik teil?                                 |
+
+Sind sie konfiguriert, ändert sich die Bedienung der Karte:
+
+- Ein Symbol im Kartenkopf schaltet den **Sortiermodus** ein. Erst dann erscheinen Griffe und
+  Pfeiltasten — dauerhaft sichtbar würdest du auf dem Tablet beim Scrollen versehentlich
+  Prioritäten verschieben. Beim Umsortieren schreibt die Karte die Ränge lückenlos als 1…n.
+- Der **Schalter rechts steuert die Automatik**, nicht mehr das Gerät. Ein farbiger Punkt am Symbol
+  zeigt, ob das Gerät gerade läuft; schalten kannst du es weiterhin über den Detail-Dialog (Klick
+  auf Name oder Symbol). Wer das nicht will, stellt `switch_action: device` ein.
+
+Zwei Regeln, die der Editor auch als Warnung anzeigt:
+
+- **Entweder alle Verbraucher haben einen Prioritäts-Helfer oder keiner.** Gemischt entsteht eine
+  Reihenfolge aus Helferwerten _und_ Listenpositionen, die kaum vorhersagbar ist.
+- **Sortieren im Dashboard braucht vollständige Helfer** — sonst wäre die neue Reihenfolge nach
+  dem Neuladen teilweise wieder weg.
+
+Beispiel:
+
+```yaml
+devices:
+  - switch_entity: switch.wallbox
+    power_entity: sensor.wallbox_leistung
+    priority_entity: input_number.prio_wallbox
+    auto_entity: input_boolean.auto_wallbox
+    max_power: 11000
+```
+
+Die Helfer legst du unter **Einstellungen → Geräte & Dienste → Helfer** an (`input_number` mit
+Minimum 1, Maximum = Anzahl der Verbraucher, Schrittweite 1). Sie sind zugleich das, was die
+spätere Integration ausliest — genau dafür sind sie gedacht.
 
 ## Die vier Zeitfelder pro Verbraucher
 

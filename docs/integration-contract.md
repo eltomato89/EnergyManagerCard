@@ -45,9 +45,38 @@ Beides ist eingehalten.
 
 ## Priorität
 
-Die Priorität ist **ausschließlich der Array-Index** in `devices[]`, Index 0 ist die höchste.
-Es gibt bewusst **kein** `priority`-Zahlenfeld: zwei Quellen für dieselbe Aussage wären eine
-Inkonsistenzquelle, sobald jemand die YAML von Hand umsortiert.
+Es gibt **zwei** mögliche Quellen, und die Reihenfolge zwischen ihnen ist festgelegt:
+
+1. **`devices[].priority_entity`** — ein `input_number` mit dem Rang (1 = höchste). Ist er gesetzt
+   und liefert einen endlichen Wert, gilt er.
+2. **Array-Index** in `devices[]` — für alle Verbraucher ohne verwertbaren Helferwert. Bei
+   Gleichstand entscheidet ebenfalls der Array-Index, damit die Reihenfolge nie springt.
+
+Ein `priority`-Zahlenfeld **in der Karten-Config** gibt es weiterhin bewusst nicht: es wäre eine
+dritte Quelle, die beim Sortieren im Dashboard sofort veralten würde.
+
+Die zweite Quelle war unvermeidlich. Eine Lovelace-Karte kann ihre eigene Konfiguration zur
+Laufzeit nicht schreiben — Sortieren im Dashboard geht also nur über Entitäten. Die Karte schreibt
+beim Umsortieren lückenlos `1..n` per `input_number.set_value`, und zwar nur für die Verbraucher,
+deren Wert sich tatsächlich ändert.
+
+**Für die Integration heißt das:** Sie muss dieselbe Rangfolge anwenden — erst Helferwert, dann
+Array-Index. Verlässt sie sich allein auf den Array-Index, schaltet sie in einer anderen Reihenfolge,
+als die Karte anzeigt. Referenz: `src/lib/priority.ts`, Funktion `orderDevices`.
+
+## Automatik-Teilnahme
+
+Ebenfalls zwei Quellen, gleiche Logik:
+
+1. **`devices[].auto_entity`** — ein `input_boolean` (oder `switch`). Ist er gesetzt und verfügbar,
+   gilt sein Zustand.
+2. **`devices[].managed`** — der statische Rückfall, Standard `true`.
+
+Ist `auto_entity` gesetzt, schaltet der Toggle in der Kartenzeile diesen Helfer statt der
+Geräte-Entität; das Gerät bleibt über den Detail-Dialog bedienbar. Ein nicht teilnehmender
+Verbraucher wird in der Karte weiterhin mit Ampel angezeigt — er ist nur gekennzeichnet.
+
+Die Integration darf einen Verbraucher mit `auto_entity == off` **nicht** automatisch schalten.
 
 ## Zeitfelder — was die Karte darf und was nicht
 

@@ -2,6 +2,31 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.3.0] — unveröffentlicht
+
+Bedienen direkt im Dashboard, ohne den Bearbeitungsmodus.
+
+### Neu
+
+- **Sortieren im Dashboard.** Ein Symbol im Kartenkopf schaltet einen Sortiermodus ein; erst dann
+  erscheinen Griffe und Pfeiltasten. Bewusst ein Modus und kein Dauerzustand — sonst verschiebt man
+  auf dem Tablet beim Scrollen versehentlich Prioritäten.
+- **Der Schalter steuert die Automatik** statt das Gerät, sobald ein `auto_entity` konfiguriert ist
+  (`switch_action`). Ein farbiger Punkt am Symbol zeigt weiterhin, ob das Gerät läuft; schalten
+  lässt es sich über den Detail-Dialog.
+- Zwei neue Felder je Verbraucher: `priority_entity` (`input_number`) und `auto_entity`
+  (`input_boolean`). **Ist ein Prioritäts-Helfer gesetzt, schlägt sein Wert die Array-Position.**
+- Knopf im Editor, der die fehlenden Helfer per WebSocket anlegt und einträgt — von Hand wären das
+  zwei je Verbraucher, samt passender Grenzen.
+- Warnungen bei gemischter Ausstattung (nur manche Verbraucher mit Prioritäts-Helfer) und bei
+  eingeschaltetem Sortieren ohne vollständige Helfer.
+
+### Hintergrund
+
+Eine Lovelace-Karte kann ihre eigene Konfiguration zur Laufzeit **nicht** speichern — im Dashboard
+ist sie schreibgeschützt. Reihenfolge und Automatik-Status brauchen deshalb einen Speicherort
+außerhalb der Karte. Helfer-Entitäten sind zugleich das, was die spätere Integration ausliest.
+
 ## [0.2.0] — unveröffentlicht
 
 ### Geändert — betrifft bestehende Konfigurationen

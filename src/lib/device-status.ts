@@ -3,6 +3,7 @@ import type { DeviceConfig } from '../types/config';
 import type { HomeAssistant } from '../types/hass';
 import type { DeviceStatus, DeviceView } from '../types/runtime';
 import { computeLock } from './lock';
+import { orderDevices } from './priority';
 import { friendlyName, isOnState, isUnavailableState, readPowerW } from './state';
 import { roundW } from './units';
 
@@ -24,10 +25,18 @@ export function computeDeviceViews(
 ): DeviceView[] {
   let budget = availableW;
 
-  return devices.map((config, index) => {
+  // Die Reihenfolge kann aus Prioritaets-Helfern kommen statt aus dem Array —
+  // die Budgetkaskade muss der tatsaechlichen Prioritaet folgen, nicht der
+  // Reihenfolge, in der die Verbraucher zufaellig konfiguriert wurden.
+  return orderDevices(devices, hass).map(({ device: config, configIndex }, index) => {
     const stateObj = hass?.states?.[config.switch_entity];
     const available = !!stateObj && !isUnavailableState(stateObj.state);
     const isOn = available && isOnState(stateObj.state);
+
+    const autoObj = config.auto_entity ? hass?.states?.[config.auto_entity] : undefined;
+    const autoSwitchable = !!autoObj && !isUnavailableState(autoObj.state);
+    // Ohne Helfer gilt das statische managed; ohne beides nimmt der Verbraucher teil.
+    const managed = autoSwitchable ? isOnState(autoObj.state) : (config.managed ?? true);
 
     const power = readPowerW(hass, config.power_entity);
     const powerW = power.w === null ? null : roundW(power.w);
@@ -53,10 +62,13 @@ export function computeDeviceViews(
     return {
       config,
       index,
+      configIndex,
       name: config.name ?? friendlyName(stateObj, config.switch_entity),
       icon: config.icon,
       isOn,
       available,
+      managed,
+      autoSwitchable,
       powerW,
       requiredW,
       status,

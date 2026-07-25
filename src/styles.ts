@@ -129,4 +129,27 @@ export const cardStyles = css`
     text-align: center;
     padding: 8px 0;
   }
+
+  .reorder-toggle {
+    --mdc-icon-button-size: 32px;
+    --mdc-icon-size: 20px;
+    color: var(--secondary-text-color);
+    margin-inline-start: -6px;
+  }
+
+  .reorder-toggle.active {
+    color: var(--primary-color);
+  }
+
+  .reorder-hint {
+    color: var(--secondary-text-color);
+    font-size: 0.8em;
+    padding-bottom: 4px;
+  }
+
+  /* Waehrend des Sortierens keine Trennlinien: das Ghost-Element von
+     ha-sortable saehe sonst aus, als gehoerte es zwischen zwei Zeilen. */
+  .devices.reordering > *:not(:last-child) {
+    border-bottom: none;
+  }
 `;

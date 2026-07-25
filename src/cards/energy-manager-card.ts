@@ -1,10 +1,17 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { mdiAlertCircleOutline, mdiAlertOutline } from '@mdi/js';
+import { mdiAlertCircleOutline, mdiAlertOutline, mdiCheck, mdiSortVariant } from '@mdi/js';
 import { CARD_TAG, DEFAULT_SMOOTHING_WINDOW, DEFAULT_UPDATE_INTERVAL, EDITOR_TAG } from '../const';
 import { haveTrackedStatesChanged } from '../lib/diff';
 import { computeDeviceViews, computeGrossSurplus, resolveScaleMax } from '../lib/device-status';
+import { loadSortable } from '../lib/ha-elements';
+import {
+  hasCompletePriorityEntities,
+  moveItem,
+  orderDevices,
+  priorityUpdates,
+} from '../lib/priority';
 import { TimeWeightedWindow } from '../lib/smoothing';
 import { combineBatteryReadings, invertReading, readPercent, readPowerW } from '../lib/state';
 import { applyReserve, computeSurplus } from '../lib/surplus';
@@ -51,6 +58,9 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
   @state() private _config?: EnergyManagerCardConfig;
   /** Zaehler, der einen Re-Render ausloest, ohne hass reaktiv zu machen. */
   @state() private _tick = 0;
+  @state() private _reordering = false;
+  @state() private _sortableReady = false;
+  @state() private _reorderError = false;
 
   private _hass?: HomeAssistant;
   private _tracked: Set<string> = new Set();
@@ -159,11 +169,21 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
 
   private renderHeader(config: EnergyManagerCardConfig, surplus: SurplusResult) {
     const showBattery = config.show_battery ?? hasBattery(config);
-    if (!showBattery && !surplus.degraded) return nothing;
+    const canReorder = this._canReorder();
+    if (!showBattery && !surplus.degraded && !canReorder) return nothing;
 
     return html`
       <div class="header-row">
-        <span></span>
+        ${
+          canReorder
+            ? html`<ha-icon-button
+                class="reorder-toggle ${this._reordering ? 'active' : ''}"
+                .path=${this._reordering ? mdiCheck : mdiSortVariant}
+                .label=${this._localize(this._reordering ? 'card.reorder_done' : 'card.reorder_start')}
+                @click=${this._toggleReordering}
+              ></ha-icon-button>`
+            : html`<span></span>`
+        }
         ${
           showBattery
             ? html`<energy-manager-battery-badge
@@ -204,25 +224,141 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
     }
 
     const config = this._config as EnergyManagerCardConfig;
+    const switchAction = this._switchAction();
+
+    const rows = repeat(
+      views,
+      (view) => view.config.id ?? view.config.switch_entity,
+      (view, i) => html`
+        <energy-manager-device-row
+          .hass=${this._hass}
+          .view=${view}
+          .locale=${this._hass?.locale}
+          .localize=${this._localize}
+          .secondaryInfo=${config.secondary_info ?? 'both'}
+          .showPriority=${config.show_priority ?? true}
+          .switchAction=${switchAction}
+          .reordering=${this._reordering}
+          .isFirst=${i === 0}
+          .isLast=${i === views.length - 1}
+          @device-move=${this._deviceMove}
+        ></energy-manager-device-row>
+      `,
+    );
+
+    if (!this._reordering) return html`<div class="devices">${rows}</div>`;
 
     return html`
-      <div class="devices">
-        ${repeat(
-          views,
-          (view) => view.config.id ?? view.config.switch_entity,
-          (view) => html`
-            <energy-manager-device-row
-              .hass=${this._hass}
-              .view=${view}
-              .locale=${this._hass?.locale}
-              .localize=${this._localize}
-              .secondaryInfo=${config.secondary_info ?? 'both'}
-              .showPriority=${config.show_priority ?? true}
-            ></energy-manager-device-row>
-          `,
-        )}
-      </div>
+      <div class="reorder-hint">${this._localize('card.reorder_hint')}</div>
+      ${
+        this._sortableReady
+          ? // ha-sortable braucht genau EIN Kind und rendert ins Light DOM.
+            html`<ha-sortable handle-selector=".handle" @item-moved=${this._itemMoved}>
+              <div class="devices reordering">${rows}</div>
+            </ha-sortable>`
+          : // Ohne ha-sortable bleiben die Pfeiltasten — die Karte ist damit
+            // vollstaendig bedienbar, nur ohne Ziehen.
+            html`<div class="devices reordering">${rows}</div>`
+      }
+      ${
+        this._reorderError
+          ? html`<div class="notice error">
+              <ha-svg-icon .path=${mdiAlertCircleOutline}></ha-svg-icon>
+              <span>${this._localize('card.reorder_failed')}</span>
+            </div>`
+          : nothing
+      }
     `;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Sortieren                                                         */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Sortieren im Dashboard geht nur, wenn ALLE Verbraucher einen
+   * Prioritaets-Helfer haben — sonst waere die neue Reihenfolge nach dem
+   * Neuladen teilweise wieder weg, und das ist schlimmer als gar kein
+   * Sortieren.
+   */
+  private _canReorder(): boolean {
+    const config = this._config;
+    if (!config) return false;
+    if (config.allow_reorder === false) return false;
+    return hasCompletePriorityEntities(config.devices);
+  }
+
+  private _switchAction(): 'device' | 'automation' {
+    const config = this._config as EnergyManagerCardConfig;
+    const mode = config.switch_action ?? 'auto';
+    if (mode === 'device' || mode === 'automation') return mode;
+    // 'auto': Automatik nur, wenn ueberhaupt ein Helfer da ist.
+    return config.devices.some((device) => device.auto_entity) ? 'automation' : 'device';
+  }
+
+  private _toggleReordering = async (): Promise<void> => {
+    this._reordering = !this._reordering;
+    this._reorderError = false;
+
+    // ha-sortable liegt in einem lazy geladenen Chunk. Erst beim Betreten des
+    // Sortiermodus nachladen, damit die Karte im Normalbetrieb nichts kostet.
+    if (this._reordering && !this._sortableReady) {
+      this._sortableReady = await loadSortable();
+    }
+  };
+
+  private _itemMoved = (ev: CustomEvent<{ oldIndex: number; newIndex: number }>): void => {
+    ev.stopPropagation();
+    void this._applyOrder(ev.detail.oldIndex, ev.detail.newIndex);
+  };
+
+  private _deviceMove = (ev: CustomEvent<{ index: number; delta: number }>): void => {
+    ev.stopPropagation();
+    void this._applyOrder(ev.detail.index, ev.detail.index + ev.detail.delta);
+  };
+
+  /**
+   * Schreibt die neue Reihenfolge in die Prioritaets-Helfer.
+   *
+   * Die Karte kann ihre eigene Konfiguration nicht speichern — die Reihenfolge
+   * lebt deshalb ausschliesslich in den input_number-Entitaeten.
+   */
+  private async _applyOrder(from: number, to: number): Promise<void> {
+    const config = this._config;
+    if (!config || !this._hass) return;
+
+    const ordered = orderDevices(config.devices, this._hass);
+    if (to < 0 || to >= ordered.length || from === to) return;
+
+    const updates = priorityUpdates(moveItem(ordered, from, to), this._hass);
+    if (updates.length === 0) return;
+
+    // Ein Service-Call auf eine geloeschte Entitaet ist in HA KEIN Fehler — er
+    // laeuft still ins Leere. Fehlende Helfer muessen deshalb vorher auffallen,
+    // sonst sieht Sortieren aus, als haette es funktioniert.
+    const missing = updates.filter((update) => !this._hass?.states?.[update.entityId]);
+    if (missing.length > 0) {
+      this._reorderError = true;
+      this._tick++;
+      return;
+    }
+
+    // Parallel: die Aufrufe betreffen durchweg verschiedene Entitaeten, teilen
+    // sich also keinen Zustand. Nacheinander waeren es bei acht Verbrauchern
+    // acht Round-Trips — ueber eine entfernte Verbindung sekundenlang.
+    const results = await Promise.allSettled(
+      updates.map((update) =>
+        this._hass!.callService('input_number', 'set_value', {
+          entity_id: update.entityId,
+          value: update.value,
+        }),
+      ),
+    );
+
+    // Typischer Grund fuer eine Ablehnung: der Wert liegt ausserhalb des beim
+    // Helfer eingestellten Bereichs. input_number clampt nicht, es weist ab.
+    this._reorderError = results.some((result) => result.status === 'rejected');
+    this._tick++;
   }
 
   /* ---------------------------------------------------------------- */
