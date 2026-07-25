@@ -13,6 +13,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/lib/**/*.ts'],
+      // Reine Browser-Integration: wartet darauf, dass HA seine lazy geladenen
+      // Formular-Elemente registriert. Enthaelt keine Rechenlogik und liesse
+      // sich nur gegen ein Geflecht aus Attrappen testen, das nichts belegt.
+      // Verifiziert wird sie beim Oeffnen des Editors in einer HA-Instanz.
+      exclude: ['src/lib/ha-elements.ts'],
+      // Vitest erfasst seit v3 auch nicht importierte Dateien aus `include`.
+      // Genau deshalb faellt eine neue, ungetestete Datei hier sofort auf.
       reporter: ['text', 'html'],
       thresholds: {
         lines: 95,
