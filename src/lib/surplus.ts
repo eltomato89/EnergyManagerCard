@@ -14,14 +14,22 @@ import { roundW } from './units';
  *
  *     S_roh = P_pv - C_haus = B - G
  *
- * Modus 'grid':  S_roh = -G + B
+ * Modus 'grid':  S_roh = -G + B_eff
  *
- * Das gilt fuer beide Batterievorzeichen ohne Fallunterscheidung: Laden (B>0)
- * ist umlenkbare Leistung und erhoeht den verfuegbaren Ueberschuss, Entladen
- * (B<0) stuetzt bereits die Hauslast und verringert ihn.
+ * Wie B_eff aus der gemessenen Batterieleistung entsteht, entscheidet
+ * `batteryMode`:
  *
- * Modus 'split': S_roh = P_prod - C_haus, plus B, wenn der Verbrauchssensor
- * die Batterieladung bereits mitzaehlt.
+ *  - 'charge_only' (Standard): B_eff = max(B, 0). Ladeleistung ist umlenkbar
+ *    und erhoeht den Ueberschuss; Entladung wird ignoriert. Beantwortet die
+ *    Frage "wie viel kann ich zuschalten, ohne ans Netz zu gehen" — die
+ *    Batterie darf dabei mitarbeiten. Ohne diese Begrenzung meldet die Karte
+ *    ein Defizit in Hoehe der Entladeleistung, obwohl der Zaehler nahezu Null
+ *    zeigt, was sich wie ein Rechenfehler liest.
+ *  - 'full': B_eff = B. Entladung wird abgezogen, die Anzeige entspricht dem
+ *    reinen PV-Ueberschuss (Erzeugung minus Hauslast).
+ *
+ * Modus 'split': S_roh = P_prod - C_haus, plus B_eff, wenn der
+ * Verbrauchssensor die Batterieladung bereits mitzaehlt.
  *
  * Vorzeichen-Invertierungen und das Zusammensetzen aus charge/discharge sind
  * VOR dem Aufruf erledigt (siehe state.ts).
@@ -39,7 +47,8 @@ export function computeSurplus(input: SurplusInput): SurplusResult {
     if (input.battery.w === null) {
       degraded = true;
     } else {
-      batteryCorrection = input.battery.w;
+      batteryCorrection =
+        input.batteryMode === 'full' ? input.battery.w : Math.max(input.battery.w, 0);
     }
   }
 
@@ -64,8 +73,23 @@ export function computeSurplus(input: SurplusInput): SurplusResult {
     }
   }
 
+  // Die Rohmesswerte werden mitgegeben, damit die Karte den tatsaechlichen
+  // Zaehlerstand neben dem berechneten Ueberschuss ausweisen kann. Ohne das
+  // liest sich ein Defizit wie Netzbezug in gleicher Hoehe, obwohl die
+  // Batterie den groessten Teil davon stuetzen kann.
+  const gridW = input.grid.w === null ? null : roundW(input.grid.w);
+  const batteryW = input.battery.w === null ? null : roundW(input.battery.w);
+
   if (raw === null) {
-    return { raw: null, available: null, batteryCorrection, degraded, errors };
+    return {
+      raw: null,
+      available: null,
+      batteryCorrection,
+      gridW,
+      batteryW,
+      degraded,
+      errors,
+    };
   }
 
   const available = applyReserve(raw, input.batterySoc, input.batteryMinSoc, input.batteryReserveW);
@@ -74,6 +98,8 @@ export function computeSurplus(input: SurplusInput): SurplusResult {
     raw: roundW(raw),
     available: available === null ? null : roundW(available),
     batteryCorrection: roundW(batteryCorrection),
+    gridW,
+    batteryW,
     degraded,
     errors,
   };

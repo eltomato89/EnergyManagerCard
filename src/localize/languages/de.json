@@ -1,7 +1,12 @@
 {
   "card": {
     "surplus_free": "frei",
-    "surplus_deficit": "Netzbezug",
+    "surplus_deficit": "Defizit",
+    "grid_import": "Netz {power} Bezug",
+    "grid_export": "Netz {power} Einspeisung",
+    "grid_idle": "Netz ausgeglichen",
+    "battery_charge_flow": "Batterie {power} laden",
+    "battery_discharge_flow": "Batterie {power} entladen",
     "allocated": "belegt",
     "free": "frei",
     "scale": "Skala",
@@ -70,6 +75,12 @@
       "helper": "Positiv beim Laden, negativ beim Entladen."
     },
     "battery_invert": { "label": "Vorzeichen umkehren" },
+    "battery_mode": {
+      "label": "Batterie im Überschuss",
+      "helper": "Ladeleistung zählt immer als verfügbar. Die Frage ist, ob eine Entladung den Überschuss verringern soll.",
+      "charge_only": "Nur Laden anrechnen",
+      "full": "Entladung abziehen (reiner PV-Überschuss)"
+    },
     "battery_charge_entity": {
       "label": "Ladeleistung",
       "helper": "Alternative zu einem bidirektionalen Sensor: zwei stets positive Sensoren."

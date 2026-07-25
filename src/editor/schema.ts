@@ -63,6 +63,18 @@ export function mainSchema(config: Partial<EnergyManagerCardConfig>) {
         { name: 'battery_charge_entity', selector: powerSensor },
         { name: 'battery_discharge_entity', selector: powerSensor },
         {
+          name: 'battery_mode',
+          selector: {
+            select: {
+              mode: 'dropdown',
+              options: [
+                { value: 'charge_only', label: 'charge_only' },
+                { value: 'full', label: 'full' },
+              ],
+            },
+          },
+        },
+        {
           name: 'battery_min_soc',
           selector: {
             number: { min: 0, max: 100, step: 1, unit_of_measurement: '%', mode: 'slider' },

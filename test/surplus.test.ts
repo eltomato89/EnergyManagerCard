@@ -12,6 +12,7 @@ function input(overrides: Partial<SurplusInput> = {}): SurplusInput {
     consumption: NONE,
     battery: NONE,
     batteryConfigured: false,
+    batteryMode: 'charge_only',
     batterySoc: null,
     consumptionIncludesBattery: false,
     batteryReserveW: 0,
@@ -44,11 +45,51 @@ describe('computeSurplus — Modus grid', () => {
     expect(result.degraded).toBe(false);
   });
 
-  it('zieht Batterieentladung ab, weil sie die Last bereits stuetzt', () => {
+  it('ignoriert Batterieentladung im Modus charge_only', () => {
     const result = computeSurplus(
       input({ grid: { w: 0 }, battery: { w: -1000 }, batteryConfigured: true }),
     );
+    expect(result.raw).toBe(0);
+    expect(result.batteryCorrection).toBe(0);
+  });
+
+  it('zieht Batterieentladung im Modus full ab', () => {
+    const result = computeSurplus(
+      input({
+        grid: { w: 0 },
+        battery: { w: -1000 },
+        batteryConfigured: true,
+        batteryMode: 'full',
+      }),
+    );
     expect(result.raw).toBe(-1000);
+  });
+
+  it('rechnet Ladung in beiden Modi gleich an', () => {
+    const base = { grid: { w: 0 }, battery: { w: 1500 }, batteryConfigured: true };
+    expect(computeSurplus(input(base)).raw).toBe(1500);
+    expect(computeSurplus(input({ ...base, batteryMode: 'full' })).raw).toBe(1500);
+  });
+
+  it('meldet bei entladender Batterie kein Defizit in Hoehe der Entladeleistung', () => {
+    // Realer Fall aus einer Anlage: 7 W Netzbezug, Batterie entlaedt mit 386 W.
+    // Der Modus 'full' meldete hier -393 W und beschriftete das als Netzbezug —
+    // ein Wert, der dem Zaehler klar widerspricht.
+    const messwerte = {
+      grid: { w: 7 },
+      battery: { w: -386 },
+      batteryConfigured: true,
+      batterySoc: 84,
+    };
+
+    const chargeOnly = computeSurplus(input(messwerte));
+    expect(chargeOnly.available).toBe(-7);
+    // Die Rohwerte bleiben unabhaengig vom Modus erhalten, damit die Karte den
+    // tatsaechlichen Zaehlerstand danebenstellen kann.
+    expect(chargeOnly.gridW).toBe(7);
+    expect(chargeOnly.batteryW).toBe(-386);
+
+    expect(computeSurplus(input({ ...messwerte, batteryMode: 'full' })).available).toBe(-393);
   });
 
   it('markiert das Ergebnis als degraded, wenn der Batteriesensor ausfaellt', () => {

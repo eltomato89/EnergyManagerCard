@@ -30,7 +30,7 @@ für die Aufnahme nachgebildet und sehen in einer echten Installation minimal an
 
 1. `energy-manager-card.js` aus dem [neuesten Release](../../releases/latest) nach `/config/www/`
 2. Einstellungen → Dashboards → ⋮ → Ressourcen → Hinzufügen:
-   URL `/local/energy-manager-card.js?v=0.1.0`, Typ **JavaScript-Modul**
+   URL `/local/energy-manager-card.js?v=0.2.0`, Typ **JavaScript-Modul**
 
 ## Konfiguration
 
@@ -86,12 +86,33 @@ Schalt-Entität) — ein **Hinweis**, keine Sperre. Ein manueller Klick geht imm
 
 ## Hausbatterie
 
-Optional. Ist eine Batterie konfiguriert, wird ihre Ladeleistung als _umlenkbare_ Leistung zum
-Überschuss gezählt: Was gerade in die Batterie fließt, könnte stattdessen ein Verbraucher bekommen.
-Entladung wird entsprechend abgezogen, weil sie die Hauslast bereits stützt.
+Optional. Ladeleistung zählt immer als _umlenkbare_ Leistung zum Überschuss: Was gerade in die
+Batterie fließt, könnte stattdessen ein Verbraucher bekommen.
+
+Wie eine **Entladung** behandelt wird, steuert `battery_mode`:
+
+| Modus                    | Formel                     | Bedeutung                                                                                          |
+| ------------------------ | -------------------------- | -------------------------------------------------------------------------------------------------- |
+| `charge_only` (Standard) | `−Netz + max(Batterie, 0)` | „Wie viel kann ich zuschalten, ohne ans Netz zu gehen?" Die Batterie darf mitarbeiten.             |
+| `full`                   | `−Netz + Batterie`         | „Wie viel liefert die PV über die Hauslast hinaus?" Gespeicherte Energie gilt als nicht verfügbar. |
+
+Der Unterschied ist erheblich. Beispiel: 463 W PV, 842 W Hausverbrauch, Batterie entlädt mit 386 W,
+7 W kommen aus dem Netz.
+
+- `charge_only` → **7 W Defizit** — das Haus läuft praktisch autark, die Batterie trägt die Lücke
+- `full` → **393 W Defizit** — so viel fehlt der PV zur Hauslast
+
+`charge_only` ist Standard, weil `full` bei entladender Batterie ein Defizit meldet, das dem
+Zählerstand deutlich widerspricht. Wer die Batterie für den Abend reservieren will, nimmt `full`.
+
+Weitere Optionen:
 
 - `battery_min_soc` — darunter hat das Laden Vorrang, es wird kein Überschuss mehr ausgewiesen
 - `battery_reserve_w` — Leistung, die immer der Batterie vorbehalten bleibt
+
+Unter dem großen Wert zeigt die Karte zusätzlich die **tatsächlichen Zählerwerte**
+(„Netz 7 W Bezug · Batterie 386 W entladen"), damit berechneter Überschuss und realer Netzfluss
+nicht verwechselt werden.
 
 Fällt der Batteriesensor aus, rechnet die Karte ohne ihn weiter, markiert den Wert aber sichtbar
 als unsicher, statt ein falsches Ergebnis als gesichert auszugeben.

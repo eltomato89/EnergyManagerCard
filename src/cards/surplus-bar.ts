@@ -22,6 +22,10 @@ export class EnergyManagerSurplusBar extends LitElement {
   @property({ attribute: false }) public smoothingWindow = 0;
   @property({ attribute: false }) public coverage = 1;
   @property({ attribute: false }) public degraded = false;
+  /** Tatsaechliche Netzleistung: >0 Bezug, <0 Einspeisung. */
+  @property({ attribute: false }) public gridW: number | null = null;
+  /** Tatsaechliche Batterieleistung: >0 Laden, <0 Entladen. */
+  @property({ attribute: false }) public batteryW: number | null = null;
   @property({ attribute: false }) public locale?: FrontendLocaleData;
   @property({ attribute: false }) public localize!: LocalizeFn;
 
@@ -84,17 +88,58 @@ export class EnergyManagerSurplusBar extends LitElement {
                   ><i class="dot allocated"></i>${this.localize('card.allocated')}
                   ${formatPower(this.allocatedW, this.locale)}</span
                 >
-                <span
-                  ><i class="dot free"></i>${this.localize('card.free')}
-                  ${formatPower(available, this.locale)}</span
-                >
+                ${
+                  negative
+                    ? // "frei -390 W" ist ein Widerspruch in sich. Bei einem
+                      // Defizit steht die Zahl bereits gross darueber.
+                      nothing
+                    : html`<span
+                        ><i class="dot free"></i>${this.localize('card.free')}
+                        ${formatPower(available, this.locale)}</span
+                      >`
+                }
                 <span class="scale"
                   >${this.localize('card.scale')} ${formatPower(scale, this.locale)}</span
                 >
               </div>
             `
       }
+      ${this.renderFlow()}
     `;
+  }
+
+  /**
+   * Tatsaechliche Zaehlerwerte unter dem berechneten Ueberschuss.
+   *
+   * Ohne sie liest sich ein Defizit wie Netzbezug in gleicher Hoehe — obwohl
+   * bei entladender Batterie kaum etwas ueber den Zaehler geht.
+   */
+  private renderFlow() {
+    const parts: string[] = [];
+
+    if (this.gridW !== null) {
+      const abs = formatPower(Math.abs(this.gridW), this.locale);
+      // Nur bei echter Null die Richtung weglassen — der Zaehlerwert ist der
+      // Grund fuer diese Zeile und soll auch bei wenigen Watt sichtbar bleiben.
+      if (Math.abs(this.gridW) < 1) parts.push(this.localize('card.grid_idle'));
+      else if (this.gridW > 0) parts.push(this.localize('card.grid_import', { power: abs }));
+      else parts.push(this.localize('card.grid_export', { power: abs }));
+    }
+
+    if (this.batteryW !== null && Math.abs(this.batteryW) >= 1) {
+      const abs = formatPower(Math.abs(this.batteryW), this.locale);
+      parts.push(
+        this.batteryW > 0
+          ? this.localize('card.battery_charge_flow', { power: abs })
+          : this.localize('card.battery_discharge_flow', { power: abs }),
+      );
+    }
+
+    if (parts.length === 0) return nothing;
+
+    return html`<div class="flow">
+      ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}
+    </div>`;
   }
 
   private renderAverageChip() {
@@ -240,6 +285,12 @@ export class EnergyManagerSurplusBar extends LitElement {
 
       .legend .scale {
         margin-inline-start: auto;
+      }
+
+      .flow {
+        color: var(--secondary-text-color);
+        font-size: 0.8em;
+        opacity: 0.85;
       }
 
       .dot {

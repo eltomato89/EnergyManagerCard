@@ -37,15 +37,16 @@ die YAML bevorzugen — und die Grundlage für die spätere Integration.
 
 ### Hausbatterie (optional)
 
-| Option                     | Typ      | Standard | Bedeutung                                                           |
-| -------------------------- | -------- | -------- | ------------------------------------------------------------------- |
-| `battery_soc_entity`       | Entity   | —        | Ladestand in %                                                      |
-| `battery_power_entity`     | Entity   | —        | >0 Laden, <0 Entladen                                               |
-| `battery_invert`           | bool     | `false`  | Vorzeichen umkehren                                                 |
-| `battery_charge_entity`    | Entity   | —        | Alternative: Ladeleistung, stets positiv                            |
-| `battery_discharge_entity` | Entity   | —        | Alternative: Entladeleistung, stets positiv                         |
-| `battery_min_soc`          | 0–100    | —        | Darunter hat das Laden Vorrang, es wird kein Überschuss ausgewiesen |
-| `battery_reserve_w`        | Zahl (W) | `0`      | Bleibt immer der Batterie vorbehalten                               |
+| Option                     | Typ      | Standard      | Bedeutung                                                                                        |
+| -------------------------- | -------- | ------------- | ------------------------------------------------------------------------------------------------ |
+| `battery_soc_entity`       | Entity   | —             | Ladestand in %                                                                                   |
+| `battery_power_entity`     | Entity   | —             | >0 Laden, <0 Entladen                                                                            |
+| `battery_invert`           | bool     | `false`       | Vorzeichen umkehren                                                                              |
+| `battery_charge_entity`    | Entity   | —             | Alternative: Ladeleistung, stets positiv                                                         |
+| `battery_discharge_entity` | Entity   | —             | Alternative: Entladeleistung, stets positiv                                                      |
+| `battery_mode`             | string   | `charge_only` | `charge_only`: Entladung wird ignoriert. `full`: Entladung wird abgezogen (reiner PV-Überschuss) |
+| `battery_min_soc`          | 0–100    | —             | Darunter hat das Laden Vorrang, es wird kein Überschuss ausgewiesen                              |
+| `battery_reserve_w`        | Zahl (W) | `0`           | Bleibt immer der Batterie vorbehalten                                                            |
 
 ## Verbraucher (`devices[]`)
 

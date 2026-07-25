@@ -144,6 +144,8 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
                     .smoothingWindow=${this._smoothingWindowS()}
                     .coverage=${this._window.coverage(Date.now())}
                     .degraded=${surplus.degraded}
+                    .gridW=${surplus.gridW}
+                    .batteryW=${surplus.batteryW}
                     .locale=${this._hass?.locale}
                     .localize=${this._localize}
                   ></energy-manager-surplus-bar>
@@ -244,6 +246,7 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
       consumption: readPowerW(this._hass, config.consumption_entity),
       battery,
       batteryConfigured: hasBattery(config),
+      batteryMode: config.battery_mode ?? 'charge_only',
       batterySoc: readPercent(this._hass, config.battery_soc_entity),
       consumptionIncludesBattery: config.consumption_includes_battery ?? false,
       batteryMinSoc: config.battery_min_soc,

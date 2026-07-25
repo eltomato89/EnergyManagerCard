@@ -81,12 +81,30 @@ Bilanz am Netzverknüpfungspunkt, alles in Watt, `G` = Netzleistung (>0 Bezug),
 G = C_haus + B − P_pv     ⟹     S_roh = P_pv − C_haus = B − G
 ```
 
-- Modus `grid`: `S_roh = −G + B`
-- Modus `split`: `S_roh = P_prod − C_haus` (`+ B`, wenn `consumption_includes_battery`)
-- danach: `available = S_roh − battery_reserve_w`, und bei `soc < battery_min_soc` zusätzlich
-  `min(available, 0)`
+- Modus `grid`: `S_roh = −G + B_eff`
+- Modus `split`: `S_roh = P_prod − C_haus` (`+ B_eff`, wenn `consumption_includes_battery`)
 
-Kein Clamping auf ≥ 0 — negative Werte bedeuten Netzbezug und werden gebraucht.
+`B_eff` hängt an `battery_mode`:
+
+- `charge_only` (Standard): `B_eff = max(B, 0)` — Ladeleistung ist umlenkbar, Entladung wird
+  ignoriert.
+- `full`: `B_eff = B` — Entladung wird abgezogen.
+
+Der Standard ist bewusst `charge_only`: Mit `full` meldet die Karte bei entladender Batterie ein
+Defizit in Höhe der Entladeleistung, während der Zähler nahezu Null zeigt — für den Nutzer sieht
+das wie ein Rechenfehler aus. Die Integration muss denselben Modus respektieren, sonst schaltet sie
+anders, als die Karte anzeigt.
+
+Anschließend gilt in beiden Modi:
+
+```
+available = S_roh − battery_reserve_w
+wenn soc < battery_min_soc:  available = min(available, 0)
+```
+
+Kein Clamping auf ≥ 0. Ein negativer Wert bedeutet ein **Defizit gegenüber der Erzeugung** — und
+ausdrücklich _nicht_ Netzbezug in gleicher Höhe, denn die Batterie kann einen Teil davon stützen.
+Wer den tatsächlichen Zählerwert braucht, nimmt `G` direkt.
 
 Weitere Festlegungen, die die Integration übernehmen sollte:
 

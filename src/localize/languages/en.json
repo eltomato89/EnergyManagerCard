@@ -1,7 +1,12 @@
 {
   "card": {
     "surplus_free": "available",
-    "surplus_deficit": "drawn from grid",
+    "surplus_deficit": "short",
+    "grid_import": "grid {power} import",
+    "grid_export": "grid {power} export",
+    "grid_idle": "grid balanced",
+    "battery_charge_flow": "battery {power} charging",
+    "battery_discharge_flow": "battery {power} discharging",
     "allocated": "in use",
     "free": "available",
     "scale": "scale",
@@ -70,6 +75,12 @@
       "helper": "Positive when charging, negative when discharging."
     },
     "battery_invert": { "label": "Invert sign" },
+    "battery_mode": {
+      "label": "Battery in surplus",
+      "helper": "Charging power always counts as available. The question is whether discharging should reduce the surplus.",
+      "charge_only": "Count charging only",
+      "full": "Subtract discharging (pure solar surplus)"
+    },
     "battery_charge_entity": {
       "label": "Charge power",
       "helper": "Alternative to a bidirectional sensor: two always-positive sensors."

@@ -1,4 +1,4 @@
-import type { DeviceConfig, MeterMode } from './config';
+import type { BatteryMode, DeviceConfig, MeterMode } from './config';
 
 /* ------------------------------------------------------------------ */
 /* Sensorwerte                                                         */
@@ -46,6 +46,7 @@ export interface SurplusInput {
   /** Bereits invertiert bzw. aus charge - discharge zusammengesetzt. */
   battery: Reading;
   batteryConfigured: boolean;
+  batteryMode: BatteryMode;
   batterySoc: number | null;
   consumptionIncludesBattery: boolean;
   batteryMinSoc?: number;
@@ -55,10 +56,19 @@ export interface SurplusInput {
 export interface SurplusResult {
   /** W vor Reserve; null = nicht berechenbar. */
   raw: number | null;
-  /** W nach Reserve und SoC-Regel. Kann negativ sein (= Netzbezug). */
+  /**
+   * W nach Reserve und SoC-Regel. Negativ bedeutet ein Defizit gegenueber der
+   * Erzeugung — NICHT zwangslaeufig Netzbezug in gleicher Hoehe, denn die
+   * Batterie kann einen Teil davon stuetzen. Fuer den tatsaechlichen
+   * Zaehlerwert siehe `gridW`.
+   */
   available: number | null;
   /** Beitrag der Batterie in W, fuer Diagnose. */
   batteryCorrection: number;
+  /** Tatsaechliche Netzleistung: >0 Bezug, <0 Einspeisung. */
+  gridW: number | null;
+  /** Tatsaechliche Batterieleistung: >0 Laden, <0 Entladen. */
+  batteryW: number | null;
   /** Batterie konfiguriert, liefert aber keinen Wert. */
   degraded: boolean;
   errors: SurplusError[];

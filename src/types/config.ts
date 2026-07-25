@@ -14,6 +14,18 @@ export type MeterMode = 'grid' | 'split';
 export type SecondaryInfo = 'power' | 'status' | 'both';
 
 /**
+ * Wie die Batterie in den Ueberschuss eingeht.
+ *
+ * - `charge_only`: Ladeleistung zaehlt als umlenkbarer Ueberschuss, Entladung
+ *   wird ignoriert. Beantwortet die Frage "wie viel kann ich einschalten, ohne
+ *   Netzstrom zu ziehen" — die Batterie darf dabei mitarbeiten.
+ * - `full`: Entladung wird zusaetzlich abgezogen. Zeigt den reinen
+ *   PV-Ueberschuss (Erzeugung minus Hauslast) und behandelt gespeicherte
+ *   Energie als etwas, das nicht verbraucht werden soll.
+ */
+export type BatteryMode = 'charge_only' | 'full';
+
+/**
  * Erbt von LovelaceCardConfig (und damit dessen Index-Signatur), damit
  * setConfig zur LovelaceCard-Schnittstelle passt und unbekannte Schluessel aus
  * einer aelteren Config nicht zum Typfehler werden.
@@ -54,6 +66,8 @@ export interface EnergyManagerCardConfig extends LovelaceCardConfig {
   /** Alternative zu battery_power_entity: zwei stets positive Sensoren. */
   battery_charge_entity?: string;
   battery_discharge_entity?: string;
+  /** Default 'charge_only'. */
+  battery_mode?: BatteryMode;
   /** 0..100. Darunter hat das Laden der Batterie Vorrang vor Verbrauchern. */
   battery_min_soc?: number;
   /** W, die immer der Batterie vorbehalten bleiben. Default 0. */
