@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   collectWarnings,
   hasBattery,
+  missingSource,
   resolveMeterMode,
   trackedEntities,
   validateConfig,
@@ -42,40 +43,41 @@ describe('validateConfig', () => {
     expect(() => validateConfig(config())).not.toThrow();
   });
 
-  it('verlangt im grid-Modus den Netzsensor', () => {
-    expect(() => validateConfig(config({ grid_entity: undefined, meter_mode: 'grid' }))).toThrow(
-      /grid_entity/,
-    );
-  });
-
-  it('verlangt im split-Modus beide Sensoren und nennt die fehlenden', () => {
-    expect(() => validateConfig(config({ grid_entity: undefined, meter_mode: 'split' }))).toThrow(
-      /production_entity, consumption_entity/,
-    );
-
-    expect(() =>
-      validateConfig(
-        config({ grid_entity: undefined, meter_mode: 'split', production_entity: 'sensor.pv' }),
-      ),
-    ).toThrow(/consumption_entity/);
-  });
-
   it('weist eine Geraeteliste zurueck, die keine Liste ist', () => {
     expect(() => validateConfig({ ...config(), devices: 'switch.a' as never })).toThrow(/devices/);
   });
 
-  it('laesst die Geraeteliste ganz weg, wenn die Integration sie liefert', () => {
-    // Genau die Konfiguration, die entsteht, sobald die Verbraucher nur noch in
-    // der Integration gepflegt werden: keine Sensoren, keine Geraete.
-    expect(() =>
-      validateConfig({ type: 'custom:energy-manager-card' }, { standalone: false }),
-    ).not.toThrow();
+  it('nimmt eine Karte ganz ohne Felder an', () => {
+    // Lovelace ruft setConfig VOR dem hass-Setter — dort ist nicht zu sehen, ob
+    // die Integration laeuft und die Sensoren stellt. Wuerde hier geworfen,
+    // waere jede Karte ohne eigene Sensoren dauerhaft eine Fehlerkarte.
+    expect(() => validateConfig({ type: 'custom:energy-manager-card' })).not.toThrow();
   });
 
-  it('verlangt ohne Integration weiterhin einen Sensor', () => {
-    expect(() =>
-      validateConfig({ type: 'custom:energy-manager-card' }, { standalone: true }),
-    ).toThrow(/production_entity/);
+  it('meldet fehlende Sensoren stattdessen ueber missingSource', () => {
+    // Dieselbe Prüfung, nur verschoben: sie greift beim Rendern, wo feststeht,
+    // ob die Integration die Sensoren stellt.
+    expect(missingSource(config({ grid_entity: undefined, meter_mode: 'grid' }))).toBe('grid');
+    expect(missingSource(config({ grid_entity: undefined, meter_mode: 'split' }))).toBe('split');
+    expect(
+      missingSource(
+        config({ grid_entity: undefined, meter_mode: 'split', production_entity: 'sensor.pv' }),
+      ),
+    ).toBe('split');
+  });
+
+  it('meldet nichts, sobald die Sensoren vollstaendig sind', () => {
+    expect(missingSource(config())).toBeNull();
+    expect(
+      missingSource(
+        config({
+          grid_entity: undefined,
+          meter_mode: 'split',
+          production_entity: 'sensor.pv',
+          consumption_entity: 'sensor.haus',
+        }),
+      ),
+    ).toBeNull();
   });
 
   it('nennt den Index eines Geraets ohne Schalt-Entity', () => {

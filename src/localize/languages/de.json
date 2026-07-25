@@ -40,6 +40,8 @@
     "unavailable": "nicht verfügbar"
   },
   "errors": {
+    "no-source-grid": "Kein Netzsensor konfiguriert — und keine Energy-Manager-Integration gefunden. Trage im Editor einen Netzsensor ein oder installiere die Integration.",
+    "no-source-split": "Erzeugungs- oder Verbrauchssensor fehlt — und keine Energy-Manager-Integration gefunden. Ergänze die Sensoren im Editor oder installiere die Integration.",
     "missing-grid": "Netzsensor ist nicht konfiguriert.",
     "missing-production": "Erzeugungssensor ist nicht konfiguriert.",
     "missing-consumption": "Verbrauchssensor ist nicht konfiguriert.",

@@ -21,42 +21,14 @@ export function hasBattery(config: Partial<EnergyManagerCardConfig>): boolean {
 /**
  * Harte Validierung fuer setConfig. Wirft bei allem, was die Karte nicht
  * sinnvoll darstellen kann — HA zeigt die Meldung dann direkt in der Karte an.
+ *
+ * Ob Zaehlersensoren fehlen, wird hier bewusst NICHT geprueft: Lovelace ruft
+ * `setConfig` vor dem `hass`-Setter auf, und ohne `hass` laesst sich nicht
+ * feststellen, ob die Integration laeuft und die Sensoren stellt. Diese Frage
+ * beantwortet `missingSource` beim Rendern.
  */
-export interface ValidateOptions {
-  /**
-   * true, wenn die Karte ohne die Energy-Manager-Integration arbeitet.
-   *
-   * Nur dann braucht sie eigene Sensoren. Laeuft die Integration, liefert sie
-   * Ueberschuss und Verbraucher — eine Karte ganz ohne Felder ist dann gueltig.
-   */
-  standalone?: boolean;
-}
-
-export function validateConfig(
-  config: EnergyManagerCardConfig | undefined,
-  options: ValidateOptions = {},
-): void {
+export function validateConfig(config: EnergyManagerCardConfig | undefined): void {
   if (!config) throw new Error('Konfiguration fehlt');
-
-  const standalone = options.standalone ?? true;
-  const mode = resolveMeterMode(config);
-
-  if (standalone) {
-    if (mode === 'grid') {
-      if (!config.grid_entity) {
-        throw new Error(
-          'grid_entity ist erforderlich (oder Modus "split" mit getrennten Sensoren)',
-        );
-      }
-    } else {
-      const missing: string[] = [];
-      if (!config.production_entity) missing.push('production_entity');
-      if (!config.consumption_entity) missing.push('consumption_entity');
-      if (missing.length > 0) {
-        throw new Error(`Im Modus "split" erforderlich: ${missing.join(', ')}`);
-      }
-    }
-  }
 
   if (config.devices !== undefined && !Array.isArray(config.devices)) {
     throw new Error('devices muss eine Liste sein');
@@ -74,6 +46,20 @@ export function validateConfig(
       throw new Error('battery_min_soc muss zwischen 0 und 100 liegen');
     }
   }
+}
+
+/**
+ * Welcher Zaehlersensor fehlt, um selbst rechnen zu koennen — oder null.
+ *
+ * Nur aufzurufen, wenn keine Integration gefunden wurde. Ohne sie braucht die
+ * Karte eigene Sensoren; das Ergebnis wird als Hinweis in der Karte gezeigt
+ * statt geworfen, weil die Antwort erst mit `hass` feststeht.
+ */
+export function missingSource(config: EnergyManagerCardConfig): 'grid' | 'split' | null {
+  if (resolveMeterMode(config) === 'grid') {
+    return config.grid_entity ? null : 'grid';
+  }
+  return config.production_entity && config.consumption_entity ? null : 'split';
 }
 
 /* ------------------------------------------------------------------ */

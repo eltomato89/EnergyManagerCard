@@ -40,6 +40,8 @@
     "unavailable": "unavailable"
   },
   "errors": {
+    "no-source-grid": "No grid sensor configured — and no Energy Manager integration found. Set a grid sensor in the editor or install the integration.",
+    "no-source-split": "Production or consumption sensor missing — and no Energy Manager integration found. Add the sensors in the editor or install the integration.",
     "missing-grid": "No grid sensor configured.",
     "missing-production": "No production sensor configured.",
     "missing-consumption": "No consumption sensor configured.",

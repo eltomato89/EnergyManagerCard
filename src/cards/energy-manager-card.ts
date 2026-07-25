@@ -23,7 +23,13 @@ import {
 import { TimeWeightedWindow } from '../lib/smoothing';
 import { combineBatteryReadings, invertReading, readPercent, readPowerW } from '../lib/state';
 import { applyReserve, computeSurplus } from '../lib/surplus';
-import { hasBattery, resolveMeterMode, trackedEntities, validateConfig } from '../lib/validate';
+import {
+  hasBattery,
+  missingSource,
+  resolveMeterMode,
+  trackedEntities,
+  validateConfig,
+} from '../lib/validate';
 import { localizer, type LocalizeFn } from '../localize/localize';
 import { cardStyles, themeVariables } from '../styles';
 import type { EnergyManagerCardConfig } from '../types/config';
@@ -110,10 +116,10 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
   }
 
   public setConfig(config: EnergyManagerCardConfig): void {
-    // Ohne Integration braucht die Karte eigene Sensoren; mit ihr nicht. Was
-    // Pflicht ist, entscheidet sich deshalb erst zur Laufzeit — hier wird nur
-    // geprueft, was in beiden Faellen gelten muss.
-    validateConfig(config, { standalone: findIntegration(this._hass) === null });
+    // Prueft nur, was ohne `hass` entscheidbar ist. Ob Zaehlersensoren fehlen,
+    // haengt daran, ob die Integration laeuft — und Lovelace ruft setConfig vor
+    // dem hass-Setter auf. Diese Frage klaert render().
+    validateConfig(config);
 
     // Die Config aus Lovelace wird geteilt — immer klonen, nie in-place aendern.
     this._config = config.devices ? { ...config, devices: [...config.devices] } : { ...config };
@@ -176,6 +182,14 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
     const now = Date.now();
     const source = this._source();
 
+    // Weder Integration noch eigene Sensoren: hier steht die Karte ohne jede
+    // Datenquelle da. Ein Hinweis, der sagt was fehlt, ist nuetzlicher als eine
+    // rote Fehlerkarte — vor allem direkt nach dem Einfuegen aus dem Picker.
+    if (!source) {
+      const missing = missingSource(config);
+      if (missing) return this.renderNoSource(config, missing);
+    }
+
     // Die beobachteten Entitaeten stehen erst hier fest: welche das sind,
     // bestimmt die Integration, und sie kann waehrend der Laufzeit dazukommen.
     if (source) {
@@ -234,6 +248,19 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
                 `
           }
           ${this.renderErrors(surplus)} ${this.renderDevices(views)}
+        </div>
+      </ha-card>
+    `;
+  }
+
+  private renderNoSource(config: EnergyManagerCardConfig, missing: 'grid' | 'split') {
+    return html`
+      <ha-card .header=${config.title}>
+        <div class="card-content">
+          <div class="notice error">
+            <ha-svg-icon .path=${mdiAlertCircleOutline}></ha-svg-icon>
+            <span>${this._localize(`errors.no-source-${missing}`)}</span>
+          </div>
         </div>
       </ha-card>
     `;
