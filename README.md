@@ -7,21 +7,15 @@ Die Karte schaltet **nichts automatisch**. Sie zeigt an und lässt manuell schal
 der Verbraucher im Editor ist die **Priorität**, die eine später folgende Integration für die
 automatische Überschusssteuerung übernimmt.
 
-```
-┌──────────────────────────────────────────────────┐
-│ PV-Überschuss                             ⚡ 62%  │
-│   ▲ 2,0 kW frei                         ⌀ 60 s   │
-│   ████████████░░░░░░░░░░░░░░░░░░░░░░░░           │
-│   belegt 900 W · frei 2,0 kW · Skala 15,0 kW     │
-│ ────────────────────────────────────────────────│
-│ ▍1 🔌 Wallbox            max. 11,0 kW   [ ●——]  │
-│ ▍   reicht nicht                                 │
-│ ▍2 ♨ Heizstab                 900 W    [——●]   │
-│ ▍   läuft · gedeckt · 🔒 noch 3:00               │
-│ ▍3 🧺 Waschmaschine       max. 2,0 kW   [ ●——]  │
-│ ▍   bereit · 🔒 Sperre noch 9:15                 │
-└──────────────────────────────────────────────────┘
-```
+![Die Karte im hellen und im dunklen Theme](docs/images/preview.png)
+
+<sub>Gezeigt: 2,4 kW Einspeisung plus 600 W Batterieladung ergeben 3,0 kW verfügbaren Überschuss.
+Die Wallbox braucht mindestens 4,2 kW und bleibt grau, der Heizstab läuft und ist gedeckt, die
+Waschmaschine wäre bereit — steht aber noch unter Mindest-Aus-Zeit.</sub>
+
+<sub>Hinweis: Das Bild entstand in einer Testumgebung. Die Karte selbst ist das ausgelieferte
+Bundle; die sie umgebenden Home-Assistant-Elemente (Kartenrahmen, Schalter, Zustandssymbole) sind
+für die Aufnahme nachgebildet und sehen in einer echten Installation minimal anders aus.</sub>
 
 ## Installation
 

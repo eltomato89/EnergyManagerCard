@@ -110,31 +110,39 @@ export class EnergyManagerDeviceRow extends LitElement {
       parts.push(this.localize(`status.${view.status}`));
     }
 
-    const lock =
-      view.lock.kind === 'none'
-        ? nothing
-        : html`<span
-            class="lock"
-            title=${this.localize(
+    const hasLock = view.lock.kind !== 'none';
+    if (parts.length === 0 && !hasLock) return nothing;
+
+    // Die Sperrzeit steht in einer eigenen Zeile statt angehängt: sonst bleibt
+    // beim Umbruch ein Trennpunkt am Zeilenende hängen, und die Sperre ist
+    // wichtig genug, um nicht im Fliesstext unterzugehen.
+    return html`
+      ${
+        parts.length === 0
+          ? nothing
+          : html`<div class="secondary">
+              ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}
+            </div>`
+      }
+      ${
+        hasLock
+          ? html`<div
+              class="secondary lock"
+              title=${this.localize(
               view.lock.kind === 'min_runtime'
-                ? 'editor.min_runtime.label'
-                : 'editor.min_off_time.label',
+                ? 'editor.min_runtime.helper'
+                : 'editor.min_off_time.helper',
             )}
-          >
-            <ha-svg-icon .path=${mdiLockClock}></ha-svg-icon>
-            ${this.localize(
+            >
+              <ha-svg-icon .path=${mdiLockClock}></ha-svg-icon>
+              ${this.localize(
               view.lock.kind === 'min_runtime' ? 'card.locked_runtime' : 'card.locked_off',
               { time: formatDuration(view.lock.remainingS) },
             )}
-          </span>`;
-
-    if (parts.length === 0 && lock === nothing) return nothing;
-
-    return html`<div class="secondary">
-      ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}${
-        lock === nothing ? nothing : html` · ${lock}`
+            </div>`
+          : nothing
       }
-    </div>`;
+    `;
   }
 
   private _openMoreInfo = (): void => {
