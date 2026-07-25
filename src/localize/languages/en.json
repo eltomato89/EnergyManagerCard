@@ -1,0 +1,158 @@
+{
+  "card": {
+    "surplus_free": "available",
+    "surplus_deficit": "drawn from grid",
+    "allocated": "in use",
+    "free": "available",
+    "scale": "scale",
+    "average": "⌀ {seconds} s",
+    "average_partial": "average not yet complete",
+    "battery_charging": "charging",
+    "battery_discharging": "discharging",
+    "no_devices": "No loads configured yet.",
+    "priority": "Priority {index}",
+    "locked_runtime": "minimum runtime {time} left",
+    "locked_off": "locked for {time}",
+    "needs": "needs {power}",
+    "max_power": "max {power}",
+    "degraded": "Battery reading missing — surplus uncertain"
+  },
+  "status": {
+    "on_ok": "running · covered",
+    "on_deficit": "running · drawing from grid",
+    "off_ready": "ready",
+    "off_close": "almost enough",
+    "off_insufficient": "not enough",
+    "unavailable": "unavailable"
+  },
+  "errors": {
+    "missing-grid": "No grid sensor configured.",
+    "missing-production": "No production sensor configured.",
+    "missing-consumption": "No consumption sensor configured.",
+    "grid-unavailable": "The grid sensor is currently not reporting a value.",
+    "production-unavailable": "The production sensor is currently not reporting a value.",
+    "consumption-unavailable": "The consumption sensor is currently not reporting a value.",
+    "wrong-unit": "A sensor does not measure power. Expected W or kW — a kWh meter reports energy, not an instantaneous value."
+  },
+  "warnings": {
+    "device-no-power-estimate": "{detail}: without a power sensor and without a rated power the indicator assumes 500 W.",
+    "min-power-above-max": "{detail}: switch-on threshold is above the rated power.",
+    "no-devices": "No load configured yet.",
+    "battery-soc-without-power": "State of charge is configured but no battery power — the surplus correction has no effect.",
+    "smoothing-below-interval": "The averaging window is smaller than the sampling interval and therefore has no effect."
+  },
+  "editor": {
+    "title": { "label": "Title" },
+    "meter_mode": {
+      "label": "Meter source",
+      "helper": "Either one bidirectional grid sensor or separate consumption and production sensors.",
+      "grid": "Single grid sensor (bidirectional)",
+      "split": "Separate sensors"
+    },
+    "grid_entity": {
+      "label": "Grid sensor",
+      "helper": "Positive when importing, negative when exporting."
+    },
+    "invert_grid": {
+      "label": "Invert sign",
+      "helper": "Enable if the sensor reports positive values while exporting."
+    },
+    "production_entity": { "label": "Solar production", "helper": "Always positive." },
+    "consumption_entity": { "label": "House consumption", "helper": "Always positive." },
+    "consumption_includes_battery": {
+      "label": "Consumption includes battery charging",
+      "helper": "Enable if the consumption sensor already counts battery charging."
+    },
+    "battery": { "label": "Home battery" },
+    "battery_soc_entity": { "label": "State of charge" },
+    "battery_power_entity": {
+      "label": "Battery power",
+      "helper": "Positive when charging, negative when discharging."
+    },
+    "battery_invert": { "label": "Invert sign" },
+    "battery_charge_entity": {
+      "label": "Charge power",
+      "helper": "Alternative to a bidirectional sensor: two always-positive sensors."
+    },
+    "battery_discharge_entity": { "label": "Discharge power" },
+    "battery_min_soc": {
+      "label": "Minimum state of charge",
+      "helper": "Below this, charging the battery takes priority over the loads."
+    },
+    "battery_reserve_w": {
+      "label": "Battery reserve",
+      "helper": "Power always kept for the battery."
+    },
+    "advanced": { "label": "Advanced" },
+    "smoothing_window": {
+      "label": "Averaging window",
+      "helper": "Smooths the surplus so passing clouds do not cause switching storms. 0 disables smoothing."
+    },
+    "update_interval": { "label": "Update interval" },
+    "scale_max": {
+      "label": "Scale maximum",
+      "helper": "Leave empty to derive it from the rated powers."
+    },
+    "show_surplus_bar": { "label": "Show surplus bar" },
+    "show_battery": { "label": "Show battery" },
+    "show_priority": { "label": "Show priority number" },
+    "compact": { "label": "Compact layout" },
+    "secondary_info": {
+      "label": "Secondary line",
+      "power": "Power",
+      "status": "Status",
+      "both": "Power and status"
+    },
+    "devices": {
+      "label": "Loads",
+      "helper": "The order is the priority: whatever should be switched on first goes to the top.",
+      "add": "Add load",
+      "empty": "No loads yet. Add one with the picker below.",
+      "move_up": "Move up",
+      "move_down": "Move down",
+      "remove": "Remove",
+      "edit": "Edit",
+      "drag": "Drag to reorder",
+      "back": "Back to list"
+    },
+    "switch_entity": { "label": "Switchable entity" },
+    "power_entity": {
+      "label": "Power sensor",
+      "helper": "Current power draw of this load."
+    },
+    "name": { "label": "Name" },
+    "icon": { "label": "Icon" },
+    "automation": { "label": "For the automation (integration)" },
+    "min_power": {
+      "label": "Switch-on threshold",
+      "helper": "Surplus required before switching on is worthwhile."
+    },
+    "max_power": { "label": "Rated power", "helper": "Maximum power draw." },
+    "hysteresis": {
+      "label": "Hysteresis",
+      "helper": "Dead band around zero so the display does not flicker."
+    },
+    "turn_on_delay": {
+      "label": "Switch-on delay",
+      "helper": "The surplus must be sufficient for this long before switching on. Debounces brief gaps in sunshine."
+    },
+    "turn_off_delay": {
+      "label": "Switch-off delay",
+      "helper": "The deficit must persist this long before switching off. Rides out passing clouds."
+    },
+    "min_runtime": {
+      "label": "Minimum runtime",
+      "helper": "The device stays on at least this long after being switched on."
+    },
+    "min_off_time": {
+      "label": "Minimum off time",
+      "helper": "The device stays off at least this long after being switched off. Protects compressors from restarting too early."
+    },
+    "managed": {
+      "label": "Control from the automation",
+      "helper": "Turn off to switch this device manually only."
+    },
+    "confirm": { "label": "Ask before switching" },
+    "confirm_switch": "Really switch {name}?"
+  }
+}

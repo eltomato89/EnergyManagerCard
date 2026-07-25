@@ -1,0 +1,158 @@
+{
+  "card": {
+    "surplus_free": "frei",
+    "surplus_deficit": "Netzbezug",
+    "allocated": "belegt",
+    "free": "frei",
+    "scale": "Skala",
+    "average": "⌀ {seconds} s",
+    "average_partial": "Mittelwert noch unvollständig",
+    "battery_charging": "lädt",
+    "battery_discharging": "entlädt",
+    "no_devices": "Noch keine Verbraucher konfiguriert.",
+    "priority": "Priorität {index}",
+    "locked_runtime": "Mindestlaufzeit noch {time}",
+    "locked_off": "Sperre noch {time}",
+    "needs": "benötigt {power}",
+    "max_power": "max. {power}",
+    "degraded": "Batteriewert fehlt — Überschuss unsicher"
+  },
+  "status": {
+    "on_ok": "läuft · gedeckt",
+    "on_deficit": "läuft · Netzbezug",
+    "off_ready": "bereit",
+    "off_close": "fast ausreichend",
+    "off_insufficient": "reicht nicht",
+    "unavailable": "nicht verfügbar"
+  },
+  "errors": {
+    "missing-grid": "Netzsensor ist nicht konfiguriert.",
+    "missing-production": "Erzeugungssensor ist nicht konfiguriert.",
+    "missing-consumption": "Verbrauchssensor ist nicht konfiguriert.",
+    "grid-unavailable": "Der Netzsensor liefert gerade keinen Wert.",
+    "production-unavailable": "Der Erzeugungssensor liefert gerade keinen Wert.",
+    "consumption-unavailable": "Der Verbrauchssensor liefert gerade keinen Wert.",
+    "wrong-unit": "Ein Sensor misst keine Leistung. Erwartet wird W oder kW — ein kWh-Zähler liefert eine Energiemenge, keinen Momentanwert."
+  },
+  "warnings": {
+    "device-no-power-estimate": "{detail}: ohne Leistungssensor und ohne Nennleistung rechnet die Ampel mit 500 W Schätzwert.",
+    "min-power-above-max": "{detail}: Einschaltschwelle liegt über der Nennleistung.",
+    "no-devices": "Es ist noch kein Verbraucher konfiguriert.",
+    "battery-soc-without-power": "Ladestand ist konfiguriert, aber keine Batterieleistung — die Überschusskorrektur bleibt wirkungslos.",
+    "smoothing-below-interval": "Das Mittelungsfenster ist kleiner als der Abtasttakt und wirkt dadurch nicht."
+  },
+  "editor": {
+    "title": { "label": "Titel" },
+    "meter_mode": {
+      "label": "Zählerquelle",
+      "helper": "Ein bidirektionaler Netzsensor oder getrennte Sensoren für Verbrauch und Erzeugung.",
+      "grid": "Ein Netzsensor (bidirektional)",
+      "split": "Getrennte Sensoren"
+    },
+    "grid_entity": {
+      "label": "Netzsensor",
+      "helper": "Positiv bei Bezug aus dem Netz, negativ bei Einspeisung."
+    },
+    "invert_grid": {
+      "label": "Vorzeichen umkehren",
+      "helper": "Aktivieren, wenn der Sensor bei Einspeisung positiv wird."
+    },
+    "production_entity": { "label": "PV-Erzeugung", "helper": "Stets positiv." },
+    "consumption_entity": { "label": "Hausverbrauch", "helper": "Stets positiv." },
+    "consumption_includes_battery": {
+      "label": "Verbrauch enthält Batterieladung",
+      "helper": "Aktivieren, wenn der Verbrauchssensor die Batterieladung mitzählt."
+    },
+    "battery": { "label": "Hausbatterie" },
+    "battery_soc_entity": { "label": "Ladestand" },
+    "battery_power_entity": {
+      "label": "Batterieleistung",
+      "helper": "Positiv beim Laden, negativ beim Entladen."
+    },
+    "battery_invert": { "label": "Vorzeichen umkehren" },
+    "battery_charge_entity": {
+      "label": "Ladeleistung",
+      "helper": "Alternative zu einem bidirektionalen Sensor: zwei stets positive Sensoren."
+    },
+    "battery_discharge_entity": { "label": "Entladeleistung" },
+    "battery_min_soc": {
+      "label": "Mindestladestand",
+      "helper": "Darunter hat das Laden der Batterie Vorrang vor den Verbrauchern."
+    },
+    "battery_reserve_w": {
+      "label": "Batteriereserve",
+      "helper": "Leistung, die immer der Batterie vorbehalten bleibt."
+    },
+    "advanced": { "label": "Erweitert" },
+    "smoothing_window": {
+      "label": "Mittelungsfenster",
+      "helper": "Glättet den Überschuss, damit Wolken keine Schaltflut auslösen. 0 schaltet die Glättung ab."
+    },
+    "update_interval": { "label": "Aktualisierungstakt" },
+    "scale_max": {
+      "label": "Skalenmaximum",
+      "helper": "Leer lassen, um es aus den Nennleistungen abzuleiten."
+    },
+    "show_surplus_bar": { "label": "Überschussleiste zeigen" },
+    "show_battery": { "label": "Batterie zeigen" },
+    "show_priority": { "label": "Prioritätsnummer zeigen" },
+    "compact": { "label": "Kompakte Darstellung" },
+    "secondary_info": {
+      "label": "Zweite Zeile",
+      "power": "Leistung",
+      "status": "Status",
+      "both": "Leistung und Status"
+    },
+    "devices": {
+      "label": "Verbraucher",
+      "helper": "Die Reihenfolge ist die Priorität: oben steht, was zuerst eingeschaltet werden soll.",
+      "add": "Verbraucher hinzufügen",
+      "empty": "Noch kein Verbraucher. Über den Picker unten hinzufügen.",
+      "move_up": "Nach oben",
+      "move_down": "Nach unten",
+      "remove": "Entfernen",
+      "edit": "Bearbeiten",
+      "drag": "Zum Sortieren ziehen",
+      "back": "Zurück zur Liste"
+    },
+    "switch_entity": { "label": "Schaltbare Entität" },
+    "power_entity": {
+      "label": "Leistungssensor",
+      "helper": "Aktuelle Leistungsaufnahme dieses Verbrauchers."
+    },
+    "name": { "label": "Name" },
+    "icon": { "label": "Symbol" },
+    "automation": { "label": "Für die Automatik (Integration)" },
+    "min_power": {
+      "label": "Einschaltschwelle",
+      "helper": "Ab so viel Überschuss lohnt sich das Einschalten."
+    },
+    "max_power": { "label": "Nennleistung", "helper": "Maximale Leistungsaufnahme." },
+    "hysteresis": {
+      "label": "Hysterese",
+      "helper": "Totband um den Nullpunkt, damit die Anzeige nicht flackert."
+    },
+    "turn_on_delay": {
+      "label": "Einschaltverzögerung",
+      "helper": "Der Überschuss muss so lange ununterbrochen reichen, bevor eingeschaltet wird. Entprellt kurze Sonnenlücken."
+    },
+    "turn_off_delay": {
+      "label": "Ausschaltverzögerung",
+      "helper": "Das Defizit muss so lange anhalten, bevor ausgeschaltet wird. Überbrückt vorbeiziehende Wolken."
+    },
+    "min_runtime": {
+      "label": "Mindestlaufzeit",
+      "helper": "So lange bleibt das Gerät nach dem Einschalten mindestens an."
+    },
+    "min_off_time": {
+      "label": "Mindest-Aus-Zeit",
+      "helper": "So lange bleibt das Gerät nach dem Ausschalten mindestens aus. Schützt Kompressoren vor zu frühem Wiederanlauf."
+    },
+    "managed": {
+      "label": "Von der Automatik steuern",
+      "helper": "Abschalten, um dieses Gerät nur manuell zu schalten."
+    },
+    "confirm": { "label": "Vor dem Schalten nachfragen" },
+    "confirm_switch": "{name} wirklich schalten?"
+  }
+}

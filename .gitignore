@@ -1,0 +1,7 @@
+# Build-Artefakt wird nicht committet, sondern als Release-Asset veroeffentlicht.
+dist/
+node_modules/
+coverage/
+*.log
+.DS_Store
+.vite/

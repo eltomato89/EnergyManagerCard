@@ -1,0 +1,51 @@
+{
+  "name": "energy-manager-card",
+  "version": "0.1.0",
+  "description": "Home Assistant Lovelace-Karte für PV-Überschusssteuerung mit priorisierbaren Verbrauchern",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eltomato89/EnergyManagerCard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eltomato89/EnergyManagerCard/issues"
+  },
+  "homepage": "https://github.com/eltomato89/EnergyManagerCard#readme",
+  "scripts": {
+    "dev": "vite build --watch",
+    "serve": "vite preview",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test"
+  },
+  "dependencies": {
+    "@mdi/js": "^7.4.47",
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-lit": "^2.3.1",
+    "eslint-plugin-wc": "^3.1.0",
+    "home-assistant-js-websocket": "^9.6.0",
+    "prettier": "^3.9.6",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.65.0",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
