@@ -129,16 +129,16 @@ export class EnergyManagerDeviceRow extends LitElement {
           ? html`<div
               class="secondary lock"
               title=${this.localize(
-              view.lock.kind === 'min_runtime'
-                ? 'editor.min_runtime.helper'
-                : 'editor.min_off_time.helper',
-            )}
+                view.lock.kind === 'min_runtime'
+                  ? 'editor.min_runtime.helper'
+                  : 'editor.min_off_time.helper',
+              )}
             >
               <ha-svg-icon .path=${mdiLockClock}></ha-svg-icon>
               ${this.localize(
-              view.lock.kind === 'min_runtime' ? 'card.locked_runtime' : 'card.locked_off',
-              { time: formatDuration(view.lock.remainingS) },
-            )}
+                view.lock.kind === 'min_runtime' ? 'card.locked_runtime' : 'card.locked_off',
+                { time: formatDuration(view.lock.remainingS) },
+              )}
             </div>`
           : nothing
       }
