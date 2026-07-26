@@ -1,6 +1,6 @@
 {
   "name": "energy-manager-card",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Home Assistant Lovelace-Karte für PV-Überschusssteuerung mit priorisierbaren Verbrauchern",
   "type": "module",
   "license": "MIT",

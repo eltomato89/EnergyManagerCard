@@ -2,6 +2,30 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.1] — 2026-07-26
+
+### Geändert
+
+- **Alle Nutzertexte auf ein sachliches Register gebracht.** Zustandsnamen wie „reicht nicht" oder
+  „fast ausreichend" lasen sich wie eine Notenbeurteilung statt wie eine technische Aussage. Sie
+  benennen jetzt den Zustand und den Begriff, um den es geht:
+
+  | vorher           | jetzt                   |
+  | ---------------- | ----------------------- |
+  | reicht nicht     | Überschuss unzureichend |
+  | fast ausreichend | Überschuss knapp        |
+  | bereit           | Einschaltbereit         |
+  | läuft · gedeckt  | In Betrieb, gedeckt     |
+  | frei / belegt    | verfügbar / zugeteilt   |
+
+  Dazu entfallen die Anrede-Imperative („Trage ein", „Prüfe") zugunsten des Infinitivs, wie in Home
+  Assistant üblich, sowie Wendungen wie „Schaltflut", „Ampel" und angehängte Halbsätze nach
+  Gedankenstrich.
+
+- Drei Prüfungen halten das Register künftig fest: keine der aufgeführten Wendungen, keine
+  Du-Imperative, und beide Sprachen deckungsgleich. Ein Text, der nur in einer Sprache existiert,
+  erschien bisher als roher Schlüssel.
+
 ## [0.5.0] — 2026-07-26
 
 Die Karte ist das Anzeigeteil der Integration — und nur das.

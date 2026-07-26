@@ -1,67 +1,67 @@
 {
   "card": {
     "surplus_free": "available",
-    "surplus_deficit": "short",
-    "grid_import": "grid {power} import",
-    "grid_export": "grid {power} export",
-    "grid_idle": "grid balanced",
-    "battery_charge_flow": "battery {power} charging",
-    "battery_discharge_flow": "battery {power} discharging",
-    "allocated": "in use",
+    "surplus_deficit": "Deficit",
+    "grid_import": "Grid {power} import",
+    "grid_export": "Grid {power} export",
+    "grid_idle": "Grid balanced",
+    "battery_charge_flow": "Battery {power} charging",
+    "battery_discharge_flow": "Battery {power} discharging",
+    "allocated": "allocated",
     "free": "available",
-    "scale": "scale",
+    "scale": "Scale",
     "average": "⌀ {seconds} s",
-    "average_partial": "average not yet complete",
-    "battery_charging": "charging",
-    "battery_discharging": "discharging",
-    "no_devices": "No loads configured yet.",
+    "average_partial": "Averaging window not yet filled",
+    "battery_charging": "Charging",
+    "battery_discharging": "Discharging",
+    "no_devices": "No loads configured.",
     "automation": "Automation",
     "automation_for": "Automation for {name}",
-    "not_managed": "not in the automation",
+    "not_managed": "Not in the automation",
     "device_on": "Device running",
-    "device_off": "Device off",
+    "device_off": "Device switched off",
     "reorder_start": "Change order",
-    "reorder_done": "Done",
-    "reorder_hint": "Drag or use the arrows — the order is the priority.",
-    "reorder_failed": "Could not save the new order. Check that all priority helpers exist and that their range covers the number of loads.",
+    "reorder_done": "Apply",
+    "reorder_hint": "Change the order by dragging or with the arrow buttons. It determines the priority.",
+    "reorder_failed": "The order could not be saved. Every load needs a priority entity whose value range covers the number of loads.",
     "priority": "Priority {index}",
-    "locked_runtime": "minimum runtime {time} left",
-    "locked_off": "locked for {time}",
-    "needs": "needs {power}",
-    "max_power": "max {power}",
-    "degraded": "Battery reading missing — surplus uncertain",
+    "locked_runtime": "Minimum runtime, {time} remaining",
+    "locked_off": "Lockout, {time} remaining",
+    "needs": "requires {power}",
+    "max_power": "max. {power}",
+    "degraded": "Battery reading missing; surplus imprecise",
     "reorder_drag": "Drag to reorder",
     "reorder_up": "Move up",
     "reorder_down": "Move down",
-    "confirm_switch": "Really switch {name}?"
+    "confirm_switch": "Switch {name}?"
   },
   "status": {
-    "on_ok": "running · covered",
-    "on_deficit": "running · drawing from grid",
-    "off_ready": "ready",
-    "off_close": "almost enough",
-    "off_insufficient": "not enough",
-    "unavailable": "unavailable"
+    "on_ok": "Running, covered",
+    "on_deficit": "Running, drawing from grid",
+    "off_ready": "Ready to start",
+    "off_close": "Surplus marginal",
+    "off_insufficient": "Surplus insufficient",
+    "unavailable": "Unavailable"
   },
   "errors": {
-    "no-source-grid": "No grid sensor configured — and no Energy Manager integration found. Set a grid sensor in the editor or install the integration.",
-    "no-source-split": "Production or consumption sensor missing — and no Energy Manager integration found. Add the sensors in the editor or install the integration.",
-    "missing-grid": "No grid sensor configured.",
-    "missing-production": "No production sensor configured.",
-    "missing-consumption": "No consumption sensor configured.",
-    "grid-unavailable": "The grid sensor is currently not reporting a value.",
-    "production-unavailable": "The production sensor is currently not reporting a value.",
-    "consumption-unavailable": "The consumption sensor is currently not reporting a value.",
-    "wrong-unit": "A sensor does not measure power. Expected W or kW — a kWh meter reports energy, not an instantaneous value."
+    "no-source-grid": "No grid sensor configured and no Energy Manager integration present. Set a grid sensor in the editor or install the integration.",
+    "no-source-split": "Production or consumption sensor missing and no Energy Manager integration present. Add the sensors in the editor or install the integration.",
+    "missing-grid": "Grid sensor is not configured.",
+    "missing-production": "Production sensor is not configured.",
+    "missing-consumption": "Consumption sensor is not configured.",
+    "grid-unavailable": "Grid sensor currently reports no value.",
+    "production-unavailable": "Production sensor currently reports no value.",
+    "consumption-unavailable": "Consumption sensor currently reports no value.",
+    "wrong-unit": "A sensor does not measure power. W or kW is expected; a kWh meter reports an energy amount rather than an instantaneous value."
   },
   "warnings": {
-    "device-no-power-estimate": "{detail}: without a power sensor and without a rated power the indicator assumes 500 W.",
-    "min-power-above-max": "{detail}: switch-on threshold is above the rated power.",
+    "device-no-power-estimate": "{detail}: Without a power sensor and without a rated power, the demand is assumed to be 500 W.",
+    "min-power-above-max": "{detail}: The start threshold exceeds the rated power.",
     "no-devices": "No load configured. Loads are created in the Energy Manager integration.",
-    "battery-soc-without-power": "State of charge is configured but no battery power — the surplus correction has no effect.",
+    "battery-soc-without-power": "State of charge is configured but battery power is not. The surplus correction therefore has no effect.",
     "smoothing-below-interval": "The averaging window is smaller than the sampling interval and therefore has no effect.",
-    "mixed-priority-entities": "Only some loads have a priority helper. The order then mixes helper values and list positions — hard to predict. Either give all of them one, or none.",
-    "reorder-without-priority-entities": "Reordering from the dashboard is enabled, but not every load has a priority helper. Without it the new order would be gone after a reload."
+    "mixed-priority-entities": "Only some loads have a priority entity. The order then derives partly from their values and partly from the list position, which is hard to predict. Either equip all loads or none.",
+    "reorder-without-priority-entities": "Reordering from the dashboard is enabled, but not every load has a priority entity. Without one, a changed order is lost on reload."
   },
   "editor": {
     "title": {
@@ -69,7 +69,7 @@
     },
     "meter_mode": {
       "label": "Meter source",
-      "helper": "Either one bidirectional grid sensor or separate consumption and production sensors.",
+      "helper": "A bidirectional grid sensor, or separate sensors for production and consumption.",
       "grid": "Single grid sensor (bidirectional)",
       "split": "Separate sensors"
     },
@@ -79,7 +79,7 @@
     },
     "invert_grid": {
       "label": "Invert sign",
-      "helper": "Enable if the sensor reports positive values while exporting."
+      "helper": "Required if the sensor reports positive values while exporting."
     },
     "production_entity": {
       "label": "Solar production",
@@ -91,7 +91,7 @@
     },
     "consumption_includes_battery": {
       "label": "Consumption includes battery charging",
-      "helper": "Enable if the consumption sensor already counts battery charging."
+      "helper": "Required if the consumption sensor already includes battery charging."
     },
     "battery": {
       "label": "Home battery"
@@ -108,7 +108,7 @@
     },
     "battery_mode": {
       "label": "Battery in surplus",
-      "helper": "Charging power always counts as available. The question is whether discharging should reduce the surplus.",
+      "helper": "Charging power always counts as available. This setting determines whether discharging reduces the surplus.",
       "charge_only": "Count charging only",
       "full": "Subtract discharging (pure solar surplus)"
     },
@@ -132,14 +132,14 @@
     },
     "smoothing_window": {
       "label": "Averaging window",
-      "helper": "Smooths the surplus so passing clouds do not cause switching storms. 0 disables smoothing."
+      "helper": "Smooths the surplus and prevents changing cloud cover from causing frequent switching. 0 disables smoothing."
     },
     "update_interval": {
       "label": "Update interval"
     },
     "scale_max": {
       "label": "Scale maximum",
-      "helper": "Leave empty to derive it from the rated powers."
+      "helper": "Without a value it is derived from the rated powers."
     },
     "show_surplus_bar": {
       "label": "Show surplus bar"
@@ -160,22 +160,22 @@
       "both": "Power and status"
     },
     "switch_action": {
-      "label": "What the switch does",
-      "helper": "\"Automatic\" means: switch the automation as soon as a load has an `auto_entity` in YAML — otherwise the device.",
+      "label": "Switch function",
+      "helper": "“Automatic” switches the automation if a load has an `auto_entity` set in YAML, otherwise the device.",
       "auto": "Decide automatically",
       "device": "Switch the device",
       "automation": "Switch the automation",
-      "helper_integration": "\"Automatic\" means: switch the automation, since the integration provides an automation switch per load."
+      "helper_integration": "“Automatic” switches the automation. The integration provides an automation switch per load."
     },
     "allow_reorder": {
       "label": "Reorder from the dashboard",
-      "helper": "Requires a `priority_entity` in YAML for every load. With the Energy Manager integration this is not needed.",
-      "helper_integration": "The integration creates a priority entity per load — reordering works without any further setup."
+      "helper": "Requires a `priority_entity` in YAML for every load. With the Energy Manager integration this requirement does not apply.",
+      "helper_integration": "The integration creates a priority entity per load; reordering works without further setup."
     },
     "integration": {
-      "detected": "The Energy Manager integration is installed. Loads, priority and sensors are maintained there — this card only displays them.",
+      "detected": "The Energy Manager integration is installed. Loads, priority and sensors are maintained there; this card displays them.",
       "open": "Open integration",
-      "missing": "Without the Energy Manager integration this card only shows the surplus — loads are created and switched there.",
+      "missing": "Without the Energy Manager integration this card only shows the surplus. Loads are created and switched in the integration.",
       "learn_more": "About the integration"
     }
   }

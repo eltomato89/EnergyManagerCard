@@ -1,67 +1,67 @@
 {
   "card": {
-    "surplus_free": "frei",
+    "surplus_free": "verfügbar",
     "surplus_deficit": "Defizit",
     "grid_import": "Netz {power} Bezug",
     "grid_export": "Netz {power} Einspeisung",
     "grid_idle": "Netz ausgeglichen",
-    "battery_charge_flow": "Batterie {power} laden",
-    "battery_discharge_flow": "Batterie {power} entladen",
-    "allocated": "belegt",
-    "free": "frei",
+    "battery_charge_flow": "Batterie {power} Ladung",
+    "battery_discharge_flow": "Batterie {power} Entladung",
+    "allocated": "zugeteilt",
+    "free": "verfügbar",
     "scale": "Skala",
     "average": "⌀ {seconds} s",
-    "average_partial": "Mittelwert noch unvollständig",
-    "battery_charging": "lädt",
-    "battery_discharging": "entlädt",
-    "no_devices": "Noch keine Verbraucher konfiguriert.",
+    "average_partial": "Mittelungsfenster noch nicht gefüllt",
+    "battery_charging": "Ladung",
+    "battery_discharging": "Entladung",
+    "no_devices": "Keine Verbraucher konfiguriert.",
     "automation": "Automatik",
     "automation_for": "Automatik für {name}",
-    "not_managed": "nicht in der Automatik",
-    "device_on": "Gerät läuft",
-    "device_off": "Gerät aus",
+    "not_managed": "Nicht in der Automatik",
+    "device_on": "Gerät in Betrieb",
+    "device_off": "Gerät ausgeschaltet",
     "reorder_start": "Reihenfolge ändern",
-    "reorder_done": "Fertig",
-    "reorder_hint": "Ziehen oder Pfeile nutzen — die Reihenfolge ist die Priorität.",
-    "reorder_failed": "Reihenfolge konnte nicht gespeichert werden. Prüfe, ob alle Prioritäts-Helfer existieren und ihr Bereich bis zur Anzahl der Verbraucher reicht.",
+    "reorder_done": "Übernehmen",
+    "reorder_hint": "Reihenfolge per Ziehen oder mit den Pfeiltasten ändern. Sie bestimmt die Priorität.",
+    "reorder_failed": "Die Reihenfolge konnte nicht gespeichert werden. Voraussetzung ist, dass für jeden Verbraucher eine Prioritäts-Entität vorhanden ist und deren Wertebereich die Anzahl der Verbraucher abdeckt.",
     "priority": "Priorität {index}",
     "locked_runtime": "Mindestlaufzeit noch {time}",
-    "locked_off": "Sperre noch {time}",
+    "locked_off": "Sperrzeit noch {time}",
     "needs": "benötigt {power}",
     "max_power": "max. {power}",
-    "degraded": "Batteriewert fehlt — Überschuss unsicher",
+    "degraded": "Batteriewert fehlt; Überschuss ungenau",
     "reorder_drag": "Zum Sortieren ziehen",
     "reorder_up": "Nach oben",
     "reorder_down": "Nach unten",
-    "confirm_switch": "{name} wirklich schalten?"
+    "confirm_switch": "{name} schalten?"
   },
   "status": {
-    "on_ok": "läuft · gedeckt",
-    "on_deficit": "läuft · Netzbezug",
-    "off_ready": "bereit",
-    "off_close": "fast ausreichend",
-    "off_insufficient": "reicht nicht",
-    "unavailable": "nicht verfügbar"
+    "on_ok": "In Betrieb, gedeckt",
+    "on_deficit": "In Betrieb, Netzbezug",
+    "off_ready": "Einschaltbereit",
+    "off_close": "Überschuss knapp",
+    "off_insufficient": "Überschuss unzureichend",
+    "unavailable": "Nicht verfügbar"
   },
   "errors": {
-    "no-source-grid": "Kein Netzsensor konfiguriert — und keine Energy-Manager-Integration gefunden. Trage im Editor einen Netzsensor ein oder installiere die Integration.",
-    "no-source-split": "Erzeugungs- oder Verbrauchssensor fehlt — und keine Energy-Manager-Integration gefunden. Ergänze die Sensoren im Editor oder installiere die Integration.",
+    "no-source-grid": "Kein Netzsensor konfiguriert und keine Energy-Manager-Integration vorhanden. Netzsensor im Editor eintragen oder die Integration installieren.",
+    "no-source-split": "Erzeugungs- oder Verbrauchssensor fehlt und keine Energy-Manager-Integration vorhanden. Sensoren im Editor ergänzen oder die Integration installieren.",
     "missing-grid": "Netzsensor ist nicht konfiguriert.",
     "missing-production": "Erzeugungssensor ist nicht konfiguriert.",
     "missing-consumption": "Verbrauchssensor ist nicht konfiguriert.",
-    "grid-unavailable": "Der Netzsensor liefert gerade keinen Wert.",
-    "production-unavailable": "Der Erzeugungssensor liefert gerade keinen Wert.",
-    "consumption-unavailable": "Der Verbrauchssensor liefert gerade keinen Wert.",
-    "wrong-unit": "Ein Sensor misst keine Leistung. Erwartet wird W oder kW — ein kWh-Zähler liefert eine Energiemenge, keinen Momentanwert."
+    "grid-unavailable": "Netzsensor liefert derzeit keinen Wert.",
+    "production-unavailable": "Erzeugungssensor liefert derzeit keinen Wert.",
+    "consumption-unavailable": "Verbrauchssensor liefert derzeit keinen Wert.",
+    "wrong-unit": "Ein Sensor misst keine Leistung. Erwartet wird W oder kW; ein kWh-Zähler liefert eine Energiemenge statt eines Momentanwerts."
   },
   "warnings": {
-    "device-no-power-estimate": "{detail}: ohne Leistungssensor und ohne Nennleistung rechnet die Ampel mit 500 W Schätzwert.",
-    "min-power-above-max": "{detail}: Einschaltschwelle liegt über der Nennleistung.",
-    "no-devices": "Es ist kein Verbraucher konfiguriert. Verbraucher werden in der Energy-Manager-Integration angelegt.",
-    "battery-soc-without-power": "Ladestand ist konfiguriert, aber keine Batterieleistung — die Überschusskorrektur bleibt wirkungslos.",
-    "smoothing-below-interval": "Das Mittelungsfenster ist kleiner als der Abtasttakt und wirkt dadurch nicht.",
-    "mixed-priority-entities": "Nur ein Teil der Verbraucher hat einen Prioritäts-Helfer. Die Reihenfolge mischt dann Helferwerte und Listenpositionen — schwer vorhersagbar. Entweder alle ausstatten oder keinen.",
-    "reorder-without-priority-entities": "Sortieren im Dashboard ist eingeschaltet, aber nicht jeder Verbraucher hat einen Prioritäts-Helfer. Ohne ihn wäre die neue Reihenfolge nach dem Neuladen wieder weg."
+    "device-no-power-estimate": "{detail}: Ohne Leistungssensor und ohne Nennleistung wird der Bedarf mit 500 W angenommen.",
+    "min-power-above-max": "{detail}: Die Einschaltschwelle liegt über der Nennleistung.",
+    "no-devices": "Kein Verbraucher konfiguriert. Verbraucher werden in der Energy-Manager-Integration angelegt.",
+    "battery-soc-without-power": "Ladestand ist konfiguriert, die Batterieleistung jedoch nicht. Die Überschusskorrektur bleibt dadurch wirkungslos.",
+    "smoothing-below-interval": "Das Mittelungsfenster ist kleiner als der Abtasttakt und bleibt dadurch wirkungslos.",
+    "mixed-priority-entities": "Nur ein Teil der Verbraucher verfügt über eine Prioritäts-Entität. Die Reihenfolge ergibt sich dann teils aus deren Werten, teils aus der Listenposition, und ist kaum vorhersagbar. Entweder alle Verbraucher ausstatten oder keinen.",
+    "reorder-without-priority-entities": "Das Sortieren im Dashboard ist aktiviert, es verfügt jedoch nicht jeder Verbraucher über eine Prioritäts-Entität. Ohne sie verfällt eine geänderte Reihenfolge beim Neuladen."
   },
   "editor": {
     "title": {
@@ -69,7 +69,7 @@
     },
     "meter_mode": {
       "label": "Zählerquelle",
-      "helper": "Ein bidirektionaler Netzsensor oder getrennte Sensoren für Verbrauch und Erzeugung.",
+      "helper": "Ein bidirektionaler Netzsensor oder getrennte Sensoren für Erzeugung und Verbrauch.",
       "grid": "Ein Netzsensor (bidirektional)",
       "split": "Getrennte Sensoren"
     },
@@ -79,7 +79,7 @@
     },
     "invert_grid": {
       "label": "Vorzeichen umkehren",
-      "helper": "Aktivieren, wenn der Sensor bei Einspeisung positiv wird."
+      "helper": "Erforderlich, wenn der Sensor bei Einspeisung positive Werte liefert."
     },
     "production_entity": {
       "label": "PV-Erzeugung",
@@ -91,7 +91,7 @@
     },
     "consumption_includes_battery": {
       "label": "Verbrauch enthält Batterieladung",
-      "helper": "Aktivieren, wenn der Verbrauchssensor die Batterieladung mitzählt."
+      "helper": "Erforderlich, wenn der Verbrauchssensor die Batterieladung mitzählt."
     },
     "battery": {
       "label": "Hausbatterie"
@@ -108,7 +108,7 @@
     },
     "battery_mode": {
       "label": "Batterie im Überschuss",
-      "helper": "Ladeleistung zählt immer als verfügbar. Die Frage ist, ob eine Entladung den Überschuss verringern soll.",
+      "helper": "Ladeleistung gilt stets als verfügbar. Diese Einstellung bestimmt, ob eine Entladung den Überschuss verringert.",
       "charge_only": "Nur Laden anrechnen",
       "full": "Entladung abziehen (reiner PV-Überschuss)"
     },
@@ -132,23 +132,23 @@
     },
     "smoothing_window": {
       "label": "Mittelungsfenster",
-      "helper": "Glättet den Überschuss, damit Wolken keine Schaltflut auslösen. 0 schaltet die Glättung ab."
+      "helper": "Glättet den Überschuss und verhindert, dass wechselnde Bewölkung häufige Schaltvorgänge auslöst. 0 deaktiviert die Glättung."
     },
     "update_interval": {
       "label": "Aktualisierungstakt"
     },
     "scale_max": {
       "label": "Skalenmaximum",
-      "helper": "Leer lassen, um es aus den Nennleistungen abzuleiten."
+      "helper": "Ohne Angabe wird der Wert aus den Nennleistungen abgeleitet."
     },
     "show_surplus_bar": {
-      "label": "Überschussleiste zeigen"
+      "label": "Überschussleiste anzeigen"
     },
     "show_battery": {
-      "label": "Batterie zeigen"
+      "label": "Batterie anzeigen"
     },
     "show_priority": {
-      "label": "Prioritätsnummer zeigen"
+      "label": "Prioritätsnummer anzeigen"
     },
     "compact": {
       "label": "Kompakte Darstellung"
@@ -160,22 +160,22 @@
       "both": "Leistung und Status"
     },
     "switch_action": {
-      "label": "Was der Schalter tut",
-      "helper": "„Automatisch\" heißt: Automatik schalten, sobald bei einem Verbraucher ein `auto_entity` im YAML steht — sonst das Gerät.",
+      "label": "Funktion des Schalters",
+      "helper": "„Automatisch“ schaltet die Automatik, sofern für einen Verbraucher ein `auto_entity` im YAML hinterlegt ist, andernfalls das Gerät.",
       "auto": "Automatisch entscheiden",
       "device": "Das Gerät schalten",
       "automation": "Die Automatik schalten",
-      "helper_integration": "„Automatisch\" heißt: Automatik schalten, denn die Integration bringt je Verbraucher einen Automatik-Schalter mit."
+      "helper_integration": "„Automatisch“ schaltet die Automatik. Die Integration stellt je Verbraucher einen Automatik-Schalter bereit."
     },
     "allow_reorder": {
       "label": "Sortieren im Dashboard",
-      "helper": "Braucht bei allen Verbrauchern ein `priority_entity` im YAML. Mit der Energy-Manager-Integration entfällt das.",
-      "helper_integration": "Die Integration legt je Verbraucher eine Prioritäts-Entität an — Sortieren funktioniert ohne weitere Vorbereitung."
+      "helper": "Setzt für jeden Verbraucher ein `priority_entity` im YAML voraus. Mit der Energy-Manager-Integration entfällt diese Voraussetzung.",
+      "helper_integration": "Die Integration legt je Verbraucher eine Prioritäts-Entität an; Sortieren ist ohne weitere Vorbereitung möglich."
     },
     "integration": {
-      "detected": "Die Energy-Manager-Integration ist installiert. Verbraucher, Priorität und Sensoren werden dort gepflegt — diese Karte zeigt sie nur an.",
+      "detected": "Die Energy-Manager-Integration ist installiert. Verbraucher, Priorität und Sensoren werden dort gepflegt; diese Karte zeigt sie an.",
       "open": "Integration öffnen",
-      "missing": "Ohne die Energy-Manager-Integration zeigt diese Karte nur den Überschuss — Verbraucher werden dort angelegt und geschaltet.",
+      "missing": "Ohne die Energy-Manager-Integration zeigt diese Karte ausschließlich den Überschuss. Verbraucher werden in der Integration angelegt und geschaltet.",
       "learn_more": "Zur Integration"
     }
   }

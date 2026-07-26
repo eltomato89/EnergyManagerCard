@@ -118,3 +118,59 @@ describe('Beschriftungen', () => {
     }
   });
 });
+
+describe('Register der Nutzertexte', () => {
+  /** Jeder Text, den ein Nutzer zu sehen bekommt. */
+  function alleTexte(sprache: 'de' | 'en'): Array<[string, string]> {
+    const quelle = (sprache === 'de' ? de : en) as unknown as Record<string, unknown>;
+    const treffer: Array<[string, string]> = [];
+
+    const gehen = (pfad: string, wert: unknown): void => {
+      if (typeof wert === 'string') {
+        treffer.push([pfad, wert]);
+        return;
+      }
+      if (wert && typeof wert === 'object') {
+        for (const [k, v] of Object.entries(wert)) gehen(pfad ? `${pfad}.${k}` : k, v);
+      }
+    };
+    gehen('', quelle);
+    return treffer;
+  }
+
+  it('vermeidet umgangssprachliche Wendungen', () => {
+    // Sammelt, was beim Durchgehen der Texte als salopp aufgefallen ist.
+    // Zustandsnamen wie "reicht nicht" lesen sich wie eine Note statt wie
+    // eine technische Aussage.
+    const verboten = [
+      /reicht nicht/i,
+      /fast ausreichend/i,
+      /schaltflut/i,
+      /\bAmpel\b/,
+      /einfach leer lassen/i,
+      /wirklich schalten/i,
+      /\bweg\b/,
+      /lohnt sich/i,
+      /angefasst/i,
+    ];
+
+    const treffer = alleTexte('de').filter(([, text]) =>
+      verboten.some((muster) => muster.test(text)),
+    );
+    expect(treffer).toEqual([]);
+  });
+
+  it('spricht den Nutzer nicht mit Du-Imperativen an', () => {
+    // "Trage ein", "Prüfe" — in einer Oberflaeche wirkt der Infinitiv
+    // sachlicher und ist in Home Assistant ueblich.
+    const verboten = /\b(Trage|Prüfe|Nutze|Setze|Aktiviere|Ergänze|Schau)\b/;
+    const treffer = alleTexte('de').filter(([, text]) => verboten.test(text));
+    expect(treffer).toEqual([]);
+  });
+
+  it('haelt beide Sprachen deckungsgleich', () => {
+    // Ein Text, der nur in einer Sprache existiert, erscheint in der anderen
+    // als roher Schluessel.
+    expect(alleTexte('de').map(([p]) => p)).toEqual(alleTexte('en').map(([p]) => p));
+  });
+});
