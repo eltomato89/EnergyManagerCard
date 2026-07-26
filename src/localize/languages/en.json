@@ -63,10 +63,6 @@
     "title": {
       "label": "Title"
     },
-    "use_integration": {
-      "label": "Use the Energy Manager integration",
-      "helper": "The integration is installed. It provides surplus, loads and ranking — loads are then maintained there only. Turn off if this one card should evaluate its own sensors instead."
-    },
     "meter_mode": {
       "label": "Meter source",
       "helper": "Either one bidirectional grid sensor or separate consumption and production sensors.",

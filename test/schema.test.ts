@@ -61,32 +61,20 @@ describe('mainSchema', () => {
     expect(names).toContain('allow_reorder');
   });
 
-  it('zeigt den Integrations-Schalter nur, wenn sie installiert ist', () => {
-    // Eine Option fuer etwas, das nicht da ist, verwirrt nur.
-    expect(fieldNames(mainSchema(config, { integrationAvailable: false }))).not.toContain(
-      'use_integration',
-    );
-    expect(fieldNames(mainSchema(config, { integrationAvailable: true }))).toContain(
-      'use_integration',
-    );
-  });
-
-  it('zeigt ihn auch dann noch, wenn er bereits abgewaehlt wurde', () => {
-    // Sonst gaebe es keinen Weg zurueck.
-    const names = fieldNames(
-      mainSchema(
-        { ...config, use_integration: false },
-        { standalone: true, integrationAvailable: true },
-      ),
-    );
-    expect(names).toContain('use_integration');
+  it('bietet keinen Schalter, um die Integration abzuwaehlen', () => {
+    // Die Karte ist das Anzeigeteil der Integration. Sie ohne diese zu
+    // betreiben ist ein Rueckfall, kein Betriebsmodus — ein Feld im Formular
+    // wuerde dafuer werben. Wer es braucht, setzt `use_integration` im YAML.
+    for (const options of [{ standalone: true }, { standalone: false }]) {
+      expect(fieldNames(mainSchema(config, options))).not.toContain('use_integration');
+    }
   });
 });
 
 describe('Beschriftungen', () => {
   const alleFelder = [
-    ...fieldNames(mainSchema(config, { standalone: true, integrationAvailable: true })),
-    ...fieldNames(mainSchema(config, { standalone: false, integrationAvailable: true })),
+    ...fieldNames(mainSchema(config, { standalone: true })),
+    ...fieldNames(mainSchema(config, { standalone: false })),
     ...fieldNames(mainSchema({ ...config, meter_mode: 'split' }, { standalone: true })),
     ...fieldNames(deviceSchema()),
   ].filter((name) => name !== '');

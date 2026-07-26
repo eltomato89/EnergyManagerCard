@@ -24,18 +24,13 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
 
   private _localize: LocalizeFn = localizer('en');
 
-  /** true, wenn die Energy-Manager-Integration ueberhaupt installiert ist. */
-  private _integrationAvailable(): boolean {
-    return findIntegration(this.hass) !== null;
-  }
-
   /**
    * true, wenn die Karte selbst rechnet — also ohne Energy-Manager-Integration
    * oder mit ausdruecklich abgeschaltetem `use_integration`.
    */
   private _standalone(): boolean {
     if (this._config?.use_integration === false) return true;
-    return !this._integrationAvailable();
+    return findIntegration(this.hass) === null;
   }
 
   public setConfig(config: EnergyManagerCardConfig): void {
@@ -72,13 +67,12 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
     }
 
     const standalone = this._standalone();
-    const integrationAvailable = this._integrationAvailable();
 
     return html`
       <ha-form
         .hass=${this.hass}
         .data=${config}
-        .schema=${mainSchema(config, { standalone, integrationAvailable })}
+        .schema=${mainSchema(config, { standalone })}
         .computeLabel=${this._computeLabel}
         .computeHelper=${this._computeHelper}
         @value-changed=${this._valueChanged}

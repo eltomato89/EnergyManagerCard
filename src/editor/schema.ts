@@ -29,16 +29,6 @@ export interface SchemaOptions {
    * zwei Stellen fuer dieselbe Angabe, von denen nur eine wirkt.
    */
   standalone?: boolean;
-
-  /**
-   * true, wenn die Integration ueberhaupt installiert ist.
-   *
-   * Getrennt von `standalone`, weil der Schalter zum Abwaehlen sichtbar bleiben
-   * muss, nachdem man ihn benutzt hat — sonst gaebe es keinen Weg zurueck.
-   * Ohne Integration bleibt das Feld weg: eine Option fuer etwas, das nicht da
-   * ist, verwirrt nur.
-   */
-  integrationAvailable?: boolean;
 }
 
 /**
@@ -119,13 +109,12 @@ export function mainSchema(config: Partial<EnergyManagerCardConfig>, options: Sc
       ] as const)
     : ([] as const);
 
-  const integration = options.integrationAvailable
-    ? ([{ name: 'use_integration', selector: { boolean: {} } }] as const)
-    : ([] as const);
-
+  // Bewusst kein Schalter fuer `use_integration`: Die Karte ist das
+  // Anzeigeteil der Integration. Sie ohne diese zu betreiben ist ein
+  // Rueckfall, kein Betriebsmodus — ein Schalter im Formular wuerde dafuer
+  // werben. Wer ihn braucht, setzt das Feld im YAML.
   return [
     { name: 'title', selector: { text: {} } },
-    ...integration,
     ...sources,
     {
       name: 'advanced',

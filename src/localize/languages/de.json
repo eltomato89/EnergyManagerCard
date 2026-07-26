@@ -63,10 +63,6 @@
     "title": {
       "label": "Titel"
     },
-    "use_integration": {
-      "label": "Energy-Manager-Integration nutzen",
-      "helper": "Die Integration ist installiert. Sie liefert Überschuss, Verbraucher und Rangfolge — Verbraucher werden dann nur dort gepflegt. Abschalten, wenn diese eine Karte stattdessen eigene Sensoren auswerten soll."
-    },
     "meter_mode": {
       "label": "Zählerquelle",
       "helper": "Ein bidirektionaler Netzsensor oder getrennte Sensoren für Verbrauch und Erzeugung.",
