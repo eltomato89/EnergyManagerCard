@@ -3,9 +3,9 @@
 # Example 1 is the normal case: with the Energy Manager Integration the card
 # needs no configuration at all. Everything else is display options.
 #
-# Examples from 3 onwards show operation WITHOUT the integration. Loads can
-# then only be maintained in YAML; the editor no longer offers an interface
-# for them, because they belong in the integration.
+# Examples from 3 onwards are legacy configurations: they date from before the
+# integration existed. They keep working, but are maintained in YAML only —
+# the editor no longer offers an interface for them.
 
 # ---------------------------------------------------------------------------
 # 1. The normal case: integration installed
@@ -23,9 +23,9 @@ secondary_info: power
 scale_max: 15000
 ---
 # ---------------------------------------------------------------------------
-# 3. Without the integration: surplus display only
+# 3. Legacy: surplus display only
 #
-# The card then needs to know the meter source and battery itself. It shows
+# The card needs to know the meter source and battery itself here. It shows
 # no loads; those are created in the integration.
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
@@ -43,7 +43,7 @@ smoothing_window: 90 # s, against flickering cloud cover
 update_interval: 5
 ---
 # ---------------------------------------------------------------------------
-# 4. Without the integration: separate sensors instead of a grid meter
+# 4. Legacy: separate sensors instead of a grid meter
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
 meter_mode: split
@@ -53,11 +53,11 @@ consumption_includes_battery: true
 battery_power_entity: sensor.battery_power
 ---
 # ---------------------------------------------------------------------------
-# 5. Existing configuration with its own list of loads
+# 5. Legacy: configuration with its own list of loads
 #
-# Still rendered, but changeable only here in YAML. Without the integration
-# nobody enforces the timing fields; the card only shows an estimated
-# countdown for min_runtime and min_off_time.
+# Still rendered, but changeable only here in YAML. Nobody enforces the
+# timing fields in this mode; the card only shows an estimated countdown for
+# min_runtime and min_off_time.
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
 grid_entity: sensor.grid_power

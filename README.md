@@ -9,9 +9,9 @@ integration calculates the surplus, keeps the loads and switches them automatica
 the card finds it on its own and displays it. **Loads are maintained exclusively in the
 integration.**
 
-Without the integration the card shows the surplus from sensors you configure yourself, but no
-loads: those are created there. Existing `devices` lists from earlier versions are still rendered,
-but can only be changed in YAML.
+The card is not meant to be used without the integration. It still runs — it then shows the
+surplus from sensors you configure yourself — but without loads there is little point to it.
+Configurations from earlier versions keep working; see [Legacy configurations](#legacy-configurations).
 
 ![The card in the light and the dark theme](docs/images/preview.png)
 
@@ -43,9 +43,7 @@ recreated for the screenshot and look slightly different in a real installation.
 Everything that concerns the card itself can be set in the graphical editor. Loads are not part of
 that — they come from the integration.
 
-### With the integration: nothing to configure
-
-If the Energy Manager integration is installed, this is enough:
+With the Energy Manager integration installed, this is enough:
 
 ```yaml
 type: custom:energy-manager-card
@@ -60,30 +58,8 @@ The card header additionally gets the **main switch of the automation**. With it
 switched.
 
 If you have the integration installed but do not want to use it for one particular card, set
-`use_integration: false` in YAML — the card then calculates on its own, as described below.
-Deliberately without a toggle in the editor: this is a fallback, not a second mode of operation.
-
-### Without the integration: two meter sources
-
-**A single bidirectional grid sensor** (default):
-
-```yaml
-type: custom:energy-manager-card
-grid_entity: sensor.grid_power # >0 import, <0 export
-```
-
-If your sensor uses the opposite sign (positive while exporting), set `invert_grid: true`.
-
-**Separate sensors** for production and consumption:
-
-```yaml
-type: custom:energy-manager-card
-meter_mode: split
-production_entity: sensor.pv_production # always positive
-consumption_entity: sensor.house_consumption # always positive
-```
-
-Both variants yield the same surplus — the formula is verified against both paths.
+`use_integration: false` in YAML. Deliberately without a toggle in the editor: this is a fallback,
+not a second mode of operation.
 
 ### Full example
 
@@ -107,27 +83,6 @@ The reason entities are needed for this is technical: **a Lovelace card cannot w
 configuration at runtime.** An order changed from the dashboard would otherwise be gone after a
 reload.
 
-<details>
-<summary>Without the integration — YAML only</summary>
-
-Before the integration existed, priority and automation participation ran through one helper each
-per load. That still works, but is **no longer configurable in the editor**: those helpers were the
-very reason the integration was built — two real HA helpers per load, accumulating in the instance.
-
-```yaml
-devices:
-  - switch_entity: switch.wallbox
-    power_entity: sensor.wallbox_power
-    priority_entity: input_number.prio_wallbox # or a number entity
-    auto_entity: input_boolean.auto_wallbox # or a switch
-    max_power: 11000
-```
-
-The rule is: either **all** loads have a priority helper or none do. A mix produces an order derived
-partly from helper values and partly from list positions, which is hard to predict.
-
-</details>
-
 ## The four timing fields per load
 
 They are the most common stumbling block because they sound alike. They act at different points and
@@ -143,12 +98,8 @@ do **not** replace one another:
 A compressor typically needs `min_off_time: 600`, a wallbox rather `turn_on_delay: 120` together
 with `min_runtime: 900`.
 
-**Important:** these times are enforced by the integration. With it, the four fields are part of the
-load configuration there, and the countdown in the card shows its exact timestamp.
-
-Without the integration they live in `devices[]` but nobody enforces them — the card then estimates
-the countdown from `last_changed` of the switch entity. That is a **hint**, not a lock: a manual
-click always goes through.
+These fields are set on the load in the integration, and they are enforced there. The card shows
+the resulting countdown from the integration's exact timestamp.
 
 ## Home battery
 
@@ -214,6 +165,51 @@ figure must be positive.
 
 **The card does not load after an update** — HA caches the resource aggressively. Clear the cache;
 with a manual installation, increment `?v=<version>` in the resource URL.
+
+## Legacy configurations
+
+Before the integration existed, the card calculated the surplus itself and kept its own list of
+loads. Those configurations keep working, but nothing here is maintained in the editor any more —
+two places for the same list was precisely the problem the integration solves.
+
+**Meter source.** Either a single bidirectional grid sensor:
+
+```yaml
+type: custom:energy-manager-card
+grid_entity: sensor.grid_power # >0 import, <0 export
+```
+
+If your sensor uses the opposite sign (positive while exporting), set `invert_grid: true`.
+
+Or separate sensors for production and consumption, both always positive:
+
+```yaml
+meter_mode: split
+production_entity: sensor.pv_production
+consumption_entity: sensor.house_consumption
+```
+
+Both yield the same surplus — the formula is verified against both paths.
+
+**Loads and their priority.** Priority and automation participation each need one helper per load.
+Those helpers were the very reason the integration was built: two real HA helpers per load,
+accumulating in the instance.
+
+```yaml
+devices:
+  - switch_entity: switch.wallbox
+    power_entity: sensor.wallbox_power
+    priority_entity: input_number.prio_wallbox # or a number entity
+    auto_entity: input_boolean.auto_wallbox # or a switch
+    max_power: 11000
+```
+
+Either **all** loads have a priority helper or none do. A mix produces an order derived partly from
+helper values and partly from list positions, which is hard to predict.
+
+The four timing fields may be set here too, but nobody enforces them without the integration — the
+card only estimates the countdown from `last_changed` of the switch entity. That is a hint, not a
+lock.
 
 ## Development
 

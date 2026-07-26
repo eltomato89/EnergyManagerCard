@@ -4,8 +4,10 @@ This table is the reference for anyone who prefers YAML. The card options can al
 graphical editor — `devices[]` cannot, see below.
 
 > **With the [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)
-> installed, almost none of this is needed.** Meter source, battery, smoothing and `devices` all
-> come from there; what remains are the display options. The editor hides the other fields.
+> almost none of this is needed** — and the integration is how the card is meant to be used. Meter
+> source, battery, smoothing and `devices` all come from there; what remains are the display
+> options in the first table. Everything marked _legacy configurations only_ exists so that setups
+> from earlier versions keep working.
 
 ## Card
 
@@ -27,14 +29,14 @@ graphical editor — `devices[]` cannot, see below.
 | `update_interval`  | number (s) | `5`            | Sampling and display interval                                                                                         |
 | `smoothing_window` | number (s) | `60`           | Averaging window; `0` disables smoothing                                                                              |
 
-### Mode `grid`
+### Meter source, mode `grid` — legacy configurations only
 
 | Option        | Type   | Default | Meaning                                                   |
 | ------------- | ------ | ------- | --------------------------------------------------------- |
 | `grid_entity` | entity | —       | **Mandatory.** Bidirectional: >0 import, <0 export        |
 | `invert_grid` | bool   | `false` | Invert the sign if the sensor is positive while exporting |
 
-### Mode `split`
+### Meter source, mode `split` — legacy configurations only
 
 | Option                         | Type   | Default | Meaning                                           |
 | ------------------------------ | ------ | ------- | ------------------------------------------------- |
@@ -42,7 +44,7 @@ graphical editor — `devices[]` cannot, see below.
 | `consumption_entity`           | entity | —       | **Mandatory.** House consumption, always positive |
 | `consumption_includes_battery` | bool   | `false` | The consumption sensor already includes charging  |
 
-### Home battery (optional)
+### Home battery — legacy configurations only
 
 | Option                     | Type       | Default       | Meaning                                                                                  |
 | -------------------------- | ---------- | ------------- | ---------------------------------------------------------------------------------------- |
@@ -55,10 +57,10 @@ graphical editor — `devices[]` cannot, see below.
 | `battery_min_soc`          | 0–100      | —             | Below this, charging takes precedence and no surplus is reported                         |
 | `battery_reserve_w`        | number (W) | `0`           | Always reserved for the battery                                                          |
 
-## Loads (`devices[]`) — YAML only
+## Loads (`devices[]`) — legacy configurations only
 
-**With the integration this section does not apply.** Loads are created there; the card reads them
-along with priority, timing fields and state from their entities.
+**With the integration none of this applies.** Loads are created there; the card reads them along
+with priority, timing fields and state from their entities.
 
 A `devices` list in the card configuration is still read and rendered so that configurations from
 earlier versions do not break. The editor no longer offers **any interface** for it — two places
