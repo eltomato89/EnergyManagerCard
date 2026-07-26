@@ -60,7 +60,13 @@
     "reorder-without-priority-entities": "Reordering from the dashboard is enabled, but not every load has a priority helper. Without it the new order would be gone after a reload."
   },
   "editor": {
-    "title": { "label": "Title" },
+    "title": {
+      "label": "Title"
+    },
+    "use_integration": {
+      "label": "Use the Energy Manager integration",
+      "helper": "The integration is installed. It provides surplus, loads and ranking — loads are then maintained there only. Turn off if this one card should evaluate its own sensors instead."
+    },
     "meter_mode": {
       "label": "Meter source",
       "helper": "Either one bidirectional grid sensor or separate consumption and production sensors.",
@@ -75,19 +81,31 @@
       "label": "Invert sign",
       "helper": "Enable if the sensor reports positive values while exporting."
     },
-    "production_entity": { "label": "Solar production", "helper": "Always positive." },
-    "consumption_entity": { "label": "House consumption", "helper": "Always positive." },
+    "production_entity": {
+      "label": "Solar production",
+      "helper": "Always positive."
+    },
+    "consumption_entity": {
+      "label": "House consumption",
+      "helper": "Always positive."
+    },
     "consumption_includes_battery": {
       "label": "Consumption includes battery charging",
       "helper": "Enable if the consumption sensor already counts battery charging."
     },
-    "battery": { "label": "Home battery" },
-    "battery_soc_entity": { "label": "State of charge" },
+    "battery": {
+      "label": "Home battery"
+    },
+    "battery_soc_entity": {
+      "label": "State of charge"
+    },
     "battery_power_entity": {
       "label": "Battery power",
       "helper": "Positive when charging, negative when discharging."
     },
-    "battery_invert": { "label": "Invert sign" },
+    "battery_invert": {
+      "label": "Invert sign"
+    },
     "battery_mode": {
       "label": "Battery in surplus",
       "helper": "Charging power always counts as available. The question is whether discharging should reduce the surplus.",
@@ -98,7 +116,9 @@
       "label": "Charge power",
       "helper": "Alternative to a bidirectional sensor: two always-positive sensors."
     },
-    "battery_discharge_entity": { "label": "Discharge power" },
+    "battery_discharge_entity": {
+      "label": "Discharge power"
+    },
     "battery_min_soc": {
       "label": "Minimum state of charge",
       "helper": "Below this, charging the battery takes priority over the loads."
@@ -107,20 +127,32 @@
       "label": "Battery reserve",
       "helper": "Power always kept for the battery."
     },
-    "advanced": { "label": "Advanced" },
+    "advanced": {
+      "label": "Advanced"
+    },
     "smoothing_window": {
       "label": "Averaging window",
       "helper": "Smooths the surplus so passing clouds do not cause switching storms. 0 disables smoothing."
     },
-    "update_interval": { "label": "Update interval" },
+    "update_interval": {
+      "label": "Update interval"
+    },
     "scale_max": {
       "label": "Scale maximum",
       "helper": "Leave empty to derive it from the rated powers."
     },
-    "show_surplus_bar": { "label": "Show surplus bar" },
-    "show_battery": { "label": "Show battery" },
-    "show_priority": { "label": "Show priority number" },
-    "compact": { "label": "Compact layout" },
+    "show_surplus_bar": {
+      "label": "Show surplus bar"
+    },
+    "show_battery": {
+      "label": "Show battery"
+    },
+    "show_priority": {
+      "label": "Show priority number"
+    },
+    "compact": {
+      "label": "Compact layout"
+    },
     "secondary_info": {
       "label": "Secondary line",
       "power": "Power",
@@ -139,14 +171,16 @@
       "drag": "Drag to reorder",
       "back": "Back to list"
     },
-    "switch_entity": { "label": "Switchable entity" },
+    "switch_entity": {
+      "label": "Switchable entity"
+    },
     "power_entity": {
       "label": "Power sensor",
       "helper": "Current power draw of this load."
     },
     "priority_entity": {
       "label": "Priority helper",
-      "helper": "input_number holding the rank (1 = highest). Only with this can the order be changed from the dashboard — otherwise the position in this list counts."
+      "helper": "input_number (or a number entity) holding the rank, 1 = highest. Only then can the order be changed from the dashboard — otherwise the position in this list counts."
     },
     "auto_entity": {
       "label": "Automation helper",
@@ -157,15 +191,23 @@
       "helper": "\"Automatic\" means: the automation when an automation helper is set, otherwise the device.",
       "auto": "Decide automatically",
       "device": "Switch the device",
-      "automation": "Switch the automation"
+      "automation": "Switch the automation",
+      "helper_integration": "\"Automatic\" means: switch the automation, since the integration provides an automation switch per load."
     },
     "allow_reorder": {
       "label": "Reorder from the dashboard",
-      "helper": "Only possible when every load has a priority helper."
+      "helper": "Only possible when every load has a priority helper.",
+      "helper_integration": "The integration creates a priority entity per load — reordering works without any further setup."
     },
-    "name": { "label": "Name" },
-    "icon": { "label": "Icon" },
-    "automation": { "label": "For the automation (integration)" },
+    "name": {
+      "label": "Name"
+    },
+    "icon": {
+      "label": "Icon"
+    },
+    "automation": {
+      "label": "For the automation (integration)"
+    },
     "integration": {
       "detected": "The Energy Manager integration is installed. Loads, priority and sensors are maintained there — this card only displays them.",
       "open": "Open integration"
@@ -174,7 +216,10 @@
       "label": "Switch-on threshold",
       "helper": "Surplus required before switching on is worthwhile."
     },
-    "max_power": { "label": "Rated power", "helper": "Maximum power draw." },
+    "max_power": {
+      "label": "Rated power",
+      "helper": "Maximum power draw."
+    },
     "hysteresis": {
       "label": "Hysteresis",
       "helper": "Dead band around zero so the display does not flicker."
@@ -199,7 +244,9 @@
       "label": "Control from the automation",
       "helper": "Turn off to switch this device manually only."
     },
-    "confirm": { "label": "Ask before switching" },
+    "confirm": {
+      "label": "Ask before switching"
+    },
     "confirm_switch": "Really switch {name}?"
   }
 }

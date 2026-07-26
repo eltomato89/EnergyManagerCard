@@ -24,13 +24,18 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
 
   private _localize: LocalizeFn = localizer('en');
 
+  /** true, wenn die Energy-Manager-Integration ueberhaupt installiert ist. */
+  private _integrationAvailable(): boolean {
+    return findIntegration(this.hass) !== null;
+  }
+
   /**
    * true, wenn die Karte selbst rechnet — also ohne Energy-Manager-Integration
    * oder mit ausdruecklich abgeschaltetem `use_integration`.
    */
   private _standalone(): boolean {
     if (this._config?.use_integration === false) return true;
-    return findIntegration(this.hass) === null;
+    return !this._integrationAvailable();
   }
 
   public setConfig(config: EnergyManagerCardConfig): void {
@@ -67,12 +72,13 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
     }
 
     const standalone = this._standalone();
+    const integrationAvailable = this._integrationAvailable();
 
     return html`
       <ha-form
         .hass=${this.hass}
         .data=${config}
-        .schema=${mainSchema(config, { standalone })}
+        .schema=${mainSchema(config, { standalone, integrationAvailable })}
         .computeLabel=${this._computeLabel}
         .computeHelper=${this._computeHelper}
         @value-changed=${this._valueChanged}
@@ -140,7 +146,21 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
   private _computeLabel = (schema: { name: string }): string =>
     this._localize(`editor.${schema.name}.label`);
 
+  /**
+   * Hilfetext zu einem Feld.
+   *
+   * Mit Integration gilt fuer einige Felder etwas anderes — Sortieren etwa
+   * braucht dann keine Helfer, weil die Integration die Prioritaets-Entitaeten
+   * mitbringt. Solche Felder haben einen zweiten Text unter
+   * `…helper_integration`; fehlt er, gilt der normale.
+   */
   private _computeHelper = (schema: { name: string }): string | undefined => {
+    if (!this._standalone()) {
+      const key = `editor.${schema.name}.helper_integration`;
+      const text = this._localize(key);
+      if (text !== key) return text;
+    }
+
     const key = `editor.${schema.name}.helper`;
     const text = this._localize(key);
     return text === key ? undefined : text;

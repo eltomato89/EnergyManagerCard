@@ -6,6 +6,14 @@ Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Behoben
 
+- **Der Editor sprach mit Integration weiter von Helfern.** „Sortieren im Dashboard" behauptete,
+  es brauche bei allen Verbrauchern einen Prioritäts-Helfer — mit Integration geht es ohne jede
+  Vorbereitung. Auch „Was der Schalter tut" verwies auf einen Automatik-Helfer, den es dort nicht
+  gibt. Beide Felder haben jetzt einen eigenen Text für den Fall mit Integration.
+- **`use_integration` war dokumentiert, aber nicht bedienbar.** Der Schalter fehlte im Editor; man
+  hätte YAML schreiben müssen. Er erscheint jetzt, sobald die Integration installiert ist — und
+  bleibt sichtbar, nachdem man ihn abgewählt hat, sonst gäbe es keinen Weg zurück.
+
 - **Die Karte lag in einer Sections-Ansicht unter der nächsten Karte.** Sie meldete Lovelace eine
   feste Zeilenzahl, die sie aus der gerenderten Verbraucherliste ableitete — beim Aufbau des
   Layouts hatte aber noch kein Rendern stattgefunden, mit Integration ergab das _zwei_ Zeilen. Eine

@@ -9,23 +9,23 @@ die YAML bevorzugen.
 
 ## Karte
 
-| Option             | Typ      | Standard         | Bedeutung                                                                                                  |
-| ------------------ | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------- |
-| `type`             | string   | —                | `custom:energy-manager-card`                                                                               |
-| `title`            | string   | —                | Überschrift der Karte                                                                                      |
-| `use_integration`  | bool     | `true`           | Die Integration als Datenquelle nutzen, falls installiert. `false` erzwingt eigene Berechnung              |
-| `meter_mode`       | string   | abgeleitet       | `grid` oder `split`. Ohne Angabe `grid`, sobald `grid_entity` gesetzt ist. Ohne Integration Pflicht        |
-| `devices`          | Liste    | —                | Verbraucher. **Die Reihenfolge ist die Priorität.** Entfällt mit Integration                               |
-| `scale_max`        | Zahl (W) | abgeleitet       | Obergrenze der Leiste. Ohne Angabe aus Σ `max_power`, min. 3000                                            |
-| `compact`          | bool     | `false`          | Engere Abstände                                                                                            |
-| `show_surplus_bar` | bool     | `true`           | Überschussleiste anzeigen                                                                                  |
-| `show_battery`     | bool     | wenn Batterie da | Batterie-Badge anzeigen                                                                                    |
-| `show_priority`    | bool     | `true`           | Prioritätsnummer je Zeile                                                                                  |
-| `secondary_info`   | string   | `both`           | `power`, `status` oder `both`                                                                              |
-| `switch_action`    | string   | `auto`           | Was der Schalter tut: `device`, `automation` oder `auto` (Automatik, sobald ein `auto_entity` gesetzt ist) |
-| `allow_reorder`    | bool     | wenn Helfer da   | Sortieren im Dashboard; braucht bei allen Verbrauchern ein `priority_entity`                               |
-| `update_interval`  | Zahl (s) | `5`              | Abtast- und Anzeigetakt                                                                                    |
-| `smoothing_window` | Zahl (s) | `60`             | Mittelungsfenster; `0` schaltet die Glättung ab                                                            |
+| Option             | Typ      | Standard         | Bedeutung                                                                                                       |
+| ------------------ | -------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| `type`             | string   | —                | `custom:energy-manager-card`                                                                                    |
+| `title`            | string   | —                | Überschrift der Karte                                                                                           |
+| `use_integration`  | bool     | `true`           | Die Integration als Datenquelle nutzen, falls installiert. `false` erzwingt eigene Berechnung                   |
+| `meter_mode`       | string   | abgeleitet       | `grid` oder `split`. Ohne Angabe `grid`, sobald `grid_entity` gesetzt ist. Ohne Integration Pflicht             |
+| `devices`          | Liste    | —                | Verbraucher. **Die Reihenfolge ist die Priorität.** Entfällt mit Integration                                    |
+| `scale_max`        | Zahl (W) | abgeleitet       | Obergrenze der Leiste. Ohne Angabe aus Σ `max_power`, min. 3000                                                 |
+| `compact`          | bool     | `false`          | Engere Abstände                                                                                                 |
+| `show_surplus_bar` | bool     | `true`           | Überschussleiste anzeigen                                                                                       |
+| `show_battery`     | bool     | wenn Batterie da | Batterie-Badge anzeigen                                                                                         |
+| `show_priority`    | bool     | `true`           | Prioritätsnummer je Zeile                                                                                       |
+| `secondary_info`   | string   | `both`           | `power`, `status` oder `both`                                                                                   |
+| `switch_action`    | string   | `auto`           | Was der Schalter tut: `device`, `automation` oder `auto` (Automatik, sobald ein `auto_entity` gesetzt ist)      |
+| `allow_reorder`    | bool     | abgeleitet       | Sortieren im Dashboard. Mit Integration immer möglich; ohne sie braucht jeder Verbraucher ein `priority_entity` |
+| `update_interval`  | Zahl (s) | `5`              | Abtast- und Anzeigetakt                                                                                         |
+| `smoothing_window` | Zahl (s) | `60`             | Mittelungsfenster; `0` schaltet die Glättung ab                                                                 |
 
 ### Modus `grid`
 

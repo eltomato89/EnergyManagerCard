@@ -60,7 +60,13 @@
     "reorder-without-priority-entities": "Sortieren im Dashboard ist eingeschaltet, aber nicht jeder Verbraucher hat einen Prioritäts-Helfer. Ohne ihn wäre die neue Reihenfolge nach dem Neuladen wieder weg."
   },
   "editor": {
-    "title": { "label": "Titel" },
+    "title": {
+      "label": "Titel"
+    },
+    "use_integration": {
+      "label": "Energy-Manager-Integration nutzen",
+      "helper": "Die Integration ist installiert. Sie liefert Überschuss, Verbraucher und Rangfolge — Verbraucher werden dann nur dort gepflegt. Abschalten, wenn diese eine Karte stattdessen eigene Sensoren auswerten soll."
+    },
     "meter_mode": {
       "label": "Zählerquelle",
       "helper": "Ein bidirektionaler Netzsensor oder getrennte Sensoren für Verbrauch und Erzeugung.",
@@ -75,19 +81,31 @@
       "label": "Vorzeichen umkehren",
       "helper": "Aktivieren, wenn der Sensor bei Einspeisung positiv wird."
     },
-    "production_entity": { "label": "PV-Erzeugung", "helper": "Stets positiv." },
-    "consumption_entity": { "label": "Hausverbrauch", "helper": "Stets positiv." },
+    "production_entity": {
+      "label": "PV-Erzeugung",
+      "helper": "Stets positiv."
+    },
+    "consumption_entity": {
+      "label": "Hausverbrauch",
+      "helper": "Stets positiv."
+    },
     "consumption_includes_battery": {
       "label": "Verbrauch enthält Batterieladung",
       "helper": "Aktivieren, wenn der Verbrauchssensor die Batterieladung mitzählt."
     },
-    "battery": { "label": "Hausbatterie" },
-    "battery_soc_entity": { "label": "Ladestand" },
+    "battery": {
+      "label": "Hausbatterie"
+    },
+    "battery_soc_entity": {
+      "label": "Ladestand"
+    },
     "battery_power_entity": {
       "label": "Batterieleistung",
       "helper": "Positiv beim Laden, negativ beim Entladen."
     },
-    "battery_invert": { "label": "Vorzeichen umkehren" },
+    "battery_invert": {
+      "label": "Vorzeichen umkehren"
+    },
     "battery_mode": {
       "label": "Batterie im Überschuss",
       "helper": "Ladeleistung zählt immer als verfügbar. Die Frage ist, ob eine Entladung den Überschuss verringern soll.",
@@ -98,7 +116,9 @@
       "label": "Ladeleistung",
       "helper": "Alternative zu einem bidirektionalen Sensor: zwei stets positive Sensoren."
     },
-    "battery_discharge_entity": { "label": "Entladeleistung" },
+    "battery_discharge_entity": {
+      "label": "Entladeleistung"
+    },
     "battery_min_soc": {
       "label": "Mindestladestand",
       "helper": "Darunter hat das Laden der Batterie Vorrang vor den Verbrauchern."
@@ -107,20 +127,32 @@
       "label": "Batteriereserve",
       "helper": "Leistung, die immer der Batterie vorbehalten bleibt."
     },
-    "advanced": { "label": "Erweitert" },
+    "advanced": {
+      "label": "Erweitert"
+    },
     "smoothing_window": {
       "label": "Mittelungsfenster",
       "helper": "Glättet den Überschuss, damit Wolken keine Schaltflut auslösen. 0 schaltet die Glättung ab."
     },
-    "update_interval": { "label": "Aktualisierungstakt" },
+    "update_interval": {
+      "label": "Aktualisierungstakt"
+    },
     "scale_max": {
       "label": "Skalenmaximum",
       "helper": "Leer lassen, um es aus den Nennleistungen abzuleiten."
     },
-    "show_surplus_bar": { "label": "Überschussleiste zeigen" },
-    "show_battery": { "label": "Batterie zeigen" },
-    "show_priority": { "label": "Prioritätsnummer zeigen" },
-    "compact": { "label": "Kompakte Darstellung" },
+    "show_surplus_bar": {
+      "label": "Überschussleiste zeigen"
+    },
+    "show_battery": {
+      "label": "Batterie zeigen"
+    },
+    "show_priority": {
+      "label": "Prioritätsnummer zeigen"
+    },
+    "compact": {
+      "label": "Kompakte Darstellung"
+    },
     "secondary_info": {
       "label": "Zweite Zeile",
       "power": "Leistung",
@@ -139,14 +171,16 @@
       "drag": "Zum Sortieren ziehen",
       "back": "Zurück zur Liste"
     },
-    "switch_entity": { "label": "Schaltbare Entität" },
+    "switch_entity": {
+      "label": "Schaltbare Entität"
+    },
     "power_entity": {
       "label": "Leistungssensor",
       "helper": "Aktuelle Leistungsaufnahme dieses Verbrauchers."
     },
     "priority_entity": {
       "label": "Prioritäts-Helfer",
-      "helper": "input_number mit dem Rang (1 = höchste). Nur damit lässt sich die Reihenfolge direkt im Dashboard ändern — sonst zählt die Position in dieser Liste."
+      "helper": "input_number (oder eine number-Entität) mit dem Rang, 1 = höchste. Nur damit lässt sich die Reihenfolge direkt im Dashboard ändern — sonst zählt die Position in dieser Liste."
     },
     "auto_entity": {
       "label": "Automatik-Helfer",
@@ -157,15 +191,23 @@
       "helper": "„Automatisch\" heißt: Automatik, sobald ein Automatik-Helfer gesetzt ist, sonst das Gerät.",
       "auto": "Automatisch entscheiden",
       "device": "Das Gerät schalten",
-      "automation": "Die Automatik schalten"
+      "automation": "Die Automatik schalten",
+      "helper_integration": "„Automatisch\" heißt: Automatik schalten, denn die Integration bringt je Verbraucher einen Automatik-Schalter mit."
     },
     "allow_reorder": {
       "label": "Sortieren im Dashboard",
-      "helper": "Nur möglich, wenn alle Verbraucher einen Prioritäts-Helfer haben."
+      "helper": "Nur möglich, wenn alle Verbraucher einen Prioritäts-Helfer haben.",
+      "helper_integration": "Die Integration legt je Verbraucher eine Prioritäts-Entität an — Sortieren funktioniert ohne weitere Vorbereitung."
     },
-    "name": { "label": "Name" },
-    "icon": { "label": "Symbol" },
-    "automation": { "label": "Für die Automatik (Integration)" },
+    "name": {
+      "label": "Name"
+    },
+    "icon": {
+      "label": "Symbol"
+    },
+    "automation": {
+      "label": "Für die Automatik (Integration)"
+    },
     "integration": {
       "detected": "Die Energy-Manager-Integration ist installiert. Verbraucher, Priorität und Sensoren werden dort gepflegt — diese Karte zeigt sie nur an.",
       "open": "Integration öffnen"
@@ -174,7 +216,10 @@
       "label": "Einschaltschwelle",
       "helper": "Ab so viel Überschuss lohnt sich das Einschalten."
     },
-    "max_power": { "label": "Nennleistung", "helper": "Maximale Leistungsaufnahme." },
+    "max_power": {
+      "label": "Nennleistung",
+      "helper": "Maximale Leistungsaufnahme."
+    },
     "hysteresis": {
       "label": "Hysterese",
       "helper": "Totband um den Nullpunkt, damit die Anzeige nicht flackert."
@@ -199,7 +244,9 @@
       "label": "Von der Automatik steuern",
       "helper": "Abschalten, um dieses Gerät nur manuell zu schalten."
     },
-    "confirm": { "label": "Vor dem Schalten nachfragen" },
+    "confirm": {
+      "label": "Vor dem Schalten nachfragen"
+    },
     "confirm_switch": "{name} wirklich schalten?"
   }
 }
