@@ -2,6 +2,20 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.4.1] — 2026-07-26
+
+### Behoben
+
+- **Die Karte lag in einer Sections-Ansicht unter der nächsten Karte.** Sie meldete Lovelace eine
+  feste Zeilenzahl, die sie aus der gerenderten Verbraucherliste ableitete — beim Aufbau des
+  Layouts hatte aber noch kein Rendern stattgefunden, mit Integration ergab das _zwei_ Zeilen. Eine
+  feste Zeilenzahl bedeutet in Sections eine feste Höhe; längerer Inhalt lief darüber hinaus.
+
+  Die Karte meldet jetzt `rows: auto` — ihre Höhe hängt an Dingen, die sich zur Laufzeit ändern
+  (Zahl der Verbraucher, Fehlerhinweise, Sortiermodus), und HA misst das genauer, als die Karte es
+  vorhersagen kann. Die Verbraucherzahl kommt zusätzlich direkt aus der Integration statt aus der
+  gerenderten Liste.
+
 ## [0.4.0] — 2026-07-26
 
 Verbraucher werden nur noch an **einer** Stelle gepflegt.

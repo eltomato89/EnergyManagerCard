@@ -142,11 +142,15 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
   }
 
   /**
-   * Zahl der Zeilen. Vor dem ersten Rendern ist nur die eigene Konfiguration
-   * bekannt — mit Integration ergibt das 0, was Lovelace als Startgroesse
-   * genuegt und sich nach dem ersten Rendern korrigiert.
+   * Zahl der Verbraucherzeilen.
+   *
+   * Fragt die Integration direkt und wartet nicht auf `_views`: Lovelace holt
+   * die Groesse beim Aufbau des Layouts, und da hat noch kein Rendern
+   * stattgefunden.
    */
   private _deviceCount(): number {
+    const source = this._source();
+    if (source) return source.devices.length;
     return this._views.length || (this._config?.devices?.length ?? 0);
   }
 
@@ -158,8 +162,18 @@ export class EnergyManagerCard extends LitElement implements LovelaceCard {
     return {
       columns: 12,
       min_columns: 6,
-      rows: 2 + this._deviceCount(),
-      min_rows: 3,
+      // Bewusst 'auto' statt einer gerechneten Zahl: Die Hoehe haengt an
+      // Dingen, die sich zur Laufzeit aendern — wie viele Verbraucher die
+      // Integration fuehrt, ob ein Fehlerhinweis erscheint, ob der
+      // Sortiermodus laeuft.
+      //
+      // Eine Zahl waere hier gefaehrlich: In einer Sections-Ansicht bekommt die
+      // Karte dann eine FESTE Hoehe (`fit-rows`), und laengerer Inhalt laeuft
+      // darueber hinaus und legt sich ueber die naechste Karte.
+      rows: 'auto',
+      // Wirkt nur, wenn der Nutzer die Hoehe im Editor auf eine Zahl umstellt —
+      // dann als Untergrenze. Bei 'auto' ignoriert HA es.
+      min_rows: 2 + this._deviceCount(),
     };
   }
 
