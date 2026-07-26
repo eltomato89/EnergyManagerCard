@@ -4,8 +4,6 @@ export const EDITOR_TAG = 'energy-manager-card-editor';
 export const DEVICE_ROW_TAG = 'energy-manager-device-row';
 export const SURPLUS_BAR_TAG = 'energy-manager-surplus-bar';
 export const BATTERY_BADGE_TAG = 'energy-manager-battery-badge';
-export const DEVICE_LIST_EDITOR_TAG = 'energy-manager-device-list-editor';
-export const DEVICE_DETAIL_EDITOR_TAG = 'energy-manager-device-detail-editor';
 
 export const REPO_URL = 'https://github.com/eltomato89/EnergyManagerCard';
 
@@ -32,17 +30,3 @@ export const OPTIMISTIC_TIMEOUT_MS = 5000;
 
 export const UNAVAILABLE = 'unavailable';
 export const UNKNOWN = 'unknown';
-
-/** Domains, deren Entitaeten sich sinnvoll als Verbraucher schalten lassen. */
-export const SWITCHABLE_DOMAINS = [
-  'switch',
-  'input_boolean',
-  'light',
-  'fan',
-  'humidifier',
-  'siren',
-  'automation',
-  'script',
-  'climate',
-  'water_heater',
-] as const;

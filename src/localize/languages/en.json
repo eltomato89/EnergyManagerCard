@@ -29,7 +29,11 @@
     "locked_off": "locked for {time}",
     "needs": "needs {power}",
     "max_power": "max {power}",
-    "degraded": "Battery reading missing — surplus uncertain"
+    "degraded": "Battery reading missing — surplus uncertain",
+    "reorder_drag": "Drag to reorder",
+    "reorder_up": "Move up",
+    "reorder_down": "Move down",
+    "confirm_switch": "Really switch {name}?"
   },
   "status": {
     "on_ok": "running · covered",
@@ -53,7 +57,7 @@
   "warnings": {
     "device-no-power-estimate": "{detail}: without a power sensor and without a rated power the indicator assumes 500 W.",
     "min-power-above-max": "{detail}: switch-on threshold is above the rated power.",
-    "no-devices": "No load configured yet.",
+    "no-devices": "No load configured. Loads are created in the Energy Manager integration.",
     "battery-soc-without-power": "State of charge is configured but no battery power — the surplus correction has no effect.",
     "smoothing-below-interval": "The averaging window is smaller than the sampling interval and therefore has no effect.",
     "mixed-priority-entities": "Only some loads have a priority helper. The order then mixes helper values and list positions — hard to predict. Either give all of them one, or none.",
@@ -155,36 +159,9 @@
       "status": "Status",
       "both": "Power and status"
     },
-    "devices": {
-      "label": "Loads",
-      "helper": "The order is the priority: whatever should be switched on first goes to the top.",
-      "add": "Add load",
-      "empty": "No loads yet. Add one with the picker below.",
-      "move_up": "Move up",
-      "move_down": "Move down",
-      "remove": "Remove",
-      "edit": "Edit",
-      "drag": "Drag to reorder",
-      "back": "Back to list"
-    },
-    "switch_entity": {
-      "label": "Switchable entity"
-    },
-    "power_entity": {
-      "label": "Power sensor",
-      "helper": "Current power draw of this load."
-    },
-    "priority_entity": {
-      "label": "Priority helper",
-      "helper": "input_number (or a number entity) holding the rank, 1 = highest. Only then can the order be changed from the dashboard — otherwise the position in this list counts."
-    },
-    "auto_entity": {
-      "label": "Automation helper",
-      "helper": "input_boolean controlling whether this load takes part in the automation. When set, the switch in the card toggles this helper instead of the device."
-    },
     "switch_action": {
       "label": "What the switch does",
-      "helper": "\"Automatic\" means: the automation when an automation helper is set, otherwise the device.",
+      "helper": "\"Automatic\" means: switch the automation as soon as a load has an `auto_entity` in YAML — otherwise the device.",
       "auto": "Decide automatically",
       "device": "Switch the device",
       "automation": "Switch the automation",
@@ -192,57 +169,14 @@
     },
     "allow_reorder": {
       "label": "Reorder from the dashboard",
-      "helper": "Only possible when every load has a priority helper.",
+      "helper": "Requires a `priority_entity` in YAML for every load. With the Energy Manager integration this is not needed.",
       "helper_integration": "The integration creates a priority entity per load — reordering works without any further setup."
-    },
-    "name": {
-      "label": "Name"
-    },
-    "icon": {
-      "label": "Icon"
-    },
-    "automation": {
-      "label": "For the automation (integration)"
     },
     "integration": {
       "detected": "The Energy Manager integration is installed. Loads, priority and sensors are maintained there — this card only displays them.",
-      "open": "Open integration"
-    },
-    "min_power": {
-      "label": "Switch-on threshold",
-      "helper": "Surplus required before switching on is worthwhile."
-    },
-    "max_power": {
-      "label": "Rated power",
-      "helper": "Maximum power draw."
-    },
-    "hysteresis": {
-      "label": "Hysteresis",
-      "helper": "Dead band around zero so the display does not flicker."
-    },
-    "turn_on_delay": {
-      "label": "Switch-on delay",
-      "helper": "The surplus must be sufficient for this long before switching on. Debounces brief gaps in sunshine."
-    },
-    "turn_off_delay": {
-      "label": "Switch-off delay",
-      "helper": "The deficit must persist this long before switching off. Rides out passing clouds."
-    },
-    "min_runtime": {
-      "label": "Minimum runtime",
-      "helper": "The device stays on at least this long after being switched on."
-    },
-    "min_off_time": {
-      "label": "Minimum off time",
-      "helper": "The device stays off at least this long after being switched off. Protects compressors from restarting too early."
-    },
-    "managed": {
-      "label": "Control from the automation",
-      "helper": "Turn off to switch this device manually only."
-    },
-    "confirm": {
-      "label": "Ask before switching"
-    },
-    "confirm_switch": "Really switch {name}?"
+      "open": "Open integration",
+      "missing": "Without the Energy Manager integration this card only shows the surplus — loads are created and switched there.",
+      "learn_more": "About the integration"
+    }
   }
 }

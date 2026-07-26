@@ -1,23 +1,32 @@
 # Beispielkonfigurationen für die Energy Manager Card.
-# Alles davon lässt sich auch im grafischen Editor einstellen.
+#
+# Der Normalfall ist Beispiel 1: Mit der Energy Manager Integration braucht die
+# Karte keine Konfiguration. Alles Weitere sind Darstellungsoptionen.
+#
+# Die Beispiele ab 3 zeigen den Betrieb OHNE Integration. Verbraucher lassen
+# sich dort nur noch im YAML pflegen — der Editor bietet dafür keine Oberfläche
+# mehr, weil sie in die Integration gehören.
 
 # ---------------------------------------------------------------------------
-# 1. Minimal: ein bidirektionaler Netzsensor, zwei Verbraucher
+# 1. Der Normalfall: Integration installiert
+# ---------------------------------------------------------------------------
+type: custom:energy-manager-card
+---
+# ---------------------------------------------------------------------------
+# 2. Mit Integration, für ein Tablet-Dashboard angepasst
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
 title: PV-Überschuss
-grid_entity: sensor.netz_leistung
-devices:
-  - id: 6f1c0a2e-6a54-4b0e-9d3b-6b0f2a1c77aa
-    switch_entity: switch.heizstab
-    power_entity: sensor.heizstab_leistung
-    max_power: 2000
-  - id: 9b7e4d31-2c88-4f77-8f10-1a2d3c4b5e6f
-    switch_entity: switch.waschmaschine
-    max_power: 2000
+compact: true
+show_priority: false
+secondary_info: power
+scale_max: 15000
 ---
 # ---------------------------------------------------------------------------
-# 2. Vollausbau: Batterie, Glättung, alle Zeitfelder
+# 3. Ohne Integration: nur Überschussanzeige
+#
+# Zählerquelle und Batterie muss die Karte dann selbst kennen. Verbraucher
+# zeigt sie keine — die legt man in der Integration an.
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
 title: PV-Überschuss
@@ -32,9 +41,26 @@ battery_reserve_w: 300 # bleibt immer der Batterie vorbehalten
 
 smoothing_window: 90 # s, gegen Wolkenflackern
 update_interval: 5
-scale_max: 15000
-secondary_info: both
-
+---
+# ---------------------------------------------------------------------------
+# 4. Ohne Integration: getrennte Sensoren statt Netzzähler
+# ---------------------------------------------------------------------------
+type: custom:energy-manager-card
+meter_mode: split
+production_entity: sensor.pv_erzeugung
+consumption_entity: sensor.hausverbrauch
+consumption_includes_battery: true
+battery_power_entity: sensor.batterie_leistung
+---
+# ---------------------------------------------------------------------------
+# 5. Bestandskonfiguration mit eigener Verbraucherliste
+#
+# Wird weiterhin dargestellt, lässt sich aber nur noch hier im YAML ändern.
+# Die Zeitfelder setzt ohne Integration niemand durch — die Karte zeigt für
+# min_runtime und min_off_time nur einen geschätzten Countdown.
+# ---------------------------------------------------------------------------
+type: custom:energy-manager-card
+grid_entity: sensor.netz_leistung
 devices:
   # Reihenfolge = Priorität. Ganz oben wird zuerst eingeschaltet.
   - id: 6f1c0a2e-6a54-4b0e-9d3b-6b0f2a1c77aa
@@ -44,8 +70,8 @@ devices:
     icon: mdi:ev-station
     min_power: 4200 # dreiphasig 6 A — darunter lohnt es nicht
     max_power: 11000
-    turn_on_delay: 120 # erst nach 2 min stabilem Überschuss starten
-    min_runtime: 900 # dann aber mindestens 15 min laden
+    turn_on_delay: 120
+    min_runtime: 900
     hysteresis: 300
 
   - id: 9b7e4d31-2c88-4f77-8f10-1a2d3c4b5e6f
@@ -55,17 +81,10 @@ devices:
     icon: mdi:heat-wave
     min_power: 800
     max_power: 2000
-    min_runtime: 300
-
-  - id: c30d5a17-8f42-4b91-a0cd-77e91b0a4d22
-    switch_entity: switch.waermepumpe
-    power_entity: sensor.waermepumpe_leistung
-    name: Wärmepumpe
-    icon: mdi:heat-pump
-    max_power: 1800
-    turn_off_delay: 180 # Wolke aussitzen statt abschalten
-    min_runtime: 1200
-    min_off_time: 600 # Kompressor-Druckausgleich abwarten
+    # Sortieren im Dashboard braucht bei ALLEN Verbrauchern eine solche
+    # Entität — sonst wäre die neue Reihenfolge nach dem Neuladen wieder weg.
+    priority_entity: input_number.prio_heizstab
+    auto_entity: input_boolean.auto_heizstab
 
   - id: 4e2a8b90-1d67-4c33-b5f2-9a0e7c1d8b44
     switch_entity: switch.waschmaschine_steckdose
@@ -74,34 +93,3 @@ devices:
     max_power: 2000
     managed: false # nur manuell schalten
     confirm: true # vorher nachfragen
----
-# ---------------------------------------------------------------------------
-# 3. Getrennte Sensoren statt Netzzähler
-# ---------------------------------------------------------------------------
-type: custom:energy-manager-card
-meter_mode: split
-production_entity: sensor.pv_erzeugung
-consumption_entity: sensor.hausverbrauch
-consumption_includes_battery: true
-battery_power_entity: sensor.batterie_leistung
-devices:
-  - id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
-    switch_entity: switch.poolpumpe
-    power_entity: sensor.poolpumpe_leistung
-    max_power: 900
-    min_runtime: 3600
----
-# ---------------------------------------------------------------------------
-# 4. Kompakt für ein Tablet-Dashboard
-# ---------------------------------------------------------------------------
-type: custom:energy-manager-card
-grid_entity: sensor.netz_leistung
-compact: true
-show_priority: false
-secondary_info: power
-smoothing_window: 30
-devices:
-  - id: 7f8e9d0c-1b2a-4c3d-9e8f-7a6b5c4d3e2f
-    switch_entity: switch.heizstab
-    power_entity: sensor.heizstab_leistung
-    max_power: 2000

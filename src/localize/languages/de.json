@@ -29,7 +29,11 @@
     "locked_off": "Sperre noch {time}",
     "needs": "benötigt {power}",
     "max_power": "max. {power}",
-    "degraded": "Batteriewert fehlt — Überschuss unsicher"
+    "degraded": "Batteriewert fehlt — Überschuss unsicher",
+    "reorder_drag": "Zum Sortieren ziehen",
+    "reorder_up": "Nach oben",
+    "reorder_down": "Nach unten",
+    "confirm_switch": "{name} wirklich schalten?"
   },
   "status": {
     "on_ok": "läuft · gedeckt",
@@ -53,7 +57,7 @@
   "warnings": {
     "device-no-power-estimate": "{detail}: ohne Leistungssensor und ohne Nennleistung rechnet die Ampel mit 500 W Schätzwert.",
     "min-power-above-max": "{detail}: Einschaltschwelle liegt über der Nennleistung.",
-    "no-devices": "Es ist noch kein Verbraucher konfiguriert.",
+    "no-devices": "Es ist kein Verbraucher konfiguriert. Verbraucher werden in der Energy-Manager-Integration angelegt.",
     "battery-soc-without-power": "Ladestand ist konfiguriert, aber keine Batterieleistung — die Überschusskorrektur bleibt wirkungslos.",
     "smoothing-below-interval": "Das Mittelungsfenster ist kleiner als der Abtasttakt und wirkt dadurch nicht.",
     "mixed-priority-entities": "Nur ein Teil der Verbraucher hat einen Prioritäts-Helfer. Die Reihenfolge mischt dann Helferwerte und Listenpositionen — schwer vorhersagbar. Entweder alle ausstatten oder keinen.",
@@ -155,36 +159,9 @@
       "status": "Status",
       "both": "Leistung und Status"
     },
-    "devices": {
-      "label": "Verbraucher",
-      "helper": "Die Reihenfolge ist die Priorität: oben steht, was zuerst eingeschaltet werden soll.",
-      "add": "Verbraucher hinzufügen",
-      "empty": "Noch kein Verbraucher. Über den Picker unten hinzufügen.",
-      "move_up": "Nach oben",
-      "move_down": "Nach unten",
-      "remove": "Entfernen",
-      "edit": "Bearbeiten",
-      "drag": "Zum Sortieren ziehen",
-      "back": "Zurück zur Liste"
-    },
-    "switch_entity": {
-      "label": "Schaltbare Entität"
-    },
-    "power_entity": {
-      "label": "Leistungssensor",
-      "helper": "Aktuelle Leistungsaufnahme dieses Verbrauchers."
-    },
-    "priority_entity": {
-      "label": "Prioritäts-Helfer",
-      "helper": "input_number (oder eine number-Entität) mit dem Rang, 1 = höchste. Nur damit lässt sich die Reihenfolge direkt im Dashboard ändern — sonst zählt die Position in dieser Liste."
-    },
-    "auto_entity": {
-      "label": "Automatik-Helfer",
-      "helper": "input_boolean, das die Teilnahme an der Automatik steuert. Ist er gesetzt, schaltet der Schalter in der Karte diesen Helfer statt des Geräts."
-    },
     "switch_action": {
       "label": "Was der Schalter tut",
-      "helper": "„Automatisch\" heißt: Automatik, sobald ein Automatik-Helfer gesetzt ist, sonst das Gerät.",
+      "helper": "„Automatisch\" heißt: Automatik schalten, sobald bei einem Verbraucher ein `auto_entity` im YAML steht — sonst das Gerät.",
       "auto": "Automatisch entscheiden",
       "device": "Das Gerät schalten",
       "automation": "Die Automatik schalten",
@@ -192,57 +169,14 @@
     },
     "allow_reorder": {
       "label": "Sortieren im Dashboard",
-      "helper": "Nur möglich, wenn alle Verbraucher einen Prioritäts-Helfer haben.",
+      "helper": "Braucht bei allen Verbrauchern ein `priority_entity` im YAML. Mit der Energy-Manager-Integration entfällt das.",
       "helper_integration": "Die Integration legt je Verbraucher eine Prioritäts-Entität an — Sortieren funktioniert ohne weitere Vorbereitung."
-    },
-    "name": {
-      "label": "Name"
-    },
-    "icon": {
-      "label": "Symbol"
-    },
-    "automation": {
-      "label": "Für die Automatik (Integration)"
     },
     "integration": {
       "detected": "Die Energy-Manager-Integration ist installiert. Verbraucher, Priorität und Sensoren werden dort gepflegt — diese Karte zeigt sie nur an.",
-      "open": "Integration öffnen"
-    },
-    "min_power": {
-      "label": "Einschaltschwelle",
-      "helper": "Ab so viel Überschuss lohnt sich das Einschalten."
-    },
-    "max_power": {
-      "label": "Nennleistung",
-      "helper": "Maximale Leistungsaufnahme."
-    },
-    "hysteresis": {
-      "label": "Hysterese",
-      "helper": "Totband um den Nullpunkt, damit die Anzeige nicht flackert."
-    },
-    "turn_on_delay": {
-      "label": "Einschaltverzögerung",
-      "helper": "Der Überschuss muss so lange ununterbrochen reichen, bevor eingeschaltet wird. Entprellt kurze Sonnenlücken."
-    },
-    "turn_off_delay": {
-      "label": "Ausschaltverzögerung",
-      "helper": "Das Defizit muss so lange anhalten, bevor ausgeschaltet wird. Überbrückt vorbeiziehende Wolken."
-    },
-    "min_runtime": {
-      "label": "Mindestlaufzeit",
-      "helper": "So lange bleibt das Gerät nach dem Einschalten mindestens an."
-    },
-    "min_off_time": {
-      "label": "Mindest-Aus-Zeit",
-      "helper": "So lange bleibt das Gerät nach dem Ausschalten mindestens aus. Schützt Kompressoren vor zu frühem Wiederanlauf."
-    },
-    "managed": {
-      "label": "Von der Automatik steuern",
-      "helper": "Abschalten, um dieses Gerät nur manuell zu schalten."
-    },
-    "confirm": {
-      "label": "Vor dem Schalten nachfragen"
-    },
-    "confirm_switch": "{name} wirklich schalten?"
+      "open": "Integration öffnen",
+      "missing": "Ohne die Energy-Manager-Integration zeigt diese Karte nur den Überschuss — Verbraucher werden dort angelegt und geschaltet.",
+      "learn_more": "Zur Integration"
+    }
   }
 }

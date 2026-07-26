@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deviceSchema, mainSchema } from '../src/editor/schema';
+import { mainSchema } from '../src/editor/schema';
 import de from '../src/localize/languages/de.json';
 import en from '../src/localize/languages/en.json';
 import type { EnergyManagerCardConfig } from '../src/types/config';
@@ -61,6 +61,18 @@ describe('mainSchema', () => {
     expect(names).toContain('allow_reorder');
   });
 
+  it('kennt keine Verbraucherfelder mehr', () => {
+    // Verbraucher werden ausschliesslich in der Integration gepflegt. Ein
+    // zweiter Ort dafuer war genau das Problem, das der Umbau beseitigt hat.
+    const alle = [
+      ...fieldNames(mainSchema(config, { standalone: true })),
+      ...fieldNames(mainSchema(config, { standalone: false })),
+    ];
+    for (const feld of ['devices', 'switch_entity', 'priority_entity', 'auto_entity']) {
+      expect(alle, feld).not.toContain(feld);
+    }
+  });
+
   it('bietet keinen Schalter, um die Integration abzuwaehlen', () => {
     // Die Karte ist das Anzeigeteil der Integration. Sie ohne diese zu
     // betreiben ist ein Rueckfall, kein Betriebsmodus — ein Feld im Formular
@@ -76,7 +88,6 @@ describe('Beschriftungen', () => {
     ...fieldNames(mainSchema(config, { standalone: true })),
     ...fieldNames(mainSchema(config, { standalone: false })),
     ...fieldNames(mainSchema({ ...config, meter_mode: 'split' }, { standalone: true })),
-    ...fieldNames(deviceSchema()),
   ].filter((name) => name !== '');
 
   for (const sprache of ['de', 'en'] as const) {

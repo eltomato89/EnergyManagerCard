@@ -6,21 +6,16 @@ import { loadHaComponents } from '../lib/ha-elements';
 import { findIntegration } from '../lib/integration';
 import { collectWarnings } from '../lib/validate';
 import { localizer, type LocalizeFn } from '../localize/localize';
-import type { DeviceConfig, EnergyManagerCardConfig } from '../types/config';
+import type { EnergyManagerCardConfig } from '../types/config';
 import type { HomeAssistant, LovelaceCardEditor } from '../types/hass';
-import { mergeConfig, stripEmpty } from './merge';
+import { stripEmpty } from './merge';
 import { mainSchema } from './schema';
-
-import './device-list-editor';
-import './device-detail-editor';
 
 @customElement(EDITOR_TAG)
 export class EnergyManagerCardEditor extends LitElement implements LovelaceCardEditor {
   @property({ attribute: false }) public hass?: HomeAssistant;
 
   @state() private _config?: EnergyManagerCardConfig;
-  /** Index des Geraets im Detailformular, oder null fuer die Listenansicht. */
-  @state() private _editing: number | null = null;
 
   private _localize: LocalizeFn = localizer('en');
 
@@ -53,19 +48,6 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
     const config = this._config;
     if (!this.hass || !config) return nothing;
 
-    const devices = config.devices ?? [];
-    if (this._editing !== null && devices[this._editing]) {
-      return html`
-        <energy-manager-device-detail-editor
-          .hass=${this.hass}
-          .device=${devices[this._editing]}
-          .localize=${this._localize}
-          @device-changed=${this._deviceChanged}
-          @detail-closed=${this._closeDetail}
-        ></energy-manager-device-detail-editor>
-      `;
-    }
-
     const standalone = this._standalone();
 
     return html`
@@ -78,24 +60,29 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
         @value-changed=${this._valueChanged}
       ></ha-form>
 
-      ${standalone ? this.renderDeviceList(devices) : this.renderIntegrationNotice()}
+      ${standalone ? this.renderMissingIntegration() : this.renderIntegrationNotice()}
       ${standalone ? this.renderWarnings(config) : nothing}
     `;
   }
 
-  private renderDeviceList(devices: DeviceConfig[]) {
+  /**
+   * Was zu tun ist, damit Verbraucher erscheinen.
+   *
+   * Die Karte fuehrt selbst keine Verbraucherliste mehr — sie ist das
+   * Anzeigeteil der Integration. Ohne diese kann sie den Ueberschuss zeigen,
+   * aber nichts, was sich schalten liesse.
+   */
+  private renderMissingIntegration() {
     return html`
-      <div class="section">
-        <div class="section-title">${this._localize('editor.devices.label')}</div>
-        <div class="section-helper">${this._localize('editor.devices.helper')}</div>
-        <energy-manager-device-list-editor
-          .hass=${this.hass}
-          .devices=${devices}
-          .localize=${this._localize}
-          @devices-changed=${this._devicesChanged}
-          @device-edit=${this._openDetail}
-        ></energy-manager-device-list-editor>
-      </div>
+      <ha-alert alert-type="warning">
+        ${this._localize('editor.integration.missing')}
+        <a
+          href="https://github.com/eltomato89/EnergyManagerIntegration"
+          target="_blank"
+          rel="noopener noreferrer"
+          >${this._localize('editor.integration.learn_more')}</a
+        >
+      </ha-alert>
     `;
   }
 
@@ -164,37 +151,11 @@ export class EnergyManagerCardEditor extends LitElement implements LovelaceCardE
     ev.stopPropagation();
     if (!this._config) return;
 
-    // ha-form liefert das vollstaendige Datenobjekt zurueck; die Geraeteliste
-    // verwaltet sich getrennt und darf davon nicht ueberschrieben werden.
+    // `devices` steht nicht im Formular, kommt also auch nicht zurueck. Eine
+    // bestehende Liste aus einer aelteren Konfiguration muss trotzdem erhalten
+    // bleiben — sonst loescht ein Klick auf ein beliebiges Feld sie weg.
     const next = stripEmpty(ev.detail.value);
     this._emit({ ...next, ...(this._config.devices ? { devices: this._config.devices } : {}) });
-  };
-
-  private _devicesChanged = (ev: CustomEvent<{ devices: DeviceConfig[] }>): void => {
-    ev.stopPropagation();
-    if (!this._config) return;
-    // Genau hier wandert die Prioritaet in die Config.
-    this._emit({ ...this._config, devices: ev.detail.devices });
-  };
-
-  private _deviceChanged = (ev: CustomEvent<{ device: DeviceConfig }>): void => {
-    ev.stopPropagation();
-    if (!this._config || this._editing === null) return;
-
-    const devices = [...(this._config.devices ?? [])];
-    // ID beibehalten: sie ist der Schluessel fuer repeat() und die Integration.
-    devices[this._editing] = mergeConfig(devices[this._editing], ev.detail.device);
-    this._emit({ ...this._config, devices });
-  };
-
-  private _openDetail = (ev: CustomEvent<{ index: number }>): void => {
-    ev.stopPropagation();
-    this._editing = ev.detail.index;
-  };
-
-  private _closeDetail = (ev: Event): void => {
-    ev.stopPropagation();
-    this._editing = null;
   };
 
   private _emit(config: EnergyManagerCardConfig): void {

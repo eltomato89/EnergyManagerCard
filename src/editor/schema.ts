@@ -1,5 +1,4 @@
-import { mdiBattery, mdiCog, mdiRobot } from '@mdi/js';
-import { SWITCHABLE_DOMAINS } from '../const';
+import { mdiBattery, mdiCog } from '@mdi/js';
 import { resolveMeterMode } from '../lib/validate';
 import type { EnergyManagerCardConfig } from '../types/config';
 
@@ -167,76 +166,6 @@ export function mainSchema(config: Partial<EnergyManagerCardConfig>, options: Sc
           },
         },
         { name: 'allow_reorder', selector: { boolean: {} } },
-      ],
-    },
-  ] as const;
-}
-
-/** Schema eines einzelnen Verbrauchers. */
-export function deviceSchema() {
-  return [
-    {
-      name: 'switch_entity',
-      required: true,
-      selector: { entity: { filter: [{ domain: [...SWITCHABLE_DOMAINS] }] } },
-    },
-    { name: 'power_entity', selector: powerSensor },
-    {
-      type: 'grid',
-      name: '',
-      schema: [
-        { name: 'name', selector: { text: {} } },
-        { name: 'icon', selector: { icon: {} }, context: { icon_entity: 'switch_entity' } },
-      ],
-    },
-    // Die beiden Entitaeten machen Reihenfolge und Automatik im Dashboard
-    // bedienbar — ohne sie bleibt beides an der Konfiguration haengen.
-    // `number` ist mit aufgefuehrt, damit sich auch die Prioritaets-Entitaet
-    // der Integration von Hand zuordnen laesst.
-    {
-      name: 'priority_entity',
-      selector: { entity: { filter: [{ domain: ['input_number', 'number'] }] } },
-    },
-    {
-      name: 'auto_entity',
-      selector: { entity: { filter: [{ domain: ['input_boolean', 'switch'] }] } },
-    },
-    {
-      name: 'automation',
-      type: 'expandable',
-      iconPath: mdiRobot,
-      flatten: true,
-      schema: [
-        {
-          type: 'grid',
-          name: '',
-          schema: [
-            { name: 'min_power', selector: watts(30000) },
-            { name: 'max_power', selector: watts(30000) },
-          ],
-        },
-        { name: 'hysteresis', selector: watts(5000) },
-        // Die vier Zeitfelder paarweise: zuerst was VOR dem Schalten wirkt,
-        // dann was DANACH gilt. Ohne die Helper-Texte sind sie nicht
-        // auseinanderzuhalten — siehe localize/languages/*.json.
-        {
-          type: 'grid',
-          name: '',
-          schema: [
-            { name: 'turn_on_delay', selector: seconds(3600, 10) },
-            { name: 'turn_off_delay', selector: seconds(3600, 10) },
-            { name: 'min_runtime', selector: seconds(86400, 60) },
-            { name: 'min_off_time', selector: seconds(86400, 60) },
-          ],
-        },
-        {
-          type: 'grid',
-          name: '',
-          schema: [
-            { name: 'managed', selector: { boolean: {} } },
-            { name: 'confirm', selector: { boolean: {} } },
-          ],
-        },
       ],
     },
   ] as const;

@@ -2,6 +2,31 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.0] — 2026-07-26
+
+Die Karte ist das Anzeigeteil der Integration — und nur das.
+
+### Geändert — betrifft bestehende Konfigurationen
+
+- **Die Verbraucherliste ist aus dem Editor verschwunden.** Verbraucher gehören in die
+  [Integration](https://github.com/eltomato89/EnergyManagerIntegration); zwei Orte für dieselbe
+  Liste war genau das Problem, das sie löst. Damit entfallen auch das Verbraucher-Detailformular
+  und die Felder für Prioritäts- und Automatik-Helfer.
+
+  **Bestehende `devices`-Listen werden weiterhin gelesen und dargestellt** — sie brechen nicht,
+  lassen sich aber nur noch im YAML ändern.
+
+- `use_integration` bekommt bewusst **keinen** Schalter im Editor. Die Karte ohne Integration zu
+  betreiben ist ein Rückfall, kein zweiter Betriebsmodus; ein Feld im Formular würde dafür werben.
+  Wer es braucht, setzt es im YAML.
+
+- Ohne Integration zeigt der Editor jetzt einen Hinweis, wo Verbraucher herkommen, statt einer
+  leeren Liste ohne Ausweg.
+
+### Nebenwirkung
+
+Das Bundle schrumpft von 113 kB auf 100 kB (gzip 31,6 → 28,9 kB).
+
 ## [0.4.1] — 2026-07-26
 
 ### Behoben

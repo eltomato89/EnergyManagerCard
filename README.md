@@ -3,15 +3,15 @@
 Lovelace-Karte für Home Assistant, die den aktuellen **PV-Überschuss** anzeigt und Verbraucher
 **nach Priorität** auflistet. Auf einen Blick erkennbar: reicht der Überschuss für dieses Gerät?
 
-Es gibt zwei Betriebsarten:
+Sie ist das Anzeigeteil der
+**[Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)**: Die
+Integration rechnet den Überschuss, führt die Verbraucher und schaltet sie automatisch nach
+Priorität — die Karte findet sie von selbst und zeigt sie an. **Verbraucher werden ausschließlich
+in der Integration gepflegt.**
 
-- **Mit der [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)**
-  (empfohlen): Die Integration rechnet den Überschuss, kennt die Verbraucher und schaltet sie
-  automatisch nach Priorität. Die Karte findet sie von selbst und zeigt sie an —
-  **Verbraucher werden dann ausschließlich in der Integration gepflegt**, nicht im Kartenkonfigurator.
-- **Ohne Integration**: Die Karte rechnet selbst aus den konfigurierten Sensoren und zeigt an.
-  Sie schaltet dann nichts automatisch; die Reihenfolge im Editor ist die Priorität, geschaltet wird
-  von Hand.
+Ohne die Integration zeigt die Karte den Überschuss aus selbst konfigurierten Sensoren an, aber
+keine Verbraucher: die legt man dort an. Bestehende `devices`-Listen aus älteren Fassungen werden
+weiterhin dargestellt, lassen sich aber nur noch im YAML ändern.
 
 ![Die Karte im hellen und im dunklen Theme](docs/images/preview.png)
 
@@ -36,11 +36,12 @@ für die Aufnahme nachgebildet und sehen in einer echten Installation minimal an
 
 1. `energy-manager-card.js` aus dem [neuesten Release](../../releases/latest) nach `/config/www/`
 2. Einstellungen → Dashboards → ⋮ → Ressourcen → Hinzufügen:
-   URL `/local/energy-manager-card.js?v=0.4.1`, Typ **JavaScript-Modul**
+   URL `/local/energy-manager-card.js?v=0.5.0`, Typ **JavaScript-Modul**
 
 ## Konfiguration
 
-Die Karte ist vollständig über den grafischen Editor konfigurierbar; YAML ist nirgends nötig.
+Alles, was die Karte selbst betrifft, lässt sich im grafischen Editor einstellen. Verbraucher
+gehören nicht dazu — die kommen aus der Integration.
 
 ### Mit Integration: nichts zu konfigurieren
 
@@ -59,7 +60,8 @@ Der Kartenkopf bekommt zusätzlich den **Hauptschalter der Automatik**. Ist er a
 geschaltet.
 
 Wer die Integration installiert hat, sie für eine bestimmte Karte aber nicht nutzen will, setzt
-`use_integration: false` — die Karte rechnet dann wie unten beschrieben selbst.
+`use_integration: false` im YAML — die Karte rechnet dann wie unten beschrieben selbst. Bewusst
+ohne Schalter im Editor: Das ist ein Rückfall, kein zweiter Betriebsmodus.
 
 ### Ohne Integration: Zählerquelle — zwei Varianten
 
@@ -68,7 +70,6 @@ Wer die Integration installiert hat, sie für eine bestimmte Karte aber nicht nu
 ```yaml
 type: custom:energy-manager-card
 grid_entity: sensor.netz_leistung # >0 Bezug, <0 Einspeisung
-devices: []
 ```
 
 Liefert der Sensor umgekehrte Vorzeichen (positiv beim Einspeisen), `invert_grid: true` setzen.
@@ -80,7 +81,6 @@ type: custom:energy-manager-card
 meter_mode: split
 production_entity: sensor.pv_erzeugung # stets positiv
 consumption_entity: sensor.hausverbrauch # stets positiv
-devices: []
 ```
 
 Beide Varianten liefern denselben Überschuss — die Formel ist gegen beide Wege geprüft.
@@ -92,51 +92,42 @@ Siehe [`docs/examples.yaml`](docs/examples.yaml) und die Optionstabelle in
 
 ## Im Dashboard sortieren und die Automatik schalten
 
-**Mit Integration funktioniert das ohne Zutun** — sie legt je Verbraucher ein
-`number.…_prioritaet` und ein `switch.…_automatik` an, und die Karte bedient beide. Der Rest dieses
-Abschnitts beschreibt, wie man dasselbe ohne Integration erreicht.
-
-Standardmäßig ist die Reihenfolge im `devices`-Array die Priorität, änderbar nur im Editor. Der
-Grund ist technisch: **eine Lovelace-Karte kann ihre eigene Konfiguration zur Laufzeit nicht
-speichern.** Wer ohne Integration direkt im Dashboard sortieren will, braucht deshalb einen
-Speicherort außerhalb der Karte — zwei Helfer pro Verbraucher:
-
-| Helfer            | Typ             | Wofür                                                                        |
-| ----------------- | --------------- | ---------------------------------------------------------------------------- |
-| `priority_entity` | `input_number`  | Rang (1 = höchste). Ist er gesetzt, **schlägt sein Wert die Array-Position** |
-| `auto_entity`     | `input_boolean` | Nimmt der Verbraucher an der Automatik teil?                                 |
-
-Sind sie konfiguriert, ändert sich die Bedienung der Karte:
+Mit der Integration funktioniert beides **ohne Zutun**: Sie legt je Verbraucher ein
+`number.…_prioritaet` und ein `switch.…_automatik` an, und die Karte bedient sie.
 
 - Ein Symbol im Kartenkopf schaltet den **Sortiermodus** ein. Erst dann erscheinen Griffe und
   Pfeiltasten — dauerhaft sichtbar würdest du auf dem Tablet beim Scrollen versehentlich
   Prioritäten verschieben. Beim Umsortieren schreibt die Karte die Ränge lückenlos als 1…n.
-- Der **Schalter rechts steuert die Automatik**, nicht mehr das Gerät. Ein farbiger Punkt am Symbol
-  zeigt, ob das Gerät gerade läuft; schalten kannst du es weiterhin über den Detail-Dialog (Klick
-  auf Name oder Symbol). Wer das nicht will, stellt `switch_action: device` ein.
+- Der **Schalter rechts steuert die Automatik**, nicht das Gerät. Ein farbiger Punkt am Symbol
+  zeigt, ob das Gerät gerade läuft; schalten kannst du es über den Detail-Dialog (Klick auf Name
+  oder Symbol). Wer das nicht will, stellt `switch_action: device` ein.
+- Der **Hauptschalter** im Kartenkopf hält die gesamte Automatik an.
 
-Zwei Regeln, die der Editor auch als Warnung anzeigt:
+Der Grund, warum es dafür Entitäten braucht, ist technisch: **eine Lovelace-Karte kann ihre eigene
+Konfiguration zur Laufzeit nicht speichern.** Eine im Dashboard geänderte Reihenfolge wäre sonst
+nach dem Neuladen wieder weg.
 
-- **Entweder alle Verbraucher haben einen Prioritäts-Helfer oder keiner.** Gemischt entsteht eine
-  Reihenfolge aus Helferwerten _und_ Listenpositionen, die kaum vorhersagbar ist.
-- **Sortieren im Dashboard braucht vollständige Helfer** — sonst wäre die neue Reihenfolge nach
-  dem Neuladen teilweise wieder weg.
+<details>
+<summary>Ohne Integration — nur noch über YAML</summary>
 
-Beispiel:
+Vor der Integration liefen Priorität und Automatik-Teilnahme über je einen Helfer pro Verbraucher.
+Das ist weiterhin möglich, aber **nicht mehr im Editor konfigurierbar**: Genau diese Helfer waren
+der Anlass, die Integration zu bauen — zwei echte HA-Helfer je Verbraucher, die sich in der Instanz
+ansammeln.
 
 ```yaml
 devices:
   - switch_entity: switch.wallbox
     power_entity: sensor.wallbox_leistung
-    priority_entity: input_number.prio_wallbox
-    auto_entity: input_boolean.auto_wallbox
+    priority_entity: input_number.prio_wallbox # oder eine number-Entität
+    auto_entity: input_boolean.auto_wallbox # oder ein switch
     max_power: 11000
 ```
 
-Die Helfer legst du unter **Einstellungen → Geräte & Dienste → Helfer** an (`input_number` mit
-Minimum 1, Maximum = Anzahl der Verbraucher, Schrittweite 1) und trägst sie im Verbraucher-Detail
-ein. Das sind zwei echte Helfer je Verbraucher, die sich in der Instanz ansammeln — der Grund,
-warum die Integration diese Zustände stattdessen als eigene Entitäten führt.
+Es gilt: entweder **alle** Verbraucher haben einen Prioritäts-Helfer oder keiner. Gemischt entsteht
+eine Reihenfolge aus Helferwerten _und_ Listenpositionen, die kaum vorhersagbar ist.
+
+</details>
 
 ## Die vier Zeitfelder pro Verbraucher
 

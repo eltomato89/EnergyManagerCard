@@ -116,7 +116,7 @@ export class EnergyManagerDeviceRow extends LitElement {
       class="handle"
       role="button"
       tabindex="-1"
-      aria-label=${this.localize('editor.devices.drag')}
+      aria-label=${this.localize('card.reorder_drag')}
     >
       <ha-svg-icon .path=${mdiDragHorizontalVariant}></ha-svg-icon>
     </div>`;
@@ -129,13 +129,13 @@ export class EnergyManagerDeviceRow extends LitElement {
       <div class="arrows">
         <ha-icon-button
           .path=${mdiArrowUp}
-          .label=${this.localize('editor.devices.move_up')}
+          .label=${this.localize('card.reorder_up')}
           .disabled=${this.isFirst}
           @click=${() => this._move(-1)}
         ></ha-icon-button>
         <ha-icon-button
           .path=${mdiArrowDown}
-          .label=${this.localize('editor.devices.move_down')}
+          .label=${this.localize('card.reorder_down')}
           .disabled=${this.isLast}
           @click=${() => this._move(1)}
         ></ha-icon-button>
@@ -246,7 +246,7 @@ export class EnergyManagerDeviceRow extends LitElement {
     // Der Klick des Nutzers geht immer durch — min_runtime/min_off_time sind
     // Hinweise an die Automatik, keine Bedienschranke.
     if (!automation && this.view.config.confirm) {
-      const ok = confirm(this.localize('editor.confirm_switch', { name: this.view.name }));
+      const ok = confirm(this.localize('card.confirm_switch', { name: this.view.name }));
       if (!ok) {
         target.checked = !next;
         return;

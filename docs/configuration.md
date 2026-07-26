@@ -1,7 +1,7 @@
 # Konfiguration
 
-Alle Optionen lassen sich im grafischen Editor setzen. Diese Tabelle ist die Referenz für alle,
-die YAML bevorzugen.
+Diese Tabelle ist die Referenz für alle, die YAML bevorzugen. Die Kartenoptionen lassen sich auch
+im grafischen Editor setzen — `devices[]` nicht, siehe unten.
 
 > **Mit installierter [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)
 > braucht es davon fast nichts.** Zählerquelle, Batterie, Glättung und `devices` kommen dann von
@@ -15,7 +15,7 @@ die YAML bevorzugen.
 | `title`            | string   | —                | Überschrift der Karte                                                                                           |
 | `use_integration`  | bool     | `true`           | Die Integration als Datenquelle nutzen, falls installiert. `false` erzwingt eigene Berechnung                   |
 | `meter_mode`       | string   | abgeleitet       | `grid` oder `split`. Ohne Angabe `grid`, sobald `grid_entity` gesetzt ist. Ohne Integration Pflicht             |
-| `devices`          | Liste    | —                | Verbraucher. **Die Reihenfolge ist die Priorität.** Entfällt mit Integration                                    |
+| `devices`          | Liste    | —                | Verbraucher, **nur YAML**. Entfällt mit Integration — siehe unten                                               |
 | `scale_max`        | Zahl (W) | abgeleitet       | Obergrenze der Leiste. Ohne Angabe aus Σ `max_power`, min. 3000                                                 |
 | `compact`          | bool     | `false`          | Engere Abstände                                                                                                 |
 | `show_surplus_bar` | bool     | `true`           | Überschussleiste anzeigen                                                                                       |
@@ -55,7 +55,14 @@ die YAML bevorzugen.
 | `battery_min_soc`          | 0–100    | —             | Darunter hat das Laden Vorrang, es wird kein Überschuss ausgewiesen                              |
 | `battery_reserve_w`        | Zahl (W) | `0`           | Bleibt immer der Batterie vorbehalten                                                            |
 
-## Verbraucher (`devices[]`)
+## Verbraucher (`devices[]`) — nur noch YAML
+
+**Mit der Integration entfällt dieser Abschnitt.** Verbraucher werden dort angelegt; die Karte
+liest sie samt Priorität, Zeitfeldern und Zustand aus ihren Entitäten.
+
+Eine `devices`-Liste in der Kartenkonfiguration wird weiterhin gelesen und dargestellt, damit
+Konfigurationen aus früheren Fassungen nicht brechen. Der Editor bietet dafür aber **keine
+Oberfläche mehr** — zwei Orte für dieselbe Liste war genau das Problem, das die Integration löst.
 
 | Option            | Typ      | Standard      | Wer wertet es aus           | Bedeutung                                                                          |
 | ----------------- | -------- | ------------- | --------------------------- | ---------------------------------------------------------------------------------- |

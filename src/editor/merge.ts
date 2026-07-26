@@ -21,12 +21,3 @@ export function stripEmpty<T extends object>(value: T): T {
 export function mergeConfig<T extends object>(base: T, patch: Partial<T>): T {
   return stripEmpty({ ...base, ...patch });
 }
-
-/** Stabile ID fuer neue Geraete; Schluessel fuer repeat() und die Integration. */
-export function newDeviceId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  // Fallback fuer Kontexte ohne sichere Herkunft (http statt https).
-  return `emc-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-}
