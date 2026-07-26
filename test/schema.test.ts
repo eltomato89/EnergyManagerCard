@@ -168,6 +168,27 @@ describe('Register der Nutzertexte', () => {
     expect(treffer).toEqual([]);
   });
 
+  it('haelt die englische Fassung frei von unuebersetzten Resten', () => {
+    // Der haeufigste Fehler ist nicht ein halb deutscher Satz, sondern ein
+    // Text, der beim Ergaenzen schlicht kopiert und nicht uebersetzt wurde.
+    // Genau den fangen Wortlisten NICHT — "Einschaltbereit" enthaelt weder
+    // Umlaut noch Funktionswort.
+    //
+    // Ausgenommen sind Texte, die in beiden Sprachen gleich lauten duerfen:
+    // Symbole mit Platzhaltern und Woerter, die im Englischen identisch sind.
+    const gleichErlaubt = new Set([
+      'card.average',
+      'card.max_power',
+      'editor.secondary_info.status',
+    ]);
+
+    const deutsch = new Map(alleTexte('de'));
+    const treffer = alleTexte('en').filter(
+      ([pfad, text]) => !gleichErlaubt.has(pfad) && deutsch.get(pfad) === text,
+    );
+    expect(treffer).toEqual([]);
+  });
+
   it('haelt beide Sprachen deckungsgleich', () => {
     // Ein Text, der nur in einer Sprache existiert, erscheint in der anderen
     // als roher Schluessel.
