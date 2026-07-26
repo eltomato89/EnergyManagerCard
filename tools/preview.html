@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Energy Manager Card</title>
+    <style>
+      body {
+        font-family:
+          Roboto,
+          -apple-system,
+          sans-serif;
+        margin: 0;
+        padding: 24px;
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        width: 960px;
+      }
+      .pane {
+        width: 420px;
+      }
+      .pane > .label {
+        font-size: 13px;
+        margin-bottom: 8px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      /* HA-Standardwerte, hell */
+      .light {
+        --card-background-color: #fff;
+        --primary-text-color: #212121;
+        --secondary-text-color: #727272;
+        --divider-color: #e0e0e0;
+        --state-icon-color: #44739e;
+        --secondary-background-color: #e5e5e5;
+        --disabled-text-color: #bdbdbd;
+        --success-color: #43a047;
+        --warning-color: #ffa726;
+        --primary-color: #03a9f4;
+      }
+      .light .label {
+        color: #727272;
+      }
+
+      /* HA-Standardwerte, dunkel */
+      .dark {
+        --card-background-color: #1c1c1c;
+        --primary-text-color: #e1e1e1;
+        --secondary-text-color: #9b9b9b;
+        --divider-color: #474747;
+        --state-icon-color: #9bb5ce;
+        --secondary-background-color: #202020;
+        --disabled-text-color: #6f6f6f;
+        --success-color: #66bb6a;
+        --warning-color: #ffb74d;
+        --primary-color: #38bdf8;
+      }
+      .dark {
+        background: #111111;
+        padding: 16px;
+        border-radius: 16px;
+      }
+      .dark .label {
+        color: #9b9b9b;
+      }
+
+      body {
+        background: #f4f5f7;
+      }
+
+      :root,
+      .light,
+      .dark {
+        --energy-solar-color: #ff9800;
+        --energy-grid-consumption-color: #488fc2;
+        --energy-battery-out-color: #4db6ac;
+        --energy-battery-in-color: #f06292;
+        --ha-card-border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      // Nachbau der HA-Elemente, die die Karte umgibt. Die Karte selbst ist das
+      // echte Bundle aus dist/.
+      class HaCard extends HTMLElement {
+        set header(v) {
+          this._h = v;
+          this._render();
+        }
+        connectedCallback() {
+          this.style.cssText =
+            'display:block;background:var(--card-background-color);' +
+            'border-radius:var(--ha-card-border-radius);' +
+            'box-shadow:0 2px 4px rgba(0,0,0,.08);overflow:hidden;';
+          this._render();
+        }
+        _render() {
+          if (this._h && !this.querySelector('.hdr')) {
+            const h = document.createElement('div');
+            h.className = 'hdr';
+            h.style.cssText =
+              'padding:14px 16px 0;font-size:22px;font-weight:400;color:var(--primary-text-color);';
+            h.textContent = this._h;
+            this.prepend(h);
+          }
+        }
+      }
+      customElements.define('ha-card', HaCard);
+
+      class HaSvgIcon extends HTMLElement {
+        set path(p) {
+          this.style.display = 'inline-flex';
+          this.innerHTML =
+            `<svg viewBox="0 0 24 24" style="width:var(--mdc-icon-size,24px);` +
+            `height:var(--mdc-icon-size,24px);fill:currentColor"><path d="${p}"/></svg>`;
+        }
+      }
+      customElements.define('ha-svg-icon', HaSvgIcon);
+
+      // HA rendert hier ein MDI-Icon je Entität — hier fest verdrahtet.
+      const ICONS = {
+        'switch.wallbox':
+          'M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z',
+        'switch.heater':
+          'M17 15V7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8a4 4 0 1 0 4 0M15 3a4 4 0 0 1 4 4v6.54A6 6 0 0 1 15 24a6 6 0 0 1-4-10.46V7a4 4 0 0 1 4-4z',
+        'switch.washer':
+          'M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2m6 5a5 5 0 0 0-5 5 5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3M7 4a1 1 0 0 0-1 1 1 1 0 0 0 1 1 1 1 0 0 0 1-1 1 1 0 0 0-1-1z',
+      };
+      class HaStateIcon extends HTMLElement {
+        set stateObj(o) {
+          this._id = o?.entity_id;
+          this._render();
+        }
+        connectedCallback() {
+          this._render();
+        }
+        _render() {
+          const p = ICONS[this._id];
+          if (!p) return;
+          this.style.display = 'inline-flex';
+          this.innerHTML = `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:currentColor"><path d="${p}"/></svg>`;
+        }
+      }
+      customElements.define('ha-state-icon', HaStateIcon);
+
+      // Nachbau des HA-Toggles (mwc-switch-Optik).
+      class HaSwitch extends HTMLElement {
+        set checked(v) {
+          this._c = v;
+          this._render();
+        }
+        set disabled(v) {
+          this._d = v;
+          this._render();
+        }
+        connectedCallback() {
+          this._render();
+        }
+        _render() {
+          const on = !!this._c;
+          const track = on ? 'var(--primary-color)' : 'var(--divider-color)';
+          const x = on ? '18px' : '2px';
+          this.style.cssText =
+            'display:inline-block;width:40px;height:22px;' + (this._d ? 'opacity:.4;' : '');
+          this.innerHTML =
+            `<span style="display:block;position:relative;width:36px;height:14px;border-radius:7px;` +
+            `background:${track};opacity:${on ? 1 : 0.5};margin-top:4px;">` +
+            `<span style="position:absolute;top:-3px;left:${x};width:20px;height:20px;border-radius:50%;` +
+            `background:${on ? 'var(--primary-color)' : '#fafafa'};box-shadow:0 1px 3px rgba(0,0,0,.4);"></span></span>`;
+        }
+      }
+      customElements.define('ha-switch', HaSwitch);
+
+      await import('./energy-manager-card.js');
+
+      const ISO = (msAgo) => new Date(Date.now() - msAgo).toISOString();
+      const ent = (id, state, unit, extra = {}) => ({
+        entity_id: id,
+        state: String(state),
+        last_changed: extra.lc ?? ISO(3600_000),
+        last_updated: extra.lc ?? ISO(3600_000),
+        attributes: {
+          ...(unit ? { unit_of_measurement: unit } : {}),
+          ...(extra.fn ? { friendly_name: extra.fn } : {}),
+          ...(extra.attrs ?? {}),
+        },
+      });
+
+      const HUB = 'hub';
+
+      /** Ein Verbraucher, wie ihn die Integration ausweist. */
+      const consumer = (slug, name, opts) => ({
+        status: ent(`sensor.${slug}_status`, opts.status, null, {
+          attrs: {
+            switch_entity: `switch.${slug}`,
+            consumer_id: slug,
+            consumer_name: name,
+            power_entity: opts.powerEntity ?? null,
+            rank: opts.rank,
+            managed: true,
+            is_on: opts.on === true,
+            power_w: opts.powerW ?? 0,
+            required_w: opts.requiredW,
+            headroom_w: opts.headroom,
+            min_power: opts.requiredW,
+            max_power: opts.maxPower,
+            required_source: 'max_power',
+            blocked_by: null,
+            displaces: 0,
+          },
+        }),
+        slug,
+        name,
+        opts,
+      });
+
+      const CONSUMERS = [
+        consumer('wallbox', 'Wallbox', {
+          rank: 1,
+          status: 'off_insufficient',
+          requiredW: 4200,
+          maxPower: 11000,
+          headroom: 3000,
+        }),
+        consumer('heater', 'Immersion heater', {
+          rank: 2,
+          status: 'on_ok',
+          on: true,
+          powerW: 900,
+          powerEntity: 'sensor.heater_power',
+          requiredW: 2000,
+          maxPower: 2000,
+          headroom: 3000,
+        }),
+        consumer('washer', 'Washing machine', {
+          rank: 3,
+          status: 'off_ready',
+          requiredW: 700,
+          maxPower: 2000,
+          headroom: 2300,
+          lockS: 345,
+        }),
+      ];
+
+      const states = {
+        'sensor.energy_manager_surplus': ent('sensor.energy_manager_surplus', 3000, 'W', {
+          attrs: {
+            grid_w: -2400,
+            battery_w: 600,
+            battery_soc: 62,
+            battery_correction_w: 600,
+            coverage: 1,
+            smoothing_window: 60,
+            degraded: false,
+            errors: [],
+          },
+        }),
+        'switch.energy_manager_automation': ent('switch.energy_manager_automation', 'on'),
+      };
+
+      const registry = {
+        'sensor.energy_manager_surplus': {
+          entity_id: 'sensor.energy_manager_surplus',
+          platform: 'energy_manager',
+          translation_key: 'surplus',
+          device_id: HUB,
+        },
+        'switch.energy_manager_automation': {
+          entity_id: 'switch.energy_manager_automation',
+          platform: 'energy_manager',
+          translation_key: 'automation',
+          device_id: HUB,
+        },
+      };
+
+      for (const c of CONSUMERS) {
+        states[`sensor.${c.slug}_status`] = c.status;
+        registry[`sensor.${c.slug}_status`] = {
+          entity_id: `sensor.${c.slug}_status`,
+          platform: 'energy_manager',
+          translation_key: 'status',
+          device_id: c.slug,
+        };
+        states[`switch.${c.slug}`] = ent(`switch.${c.slug}`, c.opts.on ? 'on' : 'off', null, {
+          fn: c.name,
+        });
+        if (c.opts.powerEntity) {
+          states[c.opts.powerEntity] = ent(c.opts.powerEntity, (c.opts.powerW ?? 0) / 1000, 'kW');
+        }
+        if (c.opts.lockS) {
+          states[`sensor.${c.slug}_until`] = ent(
+            `sensor.${c.slug}_until`,
+            new Date(Date.now() + c.opts.lockS * 1000).toISOString(),
+            null,
+            { attrs: { lock_kind: 'min_off_time' } },
+          );
+          registry[`sensor.${c.slug}_until`] = {
+            entity_id: `sensor.${c.slug}_until`,
+            platform: 'energy_manager',
+            translation_key: 'locked_until',
+            device_id: c.slug,
+          };
+        }
+        states[`number.${c.slug}_priority`] = ent(`number.${c.slug}_priority`, c.opts.rank);
+        registry[`number.${c.slug}_priority`] = {
+          entity_id: `number.${c.slug}_priority`,
+          platform: 'energy_manager',
+          translation_key: 'priority',
+          device_id: c.slug,
+        };
+        states[`switch.${c.slug}_managed`] = ent(`switch.${c.slug}_managed`, 'on');
+        registry[`switch.${c.slug}_managed`] = {
+          entity_id: `switch.${c.slug}_managed`,
+          platform: 'energy_manager',
+          translation_key: 'managed',
+          device_id: c.slug,
+        };
+      }
+
+      const hass = {
+        states,
+        entities: registry,
+        language: 'en',
+        locale: { language: 'en', number_format: 'comma_decimal', time_format: '24' },
+        callService: () => Promise.resolve(),
+      };
+
+      // Mit Integration braucht die Karte keine eigene Konfiguration.
+      const config = { type: 'custom:energy-manager-card', title: 'PV surplus' };
+
+      for (const [cls, label] of [
+        ['light', 'Light theme'],
+        ['dark', 'Dark theme'],
+      ]) {
+        const pane = document.createElement('div');
+        pane.className = `pane ${cls}`;
+        const l = document.createElement('div');
+        l.className = 'label';
+        l.textContent = label;
+        pane.appendChild(l);
+
+        const card = document.createElement('energy-manager-card');
+        card.setConfig(config);
+        card.hass = hass;
+        pane.appendChild(card);
+        document.body.appendChild(pane);
+      }
+    </script>
+  </body>
+</html>

@@ -1,95 +1,95 @@
-# Beispielkonfigurationen für die Energy Manager Card.
+# Example configurations for the Energy Manager Card.
 #
-# Der Normalfall ist Beispiel 1: Mit der Energy Manager Integration braucht die
-# Karte keine Konfiguration. Alles Weitere sind Darstellungsoptionen.
+# Example 1 is the normal case: with the Energy Manager Integration the card
+# needs no configuration at all. Everything else is display options.
 #
-# Die Beispiele ab 3 zeigen den Betrieb OHNE Integration. Verbraucher lassen
-# sich dort nur noch im YAML pflegen — der Editor bietet dafür keine Oberfläche
-# mehr, weil sie in die Integration gehören.
+# Examples from 3 onwards show operation WITHOUT the integration. Loads can
+# then only be maintained in YAML; the editor no longer offers an interface
+# for them, because they belong in the integration.
 
 # ---------------------------------------------------------------------------
-# 1. Der Normalfall: Integration installiert
+# 1. The normal case: integration installed
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
 ---
 # ---------------------------------------------------------------------------
-# 2. Mit Integration, für ein Tablet-Dashboard angepasst
+# 2. With the integration, adapted for a tablet dashboard
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
-title: PV-Überschuss
+title: PV surplus
 compact: true
 show_priority: false
 secondary_info: power
 scale_max: 15000
 ---
 # ---------------------------------------------------------------------------
-# 3. Ohne Integration: nur Überschussanzeige
+# 3. Without the integration: surplus display only
 #
-# Zählerquelle und Batterie muss die Karte dann selbst kennen. Verbraucher
-# zeigt sie keine — die legt man in der Integration an.
+# The card then needs to know the meter source and battery itself. It shows
+# no loads; those are created in the integration.
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
-title: PV-Überschuss
+title: PV surplus
 meter_mode: grid
-grid_entity: sensor.netz_leistung
+grid_entity: sensor.grid_power
 invert_grid: false
 
-battery_soc_entity: sensor.hausbatterie_soc
-battery_power_entity: sensor.hausbatterie_leistung
-battery_min_soc: 20 # darunter hat das Laden Vorrang
-battery_reserve_w: 300 # bleibt immer der Batterie vorbehalten
+battery_soc_entity: sensor.home_battery_soc
+battery_power_entity: sensor.home_battery_power
+battery_min_soc: 20 # below this, charging takes precedence
+battery_reserve_w: 300 # always reserved for the battery
 
-smoothing_window: 90 # s, gegen Wolkenflackern
+smoothing_window: 90 # s, against flickering cloud cover
 update_interval: 5
 ---
 # ---------------------------------------------------------------------------
-# 4. Ohne Integration: getrennte Sensoren statt Netzzähler
+# 4. Without the integration: separate sensors instead of a grid meter
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
 meter_mode: split
-production_entity: sensor.pv_erzeugung
-consumption_entity: sensor.hausverbrauch
+production_entity: sensor.pv_production
+consumption_entity: sensor.house_consumption
 consumption_includes_battery: true
-battery_power_entity: sensor.batterie_leistung
+battery_power_entity: sensor.battery_power
 ---
 # ---------------------------------------------------------------------------
-# 5. Bestandskonfiguration mit eigener Verbraucherliste
+# 5. Existing configuration with its own list of loads
 #
-# Wird weiterhin dargestellt, lässt sich aber nur noch hier im YAML ändern.
-# Die Zeitfelder setzt ohne Integration niemand durch — die Karte zeigt für
-# min_runtime und min_off_time nur einen geschätzten Countdown.
+# Still rendered, but changeable only here in YAML. Without the integration
+# nobody enforces the timing fields; the card only shows an estimated
+# countdown for min_runtime and min_off_time.
 # ---------------------------------------------------------------------------
 type: custom:energy-manager-card
-grid_entity: sensor.netz_leistung
+grid_entity: sensor.grid_power
 devices:
-  # Reihenfolge = Priorität. Ganz oben wird zuerst eingeschaltet.
+  # Order = priority. The topmost is switched on first.
   - id: 6f1c0a2e-6a54-4b0e-9d3b-6b0f2a1c77aa
-    switch_entity: switch.wallbox_freigabe
-    power_entity: sensor.wallbox_leistung
+    switch_entity: switch.wallbox_enable
+    power_entity: sensor.wallbox_power
     name: Wallbox
     icon: mdi:ev-station
-    min_power: 4200 # dreiphasig 6 A — darunter lohnt es nicht
+    min_power: 4200 # three-phase 6 A; below that it is pointless
     max_power: 11000
     turn_on_delay: 120
     min_runtime: 900
     hysteresis: 300
 
   - id: 9b7e4d31-2c88-4f77-8f10-1a2d3c4b5e6f
-    switch_entity: switch.heizstab
-    power_entity: sensor.heizstab_leistung
-    name: Heizstab
+    switch_entity: switch.immersion_heater
+    power_entity: sensor.immersion_heater_power
+    name: Immersion heater
     icon: mdi:heat-wave
     min_power: 800
     max_power: 2000
-    # Sortieren im Dashboard braucht bei ALLEN Verbrauchern eine solche
-    # Entität — sonst wäre die neue Reihenfolge nach dem Neuladen wieder weg.
-    priority_entity: input_number.prio_heizstab
-    auto_entity: input_boolean.auto_heizstab
+    # Reordering from the dashboard needs such an entity on ALL loads,
+    # otherwise the new order would be gone after a reload.
+    priority_entity: input_number.prio_immersion_heater
+    auto_entity: input_boolean.auto_immersion_heater
 
   - id: 4e2a8b90-1d67-4c33-b5f2-9a0e7c1d8b44
-    switch_entity: switch.waschmaschine_steckdose
-    name: Waschmaschine
+    switch_entity: switch.washing_machine_plug
+    name: Washing machine
     icon: mdi:washing-machine
     max_power: 2000
-    managed: false # nur manuell schalten
-    confirm: true # vorher nachfragen
+    managed: false # switch manually only
+    confirm: true # ask before switching

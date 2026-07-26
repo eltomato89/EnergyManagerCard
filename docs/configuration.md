@@ -1,94 +1,94 @@
-# Konfiguration
+# Configuration
 
-Diese Tabelle ist die Referenz für alle, die YAML bevorzugen. Die Kartenoptionen lassen sich auch
-im grafischen Editor setzen — `devices[]` nicht, siehe unten.
+This table is the reference for anyone who prefers YAML. The card options can also be set in the
+graphical editor — `devices[]` cannot, see below.
 
-> **Mit installierter [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)
-> braucht es davon fast nichts.** Zählerquelle, Batterie, Glättung und `devices` kommen dann von
-> dort; übrig bleiben die Darstellungsoptionen. Der Editor blendet die übrigen Felder aus.
+> **With the [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)
+> installed, almost none of this is needed.** Meter source, battery, smoothing and `devices` all
+> come from there; what remains are the display options. The editor hides the other fields.
 
-## Karte
+## Card
 
-| Option             | Typ      | Standard         | Bedeutung                                                                                                       |
-| ------------------ | -------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
-| `type`             | string   | —                | `custom:energy-manager-card`                                                                                    |
-| `title`            | string   | —                | Überschrift der Karte                                                                                           |
-| `use_integration`  | bool     | `true`           | Die Integration als Datenquelle nutzen, falls installiert. `false` erzwingt eigene Berechnung                   |
-| `meter_mode`       | string   | abgeleitet       | `grid` oder `split`. Ohne Angabe `grid`, sobald `grid_entity` gesetzt ist. Ohne Integration Pflicht             |
-| `devices`          | Liste    | —                | Verbraucher, **nur YAML**. Entfällt mit Integration — siehe unten                                               |
-| `scale_max`        | Zahl (W) | abgeleitet       | Obergrenze der Leiste. Ohne Angabe aus Σ `max_power`, min. 3000                                                 |
-| `compact`          | bool     | `false`          | Engere Abstände                                                                                                 |
-| `show_surplus_bar` | bool     | `true`           | Überschussleiste anzeigen                                                                                       |
-| `show_battery`     | bool     | wenn Batterie da | Batterie-Badge anzeigen                                                                                         |
-| `show_priority`    | bool     | `true`           | Prioritätsnummer je Zeile                                                                                       |
-| `secondary_info`   | string   | `both`           | `power`, `status` oder `both`                                                                                   |
-| `switch_action`    | string   | `auto`           | Was der Schalter tut: `device`, `automation` oder `auto` (Automatik, sobald ein `auto_entity` gesetzt ist)      |
-| `allow_reorder`    | bool     | abgeleitet       | Sortieren im Dashboard. Mit Integration immer möglich; ohne sie braucht jeder Verbraucher ein `priority_entity` |
-| `update_interval`  | Zahl (s) | `5`              | Abtast- und Anzeigetakt                                                                                         |
-| `smoothing_window` | Zahl (s) | `60`             | Mittelungsfenster; `0` schaltet die Glättung ab                                                                 |
+| Option             | Type       | Default        | Meaning                                                                                                               |
+| ------------------ | ---------- | -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `type`             | string     | —              | `custom:energy-manager-card`                                                                                          |
+| `title`            | string     | —              | Card heading                                                                                                          |
+| `use_integration`  | bool       | `true`         | Use the integration as the data source if installed. `false` forces the card's own calculation                        |
+| `meter_mode`       | string     | derived        | `grid` or `split`. Without a value, `grid` as soon as `grid_entity` is set. Mandatory without the integration         |
+| `devices`          | list       | —              | Loads, **YAML only**. Not needed with the integration — see below                                                     |
+| `scale_max`        | number (W) | derived        | Upper end of the bar. Without a value, from Σ `max_power`, at least 3000                                              |
+| `compact`          | bool       | `false`        | Tighter spacing                                                                                                       |
+| `show_surplus_bar` | bool       | `true`         | Show the surplus bar                                                                                                  |
+| `show_battery`     | bool       | if battery set | Show the battery badge                                                                                                |
+| `show_priority`    | bool       | `true`         | Priority number per row                                                                                               |
+| `secondary_info`   | string     | `both`         | `power`, `status` or `both`                                                                                           |
+| `switch_action`    | string     | `auto`         | What the toggle does: `device`, `automation` or `auto` (automation as soon as an `auto_entity` is set)                |
+| `allow_reorder`    | bool       | derived        | Reordering from the dashboard. Always possible with the integration; without it, every load needs a `priority_entity` |
+| `update_interval`  | number (s) | `5`            | Sampling and display interval                                                                                         |
+| `smoothing_window` | number (s) | `60`           | Averaging window; `0` disables smoothing                                                                              |
 
-### Modus `grid`
+### Mode `grid`
 
-| Option        | Typ    | Standard | Bedeutung                                                        |
-| ------------- | ------ | -------- | ---------------------------------------------------------------- |
-| `grid_entity` | Entity | —        | **Pflicht.** Bidirektional: >0 Bezug, <0 Einspeisung             |
-| `invert_grid` | bool   | `false`  | Vorzeichen umkehren, wenn der Sensor beim Einspeisen positiv ist |
+| Option        | Type   | Default | Meaning                                                   |
+| ------------- | ------ | ------- | --------------------------------------------------------- |
+| `grid_entity` | entity | —       | **Mandatory.** Bidirectional: >0 import, <0 export        |
+| `invert_grid` | bool   | `false` | Invert the sign if the sensor is positive while exporting |
 
-### Modus `split`
+### Mode `split`
 
-| Option                         | Typ    | Standard | Bedeutung                                             |
-| ------------------------------ | ------ | -------- | ----------------------------------------------------- |
-| `production_entity`            | Entity | —        | **Pflicht.** PV-Erzeugung, stets positiv              |
-| `consumption_entity`           | Entity | —        | **Pflicht.** Hausverbrauch, stets positiv             |
-| `consumption_includes_battery` | bool   | `false`  | Verbrauchssensor zählt die Batterieladung bereits mit |
+| Option                         | Type   | Default | Meaning                                           |
+| ------------------------------ | ------ | ------- | ------------------------------------------------- |
+| `production_entity`            | entity | —       | **Mandatory.** PV production, always positive     |
+| `consumption_entity`           | entity | —       | **Mandatory.** House consumption, always positive |
+| `consumption_includes_battery` | bool   | `false` | The consumption sensor already includes charging  |
 
-### Hausbatterie (optional)
+### Home battery (optional)
 
-| Option                     | Typ      | Standard      | Bedeutung                                                                                        |
-| -------------------------- | -------- | ------------- | ------------------------------------------------------------------------------------------------ |
-| `battery_soc_entity`       | Entity   | —             | Ladestand in %                                                                                   |
-| `battery_power_entity`     | Entity   | —             | >0 Laden, <0 Entladen                                                                            |
-| `battery_invert`           | bool     | `false`       | Vorzeichen umkehren                                                                              |
-| `battery_charge_entity`    | Entity   | —             | Alternative: Ladeleistung, stets positiv                                                         |
-| `battery_discharge_entity` | Entity   | —             | Alternative: Entladeleistung, stets positiv                                                      |
-| `battery_mode`             | string   | `charge_only` | `charge_only`: Entladung wird ignoriert. `full`: Entladung wird abgezogen (reiner PV-Überschuss) |
-| `battery_min_soc`          | 0–100    | —             | Darunter hat das Laden Vorrang, es wird kein Überschuss ausgewiesen                              |
-| `battery_reserve_w`        | Zahl (W) | `0`           | Bleibt immer der Batterie vorbehalten                                                            |
+| Option                     | Type       | Default       | Meaning                                                                                  |
+| -------------------------- | ---------- | ------------- | ---------------------------------------------------------------------------------------- |
+| `battery_soc_entity`       | entity     | —             | State of charge in %                                                                     |
+| `battery_power_entity`     | entity     | —             | >0 charging, <0 discharging                                                              |
+| `battery_invert`           | bool       | `false`       | Invert the sign                                                                          |
+| `battery_charge_entity`    | entity     | —             | Alternative: charging power, always positive                                             |
+| `battery_discharge_entity` | entity     | —             | Alternative: discharging power, always positive                                          |
+| `battery_mode`             | string     | `charge_only` | `charge_only`: discharging is ignored. `full`: discharging is deducted (pure PV surplus) |
+| `battery_min_soc`          | 0–100      | —             | Below this, charging takes precedence and no surplus is reported                         |
+| `battery_reserve_w`        | number (W) | `0`           | Always reserved for the battery                                                          |
 
-## Verbraucher (`devices[]`) — nur noch YAML
+## Loads (`devices[]`) — YAML only
 
-**Mit der Integration entfällt dieser Abschnitt.** Verbraucher werden dort angelegt; die Karte
-liest sie samt Priorität, Zeitfeldern und Zustand aus ihren Entitäten.
+**With the integration this section does not apply.** Loads are created there; the card reads them
+along with priority, timing fields and state from their entities.
 
-Eine `devices`-Liste in der Kartenkonfiguration wird weiterhin gelesen und dargestellt, damit
-Konfigurationen aus früheren Fassungen nicht brechen. Der Editor bietet dafür aber **keine
-Oberfläche mehr** — zwei Orte für dieselbe Liste war genau das Problem, das die Integration löst.
+A `devices` list in the card configuration is still read and rendered so that configurations from
+earlier versions do not break. The editor no longer offers **any interface** for it — two places
+for the same list was precisely the problem the integration solves.
 
-| Option            | Typ      | Standard      | Wer wertet es aus           | Bedeutung                                                                          |
-| ----------------- | -------- | ------------- | --------------------------- | ---------------------------------------------------------------------------------- |
-| `switch_entity`   | Entity   | —             | Karte + Integration         | **Pflicht.** Was geschaltet wird                                                   |
-| `power_entity`    | Entity   | —             | Karte + Integration         | Aktuelle Leistungsaufnahme                                                         |
-| `priority_entity` | Entity   | —             | nur ohne Integration        | `input_number` (oder `number`) mit dem Rang. Gesetzt schlägt er die Array-Position |
-| `auto_entity`     | Entity   | —             | nur ohne Integration        | `input_boolean` (oder `switch`) für die Teilnahme an der Automatik                 |
-| `id`              | string   | automatisch   | Karte + Integration         | Stabile UUID; vom Editor vergeben, nicht ändern                                    |
-| `name`            | string   | friendly_name | Karte                       | Anzeigename                                                                        |
-| `icon`            | string   | Entity-Icon   | Karte                       | Symbol                                                                             |
-| `min_power`       | Zahl (W) | `max_power`   | Karte + Integration         | Ab so viel Überschuss lohnt sich das Einschalten                                   |
-| `max_power`       | Zahl (W) | —             | Karte + Integration         | Nennleistung; geht in die Skala ein                                                |
-| `hysteresis`      | Zahl (W) | `0`           | Karte + Integration         | Totband gegen Flackern                                                             |
-| `turn_on_delay`   | Zahl (s) | `0`           | **nur Integration**         | So lange muss der Überschuss reichen, bevor eingeschaltet wird                     |
-| `turn_off_delay`  | Zahl (s) | `0`           | **nur Integration**         | So lange muss das Defizit anhalten, bevor ausgeschaltet wird                       |
-| `min_runtime`     | Zahl (s) | `0`           | Integration; Karte zeigt an | Mindestlaufzeit nach dem Einschalten                                               |
-| `min_off_time`    | Zahl (s) | `0`           | Integration; Karte zeigt an | Mindest-Aus-Zeit nach dem Ausschalten                                              |
-| `managed`         | bool     | `true`        | **nur Integration**         | Nimmt an der Automatik teil                                                        |
-| `confirm`         | bool     | `false`       | Karte                       | Sicherheitsabfrage vor dem Schalten                                                |
+| Option            | Type       | Default       | Evaluated by                 | Meaning                                                                            |
+| ----------------- | ---------- | ------------- | ---------------------------- | ---------------------------------------------------------------------------------- |
+| `switch_entity`   | entity     | —             | card + integration           | **Mandatory.** What gets switched                                                  |
+| `power_entity`    | entity     | —             | card + integration           | Current power draw                                                                 |
+| `priority_entity` | entity     | —             | without the integration only | `input_number` (or `number`) holding the rank. If set, it beats the array position |
+| `auto_entity`     | entity     | —             | without the integration only | `input_boolean` (or `switch`) for participation in the automation                  |
+| `id`              | string     | automatic     | card + integration           | Stable UUID; assigned by the editor, do not change                                 |
+| `name`            | string     | friendly_name | card                         | Display name                                                                       |
+| `icon`            | string     | entity icon   | card                         | Icon                                                                               |
+| `min_power`       | number (W) | `max_power`   | card + integration           | Switching on starts at this surplus                                                |
+| `max_power`       | number (W) | —             | card + integration           | Rated power; feeds into the scale                                                  |
+| `hysteresis`      | number (W) | `0`           | card + integration           | Dead band against flickering                                                       |
+| `turn_on_delay`   | number (s) | `0`           | **integration only**         | The surplus must be sufficient this long before switching on                       |
+| `turn_off_delay`  | number (s) | `0`           | **integration only**         | The deficit must persist this long before switching off                            |
+| `min_runtime`     | number (s) | `0`           | integration; card displays   | Minimum runtime after switching on                                                 |
+| `min_off_time`    | number (s) | `0`           | integration; card displays   | Minimum pause after switching off                                                  |
+| `managed`         | bool       | `true`        | **integration only**         | Participates in the automation                                                     |
+| `confirm`         | bool       | `false`       | card                         | Confirmation prompt before switching                                               |
 
-Ohne `power_entity` **und** ohne `max_power`/`min_power` rechnet die Ampel mit 500 W Schätzwert und
-der Editor weist darauf hin.
+Without `power_entity` **and** without `max_power`/`min_power`, the demand is assumed to be 500 W
+and the editor points that out.
 
-## Farbanpassung
+## Colour customisation
 
-Die Karte nutzt HA-Theme-Variablen. Für abweichende Farben (z. B. per card-mod):
+The card uses HA theme variables. For different colours (e.g. via card-mod):
 
 ```yaml
 card_mod:
@@ -100,5 +100,5 @@ card_mod:
     }
 ```
 
-Verfügbar: `--energy-manager-{on-ok,on-deficit,off-ready,off-close,off-insufficient,unavailable}-color`.
-Die Energieflussfarben stammen aus HAs eigenen `--energy-*-color`-Variablen.
+Available: `--energy-manager-{on-ok,on-deficit,off-ready,off-close,off-insufficient,unavailable}-color`.
+The energy flow colours come from HA's own `--energy-*-color` variables.
