@@ -2,6 +2,21 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.2] — 2026-07-27
+
+### Geändert
+
+- **Dokumentation auf Englisch.** README, Optionstabelle und Beispieldatei; die Projektsprache war
+  Deutsch, was für ein öffentliches HACS-Repository die Reichweite unnötig begrenzt.
+- **Screenshot erneuert**: englische Oberfläche und der Normalfall mit Integration samt
+  Hauptschalter. Der bisherige zeigte noch die alten Texte und die Konfiguration ohne Integration.
+- Der Betrieb **ohne Integration** steht jetzt unter „Legacy configurations" statt als
+  gleichrangiger Abschnitt daneben. Er existiert, damit Konfigurationen aus früheren Fassungen
+  nicht brechen — nicht als zweite Betriebsart.
+
+<sub>Ohne diese Version zeigt HACS weiterhin die deutsche Fassung: Es liest die README aus dem
+installierten Release-Tag, nicht aus dem Standard-Branch.</sub>
+
 ## [0.5.1] — 2026-07-26
 
 ### Geändert

@@ -36,7 +36,7 @@ recreated for the screenshot and look slightly different in a real installation.
 
 1. Copy `energy-manager-card.js` from the [latest release](../../releases/latest) to `/config/www/`
 2. Settings → Dashboards → ⋮ → Resources → Add:
-   URL `/local/energy-manager-card.js?v=0.5.1`, type **JavaScript module**
+   URL `/local/energy-manager-card.js?v=0.5.2`, type **JavaScript module**
 
 ## Configuration
 
