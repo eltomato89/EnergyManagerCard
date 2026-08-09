@@ -1,14 +1,10 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import {
-  mdiArrowDown,
-  mdiArrowUp,
-  mdiBattery,
-  mdiDragHorizontalVariant,
-  mdiLockClock,
-} from '@mdi/js';
+import { mdiArrowDown, mdiArrowUp, mdiDragHorizontalVariant, mdiLockClock } from '@mdi/js';
 import { DEVICE_ROW_TAG, OPTIMISTIC_TIMEOUT_MS } from '../const';
 import { batteryStatusKey } from '../lib/device-status';
+import { batteryFlow, batteryFrame, FRAME_COUNT } from '../lib/battery-icon';
+import type { BatteryFlow } from '../lib/battery-icon';
 import { formatDuration, formatPercent, formatPower } from '../lib/format';
 import { fireEvent, fireMoreInfo } from '../lib/events';
 import type { LocalizeFn } from '../localize/localize';
@@ -16,6 +12,20 @@ import { statusColor, statusOpacity, themeVariables } from '../styles';
 import type { SecondaryInfo } from '../types/config';
 import type { FrontendLocaleData, HomeAssistant } from '../types/hass';
 import type { DeviceView } from '../types/runtime';
+
+/** Dauer eines Einzelbilds der Lade-/Entlade-Animation. Fuenf Bilder = 2 s. */
+const FILL_FRAME_MS = 400;
+
+/**
+ * Hat der Nutzer Bewegung abbestellt?
+ *
+ * Zur Laufzeit gefragt statt einmalig gemerkt: Die Einstellung laesst sich im
+ * Betriebssystem umstellen, und die Karte lebt in einem Dashboard, das tagelang
+ * offen bleibt.
+ */
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+}
 
 /** Eine Zeile der Verbraucherliste: Status, Name, Leistung, Schalter. */
 @customElement(DEVICE_ROW_TAG)
@@ -45,9 +55,23 @@ export class EnergyManagerDeviceRow extends LitElement {
   @state() private _optimistic?: boolean;
   private _optimisticTimer?: number;
 
+  /** Schritt der Lade-/Entlade-Animation der Batteriezeile. */
+  @state() private _fillStep = 0;
+  private _fillTimer?: number;
+  /** Richtung, fuer die der Takt gerade laeuft — haelt _syncFill idempotent. */
+  private _fillFlow: BatteryFlow = null;
+
+  public override connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
+    this._syncFill();
+  }
+
   public override disconnectedCallback(): void {
     super.disconnectedCallback();
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
     this._clearOptimistic();
+    this._stopFill();
   }
 
   protected override willUpdate(changed: Map<string, unknown>): void {
@@ -55,6 +79,10 @@ export class EnergyManagerDeviceRow extends LitElement {
     if (changed.has('view') && this._optimistic !== undefined) {
       if (this._switchState() === this._optimistic) this._clearOptimistic();
     }
+  }
+
+  protected override updated(): void {
+    this._syncFill();
   }
 
   /** Die Hausbatterie als verschiebbare Last: eigene Zeile ohne Schalter. */
@@ -90,7 +118,7 @@ export class EnergyManagerDeviceRow extends LitElement {
             class="icon"
             .hass=${this.hass}
             .stateObj=${this._isBattery ? undefined : this.hass?.states?.[view.config.switch_entity]}
-            .icon=${this._isBattery ? mdiBattery : view.icon}
+            .icon=${this._isBattery ? this._batteryIcon() : view.icon}
           ></ha-state-icon>
           ${
             // Der Punkt zeigt den Geraetezustand — noetig, sobald der Schalter
@@ -277,6 +305,57 @@ export class EnergyManagerDeviceRow extends LitElement {
       ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}
     </div>`;
   }
+
+  /**
+   * Das Batteriesymbol: im Ruhezustand der Ladestand, sonst ein Schritt der
+   * Animation. Bewegung ist nichts, was fuer die Bedienung noetig waere —
+   * wer sie abgeschaltet hat, bekommt das ruhende Symbol.
+   */
+  private _batteryIcon(): string {
+    return batteryFrame(this._fillFlow, this._fillStep, this.view.soc ?? null);
+  }
+
+  /**
+   * Haelt den Takt der Animation mit dem Zustand der Zeile im Einklang.
+   *
+   * Wird nach jedem Rendern aufgerufen und muss deshalb erkennen, dass sich
+   * nichts geaendert hat: Ein Neustart bei jedem Schritt setzte die Animation
+   * endlos zurueck.
+   */
+  private _syncFill(): void {
+    // Beim Anhaengen ans DOM kann die view-Eigenschaft noch fehlen: Lit setzt
+    // sie erst, nachdem connectedCallback gelaufen ist.
+    if (!this.view) return;
+
+    const soll =
+      this._isBattery && this.isConnected && !document.hidden && !prefersReducedMotion()
+        ? batteryFlow(this.view.powerW)
+        : null;
+
+    if (soll === this._fillFlow) return;
+
+    this._stopFill();
+    this._fillFlow = soll;
+    this._fillStep = 0;
+    if (soll === null) return;
+
+    this._fillTimer = window.setInterval(() => {
+      this._fillStep = (this._fillStep + 1) % FRAME_COUNT;
+    }, FILL_FRAME_MS);
+  }
+
+  private _stopFill(): void {
+    if (this._fillTimer !== undefined) {
+      clearInterval(this._fillTimer);
+      this._fillTimer = undefined;
+    }
+    this._fillFlow = null;
+  }
+
+  /** In Hintergrund-Tabs pausieren — dort sieht die Animation ohnehin niemand. */
+  private _onVisibilityChange = (): void => {
+    this._syncFill();
+  };
 
   private _move(delta: number): void {
     fireEvent(this, 'device-move', { index: this.view.index, delta });

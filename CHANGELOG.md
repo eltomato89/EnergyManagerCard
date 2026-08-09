@@ -2,6 +2,30 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.6.0-beta.6] — 2026-08-09
+
+### Neu
+
+- **Die Batteriezeile animiert Laden und Entladen.** Der Füllstand des Symbols wandert aufwärts beim
+  Laden, abwärts beim Entladen — fünf Bilder in zwei Sekunden. Die Ladebilder tragen den Blitz und
+  sind damit als Bewegung gekennzeichnet, nicht als Messwert; der echte Ladestand steht als Zahl
+  daneben.
+
+- Im Ruhezustand zeigt das Symbol jetzt den **tatsächlichen Ladestand**. Bisher stand dort
+  unabhängig davon eine volle Batterie.
+
+### Geändert
+
+- Ein Totband von 10 W verhindert, dass ein um die Null pendelnder Leistungssensor die Richtung
+  ständig wechseln lässt.
+
+- Die Animation pausiert in Hintergrund-Tabs und entfällt, wenn das Betriebssystem
+  `prefers-reduced-motion` meldet — dann steht dort das ruhende Symbol mit dem Ladestand.
+
+- `iconForSoc` lag in der Badge-Komponente und wird jetzt als `batteryIconForSoc` in
+  `lib/battery-icon.ts` von beiden Stellen genutzt. Zwei Zuordnungen von Ladestand zu Symbol wären
+  auseinandergelaufen.
+
 ## [0.6.0-beta.5] — 2026-08-09
 
 ### Geändert

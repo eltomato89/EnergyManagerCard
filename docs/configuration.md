@@ -73,6 +73,14 @@ doing, state of charge. The power is shown as a magnitude — the direction is i
 and a minus sign in a line that can also read "waiting" is too easily taken for a deficit. A reading
 of 0 W is shown rather than omitted; "0 W · waiting" is a statement, a missing figure is not.
 
+While power is actually flowing, the battery icon animates: the fill travels **upwards** when
+charging and **downwards** when discharging, five frames over two seconds. The charging frames carry
+the lightning bolt, which marks them as motion rather than a reading — the real state of charge is
+the figure next to them. At rest, or when the operating system asks for
+[reduced motion](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion),
+the icon simply shows the actual state of charge. A deadband of 10 W keeps sensor noise around zero
+from flipping the direction back and forth, and the animation pauses in background tabs.
+
 The word is not the traffic-light text used for loads: "running, drawing from grid" makes no sense
 for a battery, which never draws from the grid. A **discharge takes precedence over everything
 else** — with no surplus the traffic light says `off_insufficient`, but the battery is not waiting

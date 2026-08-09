@@ -1,38 +1,12 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import {
-  mdiBattery,
-  mdiBattery10,
-  mdiBattery20,
-  mdiBattery30,
-  mdiBattery40,
-  mdiBattery50,
-  mdiBattery60,
-  mdiBattery70,
-  mdiBattery80,
-  mdiBattery90,
-  mdiBatteryOutline,
-  mdiMinus,
-  mdiPlus,
-} from '@mdi/js';
+import { mdiMinus, mdiPlus } from '@mdi/js';
+import { batteryIconForSoc } from '../lib/battery-icon';
 import { BATTERY_BADGE_TAG } from '../const';
 import { formatPercent, formatPower } from '../lib/format';
 import type { LocalizeFn } from '../localize/localize';
 import { themeVariables } from '../styles';
 import type { FrontendLocaleData } from '../types/hass';
-
-const LEVELS: Array<[number, string]> = [
-  [95, mdiBattery],
-  [85, mdiBattery90],
-  [75, mdiBattery80],
-  [65, mdiBattery70],
-  [55, mdiBattery60],
-  [45, mdiBattery50],
-  [35, mdiBattery40],
-  [25, mdiBattery30],
-  [15, mdiBattery20],
-  [5, mdiBattery10],
-];
 
 /** Ladestand und Lade-/Entladerichtung der Hausbatterie. */
 @customElement(BATTERY_BADGE_TAG)
@@ -60,7 +34,7 @@ export class EnergyManagerBatteryBadge extends LitElement {
 
     return html`
       <div class="badge" title=${title}>
-        <ha-svg-icon .path=${iconForSoc(this.soc)}></ha-svg-icon>
+        <ha-svg-icon .path=${batteryIconForSoc(this.soc)}></ha-svg-icon>
         ${
           charging || discharging
             ? html`<ha-svg-icon
@@ -104,14 +78,6 @@ export class EnergyManagerBatteryBadge extends LitElement {
       }
     `,
   ];
-}
-
-function iconForSoc(soc: number | null): string {
-  if (soc === null) return mdiBatteryOutline;
-  for (const [threshold, icon] of LEVELS) {
-    if (soc >= threshold) return icon;
-  }
-  return mdiBatteryOutline;
 }
 
 declare global {
