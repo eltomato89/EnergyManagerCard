@@ -2,6 +2,22 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.6.0-beta.3] — 2026-08-09
+
+### Dokumentation
+
+- **Begründung zur Versionierung berichtigt.** Sie führte als ersten Grund an, dass die Karte ohne
+  Integration läuft. Das ist Bestandsschutz für ältere Konfigurationen und kein vorgesehener
+  Betriebsmodus — als Argument taugt es nicht. An seiner Stelle steht der nachprüfbare Befund aus
+  der bisherigen Historie: fünf Release-Paare binnen zwei Minuten, drei Fassungen nur auf einer
+  Seite. Gleichstand hätte dort jedes Mal ein leeres Release erzwungen.
+
+### Behoben
+
+- Der Release-Workflow leitet die Kennzeichnung als Vorabfassung jetzt aus dem Tag ab. `0.6.0-beta.2`
+  erschien noch als reguläres Release und wurde auf „Latest" gesetzt; HACS hätte die Beta damit
+  allen angeboten statt nur denen, die Vorabfassungen eingeschaltet haben.
+
 ## [0.6.0-beta.2] — 2026-08-09
 
 ### Geändert

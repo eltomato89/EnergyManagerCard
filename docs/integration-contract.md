@@ -96,7 +96,7 @@ Integration braucht, nennt hier ihre Mindestversion.
 | Integrationsmodus (Verbraucher, Ampel, Rang, Sperrzeiten) | ≥ 0.4.0        | ≥ 0.1.0     |
 | Batteriezeile als verschiebbare Last                      | ≥ 0.6.0-beta.1 | ≥ 0.4.0b1   |
 
-Die aktuellen Vorabfassungen `0.6.0-beta.2` (Karte) und `0.4.0b3` (Integration) gehören zusammen.
+Die aktuellen Vorabfassungen `0.6.0-beta.3` (Karte) und `0.4.0b4` (Integration) gehören zusammen.
 
 ## Attribute, auf die sich die Karte verlässt
 
