@@ -246,6 +246,28 @@ describe('computeGrossSurplus', () => {
   it('liefert grossW null, wenn der Ueberschuss unbekannt ist', () => {
     expect(computeGrossSurplus([], null)).toEqual({ grossW: null, allocatedW: 0 });
   });
+
+  it('zaehlt die ladende Batterie nicht als Zuteilung', () => {
+    // Ihre Ladeleistung steckt im Ueberschuss schon als umlenkbar drin — als
+    // Zuteilung wuerde sie ein zweites Mal erscheinen.
+    const battery = {
+      config: { id: '__battery__', switch_entity: '' },
+      kind: 'battery' as const,
+      index: 0,
+      configIndex: -1,
+      name: '',
+      isOn: true,
+      available: true,
+      managed: true,
+      autoSwitchable: false,
+      powerW: 4200,
+      requiredW: 5000,
+      status: 'on_ok' as const,
+      headroomW: null,
+      lock: { kind: 'none' as const, remainingS: 0 },
+    };
+    expect(computeGrossSurplus([battery], 1200)).toEqual({ grossW: 1200, allocatedW: 0 });
+  });
 });
 
 describe('resolveScaleMax', () => {

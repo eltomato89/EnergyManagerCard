@@ -27,6 +27,10 @@ const ROLE_LOCKED_UNTIL = 'locked_until';
 const ROLE_PRIORITY = 'priority';
 const ROLE_MANAGED = 'managed';
 const ROLE_AUTOMATION = 'automation';
+const ROLE_BATTERY_PRIORITY = 'battery_priority';
+
+/** Stabiler Schluessel der Batteriezeile — sie hat keine Verbraucher-ID. */
+export const BATTERY_ROW_ID = '__battery__';
 
 interface RoleMap {
   /** Entitaets-IDs je Rolle. */
@@ -43,6 +47,12 @@ export interface IntegrationHandle {
   surplusEntity: string;
   /** Der Hauptschalter, sofern vorhanden. */
   automationEntity?: string;
+  /**
+   * Die Prioritaets-Entitaet der Batterie am Hub. Nur vorhanden, wenn die
+   * Batterie als verschiebbare Last teilnimmt — dann bekommt die Batteriezeile
+   * darueber ihren Rang und laesst sich mitsortieren.
+   */
+  batteryPriorityEntity?: string;
   /** Ein Eintrag je Verbraucher. */
   devices: IntegrationDevice[];
 }
@@ -90,6 +100,7 @@ export function findIntegration(hass: HomeAssistant | undefined): IntegrationHan
   return {
     surplusEntity: hub[ROLE_SURPLUS],
     automationEntity: hub[ROLE_AUTOMATION],
+    batteryPriorityEntity: hub[ROLE_BATTERY_PRIORITY],
     devices,
   };
 }
@@ -103,6 +114,9 @@ export function findIntegration(hass: HomeAssistant | undefined): IntegrationHan
 export function trackedFromIntegration(hass: HomeAssistant, handle: IntegrationHandle): string[] {
   const ids = [handle.surplusEntity];
   if (handle.automationEntity) ids.push(handle.automationEntity);
+  // Der Rang der Batterie kann sich beim Sortieren aendern; die Zeile muss
+  // dann neu zeichnen. Der Ladestand steckt schon im Ueberschuss-Sensor.
+  if (handle.batteryPriorityEntity) ids.push(handle.batteryPriorityEntity);
 
   for (const device of handle.devices) {
     ids.push(...Object.values(device.roles));
@@ -219,8 +233,60 @@ export function viewsFromIntegration(
     });
   }
 
+  const battery = batteryRowFromIntegration(hass, handle);
+  if (battery) views.push(battery);
+
   // Nach Rang sortieren — die Integration bestimmt die Reihenfolge.
   return views.sort((a, b) => a.index - b.index);
+}
+
+/**
+ * Die Hausbatterie als verschiebbare Last, aus den Attributen des
+ * Ueberschuss-Sensors.
+ *
+ * Nur wenn die Integration sie als Last fuehrt (`battery_load`) UND ihre
+ * Prioritaets-Entitaet vorliegt — ohne die liesse sich die Zeile nicht
+ * mitsortieren, und ein Rang ohne Rueckschreibweg waere irrefuehrend.
+ */
+export function batteryRowFromIntegration(
+  hass: HomeAssistant,
+  handle: IntegrationHandle,
+): DeviceView | null {
+  if (!handle.batteryPriorityEntity) return null;
+
+  const attrs = (hass.states[handle.surplusEntity]?.attributes ?? {}) as Record<string, unknown>;
+  if (attrs.battery_load !== true) return null;
+
+  const status = String(attrs.battery_status ?? 'unavailable') as DeviceStatus;
+  const rank = num(attrs.battery_rank);
+  const chargingW = num(attrs.battery_charging_w);
+  const socEntity = attrs.battery_soc_entity ? String(attrs.battery_soc_entity) : '';
+
+  return {
+    config: {
+      id: BATTERY_ROW_ID,
+      // Der Ladestandssensor: darueber oeffnet die Zeile den Detail-Dialog.
+      switch_entity: socEntity,
+      priority_entity: handle.batteryPriorityEntity,
+    },
+    kind: 'battery',
+    index: rank === null ? Number.MAX_SAFE_INTEGER : rank - 1,
+    configIndex: -1,
+    name: '',
+    icon: undefined,
+    // "An" heisst hier: laedt gerade. Nur fuer die gedaempfte Darstellung.
+    isOn: chargingW !== null && chargingW > 0,
+    available: status !== 'unavailable',
+    // Die Batterie nimmt immer teil, solange sie als Last gefuehrt wird.
+    managed: true,
+    autoSwitchable: false,
+    powerW: chargingW,
+    requiredW: num(attrs.battery_max_charge_w) ?? 0,
+    status,
+    headroomW: num(attrs.battery_claim_w),
+    soc: num(attrs.battery_soc),
+    lock: { kind: 'none', remainingS: 0 },
+  };
 }
 
 /**

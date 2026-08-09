@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BATTERY_ROW_ID,
   batteryReadingFromIntegration,
+  batteryRowFromIntegration,
   findIntegration,
   surplusFromIntegration,
   trackedFromIntegration,
@@ -298,5 +300,97 @@ describe('viewsFromIntegration', () => {
     const view = viewsFromIntegration(hass, findIntegration(hass)!, NOW)[0];
 
     expect(view.available).toBe(false);
+  });
+});
+
+/**
+ * Registriert die Prioritaets-Entitaet der Batterie am Hub. Ohne sie fuehrt die
+ * Integration die Batterie nicht als verschiebbare Last.
+ */
+function withBatteryHelper(hass: ReturnType<typeof makeHass>, priority = 3) {
+  hass.states['number.energy_manager_battery_priority'] = makeHass({
+    'number.energy_manager_battery_priority': { state: priority },
+  }).states['number.energy_manager_battery_priority'];
+  (hass.entities as Record<string, unknown>)['number.energy_manager_battery_priority'] = {
+    entity_id: 'number.energy_manager_battery_priority',
+    platform: 'energy_manager',
+    translation_key: 'battery_priority',
+    device_id: 'hub',
+  };
+  return hass;
+}
+
+const BATTERY_ATTRS = {
+  battery_load: true,
+  battery_rank: 2,
+  battery_status: 'on_ok',
+  battery_max_charge_w: 5000,
+  battery_claim_w: 5000,
+  battery_charging_w: 4200,
+  battery_soc: 55,
+  battery_soc_entity: 'sensor.akku_soc',
+};
+
+describe('batteryRowFromIntegration', () => {
+  it('findet die Prioritaets-Entitaet der Batterie am Hub', () => {
+    const hass = withBatteryHelper(withIntegration(BATTERY_ATTRS));
+    expect(findIntegration(hass)?.batteryPriorityEntity).toBe(
+      'number.energy_manager_battery_priority',
+    );
+  });
+
+  it('baut die Batteriezeile aus den Hub-Attributen', () => {
+    const hass = withBatteryHelper(withIntegration(BATTERY_ATTRS));
+    const row = batteryRowFromIntegration(hass, findIntegration(hass)!);
+
+    expect(row).not.toBeNull();
+    expect(row?.kind).toBe('battery');
+    expect(row?.config.id).toBe(BATTERY_ROW_ID);
+    expect(row?.index).toBe(1);
+    expect(row?.config.priority_entity).toBe('number.energy_manager_battery_priority');
+    // Der Ladestandssensor traegt den Detail-Dialog.
+    expect(row?.config.switch_entity).toBe('sensor.akku_soc');
+    expect(row?.requiredW).toBe(5000);
+    expect(row?.powerW).toBe(4200);
+    expect(row?.isOn).toBe(true);
+    expect(row?.soc).toBe(55);
+  });
+
+  it('reiht die Batterie an ihrem Rang in die Liste ein', () => {
+    const hass = withBatteryHelper(
+      withIntegration(BATTERY_ATTRS, [
+        {
+          deviceId: 'wallbox',
+          status: status({ rank: 1, consumer_name: 'Wallbox', switch_entity: 'switch.wallbox' }),
+        },
+        {
+          deviceId: 'heizstab',
+          status: status({ rank: 3, consumer_name: 'Heizstab', switch_entity: 'switch.heizstab' }),
+        },
+      ]),
+    );
+    const views = viewsFromIntegration(hass, findIntegration(hass)!, NOW);
+
+    // Rang 1 Wallbox, Rang 2 Batterie, Rang 3 Heizstab.
+    expect(views.map((v) => v.kind ?? 'consumer')).toEqual(['consumer', 'battery', 'consumer']);
+    expect(views[1].kind).toBe('battery');
+  });
+
+  it('beobachtet die Prioritaets-Entitaet der Batterie', () => {
+    const hass = withBatteryHelper(withIntegration(BATTERY_ATTRS));
+    expect(trackedFromIntegration(hass, findIntegration(hass)!)).toContain(
+      'number.energy_manager_battery_priority',
+    );
+  });
+
+  it('gibt keine Zeile ohne Prioritaets-Entitaet', () => {
+    // battery_load ist gesetzt, aber die number-Entitaet fehlt noch (Start).
+    const hass = withIntegration(BATTERY_ATTRS);
+    expect(batteryRowFromIntegration(hass, findIntegration(hass)!)).toBeNull();
+  });
+
+  it('gibt keine Zeile, wenn die Batterie nicht als Last gefuehrt wird', () => {
+    const hass = withBatteryHelper(withIntegration({ battery_soc: 55 }));
+    expect(batteryRowFromIntegration(hass, findIntegration(hass)!)).toBeNull();
   });
 });

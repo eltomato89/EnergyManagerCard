@@ -33,7 +33,12 @@
     "reorder_drag": "Drag to reorder",
     "reorder_up": "Move up",
     "reorder_down": "Move down",
-    "confirm_switch": "Switch {name}?"
+    "confirm_switch": "Switch {name}?",
+    "battery": "Battery",
+    "battery_load_charging": "charging",
+    "battery_load_full": "full",
+    "battery_load_reduced": "throttled",
+    "battery_load_waiting": "waiting"
   },
   "status": {
     "on_ok": "Running, covered",

@@ -1,6 +1,12 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { mdiArrowDown, mdiArrowUp, mdiDragHorizontalVariant, mdiLockClock } from '@mdi/js';
+import {
+  mdiArrowDown,
+  mdiArrowUp,
+  mdiBattery,
+  mdiDragHorizontalVariant,
+  mdiLockClock,
+} from '@mdi/js';
 import { DEVICE_ROW_TAG, OPTIMISTIC_TIMEOUT_MS } from '../const';
 import { formatDuration, formatPower } from '../lib/format';
 import { fireEvent, fireMoreInfo } from '../lib/events';
@@ -50,6 +56,11 @@ export class EnergyManagerDeviceRow extends LitElement {
     }
   }
 
+  /** Die Hausbatterie als verschiebbare Last: eigene Zeile ohne Schalter. */
+  private get _isBattery(): boolean {
+    return this.view.kind === 'battery';
+  }
+
   /** Zustand, den der Schalter abbildet — Geraet oder Automatik. */
   private _switchState(): boolean {
     return this.switchAction === 'automation' ? this.view.managed : this.view.isOn;
@@ -77,13 +88,14 @@ export class EnergyManagerDeviceRow extends LitElement {
           <ha-state-icon
             class="icon"
             .hass=${this.hass}
-            .stateObj=${this.hass?.states?.[view.config.switch_entity]}
-            .icon=${view.icon}
+            .stateObj=${this._isBattery ? undefined : this.hass?.states?.[view.config.switch_entity]}
+            .icon=${this._isBattery ? mdiBattery : view.icon}
           ></ha-state-icon>
           ${
             // Der Punkt zeigt den Geraetezustand — noetig, sobald der Schalter
-            // die Automatik bedient und nicht mehr das Geraet.
-            automation
+            // die Automatik bedient und nicht mehr das Geraet. Fuer die Batterie
+            // gibt es keinen Schalter, also auch keinen Punkt.
+            automation && !this._isBattery
               ? html`<span
                   class="dot ${view.isOn ? 'on' : 'off'}"
                   title=${this.localize(view.isOn ? 'card.device_on' : 'card.device_off')}
@@ -93,11 +105,19 @@ export class EnergyManagerDeviceRow extends LitElement {
         </div>
 
         <div class="text" @click=${this._openMoreInfo}>
-          <div class="name">${view.name}</div>
-          ${this.renderSecondary()}
+          <div class="name">${this._isBattery ? this.localize('card.battery') : view.name}</div>
+          ${this._isBattery ? this.renderBatterySecondary() : this.renderSecondary()}
         </div>
 
-        ${this.reordering ? this.renderArrows() : this.renderSwitch(checked, automation)}
+        ${
+          // Die Batterie wird nicht geschaltet — im Normalbetrieb bleibt die
+          // rechte Spalte leer, im Sortiermodus tragen die Pfeiltasten sie mit.
+          this.reordering
+            ? this.renderArrows()
+            : this._isBattery
+              ? nothing
+              : this.renderSwitch(checked, automation)
+        }
       </div>
     `;
   }
@@ -228,14 +248,55 @@ export class EnergyManagerDeviceRow extends LitElement {
     `;
   }
 
+  /**
+   * Zweite Zeile der Batteriezeile: Ladeleistung und ein Wort zum Zustand.
+   *
+   * Bewusst nicht die Ampeltexte der Verbraucher — "In Betrieb, Netzbezug"
+   * ergaebe fuer die Batterie keinen Sinn. Die Batterie zieht nie Netzstrom;
+   * sie bekommt ihre Ladeleistung ganz, teilweise oder gar nicht.
+   */
+  private renderBatterySecondary() {
+    const view = this.view;
+    const parts: unknown[] = [];
+
+    if (view.powerW !== null && view.powerW > 0) {
+      parts.push(formatPower(view.powerW, this.locale));
+    }
+    parts.push(this.localize(this._batteryStatusKey()));
+
+    return html`<div class="secondary">
+      ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}
+    </div>`;
+  }
+
+  private _batteryStatusKey(): string {
+    const view = this.view;
+    switch (view.status) {
+      case 'on_ok':
+        return view.soc !== null && view.soc !== undefined && view.soc >= 100
+          ? 'card.battery_load_full'
+          : 'card.battery_load_charging';
+      case 'on_deficit':
+        return 'card.battery_load_reduced';
+      case 'unavailable':
+        return 'status.unavailable';
+      default:
+        // off_close / off_insufficient: kein Ueberschuss uebrig, die Batterie wartet.
+        return 'card.battery_load_waiting';
+    }
+  }
+
   private _move(delta: number): void {
     fireEvent(this, 'device-move', { index: this.view.index, delta });
   }
 
   private _openMoreInfo = (): void => {
     // Auch im Automatik-Modus der Weg zum Geraet selbst: dort laesst es sich
-    // von Hand schalten.
-    fireMoreInfo(this, this.view.config.switch_entity);
+    // von Hand schalten. Fuer die Batterie fuehrt er zum Ladestandssensor,
+    // sofern einer konfiguriert ist.
+    const entityId = this.view.config.switch_entity;
+    if (!entityId) return;
+    fireMoreInfo(this, entityId);
   };
 
   private _toggle = (ev: Event): void => {

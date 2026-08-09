@@ -99,7 +99,12 @@ export function computeGrossSurplus(
   availableW: number | null,
 ): { grossW: number | null; allocatedW: number } {
   const allocatedW = views.reduce(
-    (sum, view) => (view.isOn && view.powerW !== null && view.powerW > 0 ? sum + view.powerW : sum),
+    (sum, view) =>
+      // Die Batterie ist kein zugeteilter Verbraucher: ihre Ladeleistung steckt
+      // im Ueberschuss schon als umlenkbar drin, sie wuerde hier doppelt zaehlen.
+      view.kind !== 'battery' && view.isOn && view.powerW !== null && view.powerW > 0
+        ? sum + view.powerW
+        : sum,
     0,
   );
   return {

@@ -48,14 +48,15 @@ Findet sich kein Hub, rechnet die Karte selbst. Dasselbe bei `use_integration: f
 
 ### Die Rollen
 
-| `translation_key` | Ort         | Wofür die Karte sie nutzt                           |
-| ----------------- | ----------- | --------------------------------------------------- |
-| `surplus`         | Hub         | Überschuss und alle Kennzahlen (siehe Attribute)    |
-| `automation`      | Hub         | Hauptschalter im Kartenkopf                         |
-| `status`          | Verbraucher | Ampelzustand **und alle Angaben zum Verbraucher**   |
-| `priority`        | Verbraucher | Rang; wird beim Sortieren geschrieben               |
-| `managed`         | Verbraucher | Teilnahme an der Automatik; der Toggle in der Zeile |
-| `locked_until`    | Verbraucher | Sperrzeit-Countdown                                 |
+| `translation_key`  | Ort         | Wofür die Karte sie nutzt                           |
+| ------------------ | ----------- | --------------------------------------------------- |
+| `surplus`          | Hub         | Überschuss und alle Kennzahlen (siehe Attribute)    |
+| `automation`       | Hub         | Hauptschalter im Kartenkopf                         |
+| `battery_priority` | Hub         | Rang der Batterie als verschiebbare Last (optional) |
+| `status`           | Verbraucher | Ampelzustand **und alle Angaben zum Verbraucher**   |
+| `priority`         | Verbraucher | Rang; wird beim Sortieren geschrieben               |
+| `managed`          | Verbraucher | Teilnahme an der Automatik; der Toggle in der Zeile |
+| `locked_until`     | Verbraucher | Sperrzeit-Countdown                                 |
 
 Diese Schlüssel sind Teil der Zusage. Werden sie in der Integration umbenannt, findet die Karte die
 Rolle nicht mehr.
@@ -81,6 +82,11 @@ Am Status-Sensor je Verbraucher:
 Am Überschuss-Sensor des Hubs: `grid_w`, `battery_w`, `battery_correction_w`, `battery_soc`,
 `coverage`, `smoothing_window`, `degraded`, `errors`.
 
+Nimmt die Batterie als verschiebbare Last teil (siehe unten), kommen am
+Überschuss-Sensor dazu: `battery_load` (`true`), `battery_rank`, `battery_status`,
+`battery_max_charge_w`, `battery_claim_w`, `battery_charging_w`, `battery_full` und
+`battery_soc_entity` (für den Detail-Dialog der Batteriezeile).
+
 `errors` verwendet Unterstriche (`grid_unavailable`); die Karte übersetzt sie in ihre eigene
 Schreibweise mit Bindestrichen. Ein Testfall in `test/integration.test.ts` hält das fest.
 
@@ -96,6 +102,26 @@ Die Service-Domain leitet sie aus der Entitäts-ID ab (`number` oder `input_numb
 Ohne Integration gilt die alte Regel: erst `devices[].priority_entity`, dann der Array-Index. Ein
 `priority`-Zahlenfeld in der Karten-Config gibt es bewusst nicht — es wäre eine dritte Quelle, die
 beim Sortieren sofort veraltet.
+
+## Batterie als verschiebbare Last
+
+Trägt der Nutzer in der Integration eine **maximale Ladeleistung** ein, nimmt die Hausbatterie an
+der Prioritätsreihenfolge teil — sonst bleibt sie wie bisher nur ein Korrekturterm im Überschuss.
+
+Die Integration hängt sie dann als eigenen Rang in dieselbe Budget-Kaskade wie die Verbraucher:
+Wer **über** der Batterie steht, bekommt den Überschuss zuerst und bleibt eingeschaltet; die
+Batterie reserviert an ihrem Rang bis zu ihrer Ladeleistung; nur der Rest steht Verbrauchern
+**unter** ihr zur Verfügung. Das ist reine Verteilung — die Batterie wird nicht angesteuert.
+
+Die Karte stellt sie als eigene Zeile dar (`kind: 'battery'`), gebaut allein aus den
+`battery_*`-Attributen des Überschuss-Sensors und der `battery_priority`-Entität am Hub. Die Zeile
+hat **keinen Schalter** (es gibt nichts zu schalten), aber einen Rang: über die
+`battery_priority`-number lässt sie sich mitsortieren, genau wie die Verbraucher. Der
+Detail-Dialog führt zum Ladestandssensor (`battery_soc_entity`).
+
+Damit die Reihenfolge lückenlos bleibt, zählt die Integration die Batterie beim Vergeben der
+`rank`-Werte mit: die Verbraucher-Ränge lassen die Position der Batterie frei, sodass Karte und
+Automatik dieselbe Abfolge zeigen.
 
 ## Sperrzeiten — die eingelöste Zusage
 

@@ -57,6 +57,17 @@ graphical editor — `devices[]` cannot, see below.
 | `battery_min_soc`          | 0–100      | —             | Below this, charging takes precedence and no surplus is reported                         |
 | `battery_reserve_w`        | number (W) | `0`           | Always reserved for the battery                                                          |
 
+### Battery as a shiftable load
+
+With the integration, entering a **maximum charge power** (`battery_max_charge_w`, in the
+integration's battery settings) turns the house battery into a load that takes part in the priority
+order: the card then shows it as its own row with a rank. Loads ranked **above** the battery are
+served first and stay on; the battery reserves up to its charge power at its rank; only what is left
+goes to loads ranked **below** it. The row has no switch — the battery is not commanded, only
+scheduled — but it can be dragged to any position like a load. See
+[integration-contract.md](integration-contract.md#batterie-als-verschiebbare-last). Standalone
+(without the integration) the card does not synthesise this row.
+
 ## Loads (`devices[]`) — legacy configurations only
 
 **With the integration none of this applies.** Loads are created there; the card reads them along

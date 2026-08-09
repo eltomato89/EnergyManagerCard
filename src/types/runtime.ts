@@ -102,6 +102,15 @@ export interface LockState {
 
 export interface DeviceView {
   config: DeviceConfig;
+  /**
+   * Art der Zeile. 'battery' ist die Hausbatterie als verschiebbare Last: sie
+   * hat einen Rang und belegt Budget, wird aber nicht geschaltet (kein
+   * Schalter, kein Sperrzeit-Countdown). Fehlt das Feld, ist es ein normaler
+   * Verbraucher.
+   */
+  kind?: 'consumer' | 'battery';
+  /** Ladestand in Prozent — nur fuer kind 'battery'. */
+  soc?: number | null;
   /** Rang in der Prioritaetsreihenfolge, 0-basiert (0 = hoechste). */
   index: number;
   /** Position im devices-Array. Fuer Umsortieren und stabile Keys noetig. */
