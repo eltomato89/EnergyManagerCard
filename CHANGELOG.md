@@ -2,6 +2,23 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.6.0-beta.5] — 2026-08-09
+
+### Geändert
+
+- **Die Batteriezeile zeigt, was die Batterie tut.** Bisher stand dort meist nur „wartet": Die
+  Leistung erschien ausschließlich beim Laden, der Ladestand gar nicht. Die zweite Zeile lautet
+  jetzt `1,2 kW · lädt · 62 %` — gemessene Leistung, Zustand, Ladestand. Die Leistung steht als
+  Betrag da; die Richtung sagt das Wort daneben, und ein Minuszeichen ließe sich in einer Zeile, die
+  auch „wartet" enthalten kann, zu leicht als Defizit lesen. 0 W wird gezeigt statt weggelassen.
+
+- **Eine laufende Entladung geht allem anderen vor.** Ohne Überschuss meldete die Ampel
+  `off_insufficient` und die Zeile „wartet" — während die Batterie in Wahrheit das Haus versorgte.
+  Neuer Zustand „entlädt" (`battery_load_discharging`), der auch eine volle Batterie überstimmt.
+
+- Das Zustandswort liegt jetzt als `batteryStatusKey()` in `lib/device-status.ts` statt in der
+  Zeilenkomponente. Dort ist es geprüft; in der Komponente war es das nicht.
+
 ## [0.6.0-beta.4] — 2026-08-09
 
 ### Geändert

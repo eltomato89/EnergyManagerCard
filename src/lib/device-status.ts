@@ -94,6 +94,34 @@ function resolveRequiredW(config: DeviceConfig, powerW: number | null): number {
  * Bruttoueberschuss = was zur Verfuegung staende, wenn alle aktuell laufenden
  * Verbraucher aus waeren. Basis fuer die zweigeteilte Leiste.
  */
+/**
+ * Das Zustandswort der Batteriezeile.
+ *
+ * Eine laufende Entladung geht allem anderen vor: Sie ist das, was das Geraet
+ * gerade tut. Der Ampelstatus beschreibt dagegen nur die Verteilung des
+ * Ueberschusses — ohne Ueberschuss stuende dort "wartet", waehrend die Batterie
+ * in Wahrheit das Haus versorgt.
+ *
+ * Bewusst nicht die Ampeltexte der Verbraucher: "In Betrieb, Netzbezug" ergaebe
+ * fuer die Batterie keinen Sinn. Sie zieht nie Netzstrom, sie bekommt ihre
+ * Ladeleistung ganz, teilweise oder gar nicht.
+ */
+export function batteryStatusKey(view: DeviceView): string {
+  if (view.status === 'unavailable') return 'status.unavailable';
+  if (view.powerW !== null && view.powerW < 0) return 'card.battery_load_discharging';
+  if (view.full) return 'card.battery_load_full';
+
+  switch (view.status) {
+    case 'on_ok':
+      return 'card.battery_load_charging';
+    case 'on_deficit':
+      return 'card.battery_load_reduced';
+    default:
+      // off_close / off_insufficient: kein Ueberschuss uebrig, die Batterie wartet.
+      return 'card.battery_load_waiting';
+  }
+}
+
 export function computeGrossSurplus(
   views: DeviceView[],
   availableW: number | null,

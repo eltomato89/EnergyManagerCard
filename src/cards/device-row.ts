@@ -8,7 +8,8 @@ import {
   mdiLockClock,
 } from '@mdi/js';
 import { DEVICE_ROW_TAG, OPTIMISTIC_TIMEOUT_MS } from '../const';
-import { formatDuration, formatPower } from '../lib/format';
+import { batteryStatusKey } from '../lib/device-status';
+import { formatDuration, formatPercent, formatPower } from '../lib/format';
 import { fireEvent, fireMoreInfo } from '../lib/events';
 import type { LocalizeFn } from '../localize/localize';
 import { statusColor, statusOpacity, themeVariables } from '../styles';
@@ -249,39 +250,32 @@ export class EnergyManagerDeviceRow extends LitElement {
   }
 
   /**
-   * Zweite Zeile der Batteriezeile: Ladeleistung und ein Wort zum Zustand.
+   * Zweite Zeile der Batteriezeile: Leistung, ein Wort zum Zustand, Ladestand.
    *
    * Bewusst nicht die Ampeltexte der Verbraucher — "In Betrieb, Netzbezug"
    * ergaebe fuer die Batterie keinen Sinn. Die Batterie zieht nie Netzstrom;
    * sie bekommt ihre Ladeleistung ganz, teilweise oder gar nicht.
+   *
+   * Die Leistung steht als Betrag da: Die Richtung sagt das Wort daneben, und
+   * ein Minuszeichen liesse sich in einer Zeile, die auch "wartet" enthaelt,
+   * zu leicht als Defizit lesen. Ein Messwert von 0 W wird gezeigt statt
+   * weggelassen — "0 W · wartet" ist eine Aussage, eine fehlende Zahl nicht.
    */
   private renderBatterySecondary() {
     const view = this.view;
     const parts: unknown[] = [];
 
-    if (view.powerW !== null && view.powerW > 0) {
-      parts.push(formatPower(view.powerW, this.locale));
+    if (view.powerW !== null) {
+      parts.push(formatPower(Math.abs(view.powerW), this.locale));
     }
-    parts.push(this.localize(this._batteryStatusKey()));
+    parts.push(this.localize(batteryStatusKey(view)));
+    if (view.soc !== null && view.soc !== undefined) {
+      parts.push(formatPercent(view.soc, this.locale));
+    }
 
     return html`<div class="secondary">
       ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}
     </div>`;
-  }
-
-  private _batteryStatusKey(): string {
-    const view = this.view;
-    switch (view.status) {
-      case 'on_ok':
-        return view.full ? 'card.battery_load_full' : 'card.battery_load_charging';
-      case 'on_deficit':
-        return 'card.battery_load_reduced';
-      case 'unavailable':
-        return 'status.unavailable';
-      default:
-        // off_close / off_insufficient: kein Ueberschuss uebrig, die Batterie wartet.
-        return 'card.battery_load_waiting';
-    }
   }
 
   private _move(delta: number): void {

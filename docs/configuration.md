@@ -68,6 +68,16 @@ scheduled — but it can be dragged to any position like a load. See
 [integration-contract.md](integration-contract.md#batterie-als-verschiebbare-last). Standalone
 (without the integration) the card does not synthesise this row.
 
+The second line of that row reads `1.2 kW · charging · 62 %`: measured power, what the battery is
+doing, state of charge. The power is shown as a magnitude — the direction is in the word next to it,
+and a minus sign in a line that can also read "waiting" is too easily taken for a deficit. A reading
+of 0 W is shown rather than omitted; "0 W · waiting" is a statement, a missing figure is not.
+
+The word is not the traffic-light text used for loads: "running, drawing from grid" makes no sense
+for a battery, which never draws from the grid. A **discharge takes precedence over everything
+else** — with no surplus the traffic light says `off_insufficient`, but the battery is not waiting
+then, it is supplying the house.
+
 ## Loads (`devices[]`) — legacy configurations only
 
 **With the integration none of this applies.** Loads are created there; the card reads them along

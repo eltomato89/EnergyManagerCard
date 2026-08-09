@@ -36,6 +36,7 @@
     "confirm_switch": "{name} schalten?",
     "battery": "Batterie",
     "battery_load_charging": "lädt",
+    "battery_load_discharging": "entlädt",
     "battery_load_full": "voll",
     "battery_load_reduced": "gedrosselt",
     "battery_load_waiting": "wartet"

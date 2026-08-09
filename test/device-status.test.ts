@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { computeDeviceViews, computeGrossSurplus, resolveScaleMax } from '../src/lib/device-status';
+import {
+  batteryStatusKey,
+  computeDeviceViews,
+  computeGrossSurplus,
+  resolveScaleMax,
+} from '../src/lib/device-status';
 import type { DeviceConfig } from '../src/types/config';
+import type { DeviceView } from '../src/types/runtime';
 import { makeHass } from './fixtures/hass';
 
 const NOW = Date.parse('2026-07-25T12:00:00.000Z');
@@ -267,6 +273,74 @@ describe('computeGrossSurplus', () => {
       lock: { kind: 'none' as const, remainingS: 0 },
     };
     expect(computeGrossSurplus([battery], 1200)).toEqual({ grossW: 1200, allocatedW: 0 });
+  });
+});
+
+describe('batteryStatusKey', () => {
+  function battery(overrides: Partial<DeviceView> = {}): DeviceView {
+    return {
+      config: { id: '__battery__', switch_entity: '' },
+      kind: 'battery',
+      index: 0,
+      configIndex: -1,
+      name: '',
+      isOn: false,
+      available: true,
+      managed: true,
+      autoSwitchable: false,
+      powerW: 0,
+      requiredW: 5000,
+      status: 'off_insufficient',
+      headroomW: null,
+      lock: { kind: 'none', remainingS: 0 },
+      ...overrides,
+    };
+  }
+
+  it('meldet Laden, wenn die volle Ladeleistung zurueckgelegt ist', () => {
+    expect(batteryStatusKey(battery({ status: 'on_ok', powerW: 4200 }))).toBe(
+      'card.battery_load_charging',
+    );
+  });
+
+  it('meldet gedrosselt, wenn nur ein Teil uebrig war', () => {
+    expect(batteryStatusKey(battery({ status: 'on_deficit', powerW: 1500 }))).toBe(
+      'card.battery_load_reduced',
+    );
+  });
+
+  it('meldet voll unabhaengig vom Ampelstatus', () => {
+    // Bei voller Batterie faellt der Anspruch auf 0, der Status kann damit auch
+    // ausserhalb von on_ok landen. "wartet" waere dort schlicht falsch.
+    expect(batteryStatusKey(battery({ status: 'off_insufficient', full: true }))).toBe(
+      'card.battery_load_full',
+    );
+  });
+
+  it('meldet Entladen vor allem anderen', () => {
+    // Ohne Ueberschuss steht im Ampelstatus "off_insufficient". Die Batterie
+    // wartet dann aber nicht — sie versorgt gerade das Haus.
+    expect(batteryStatusKey(battery({ status: 'off_insufficient', powerW: -800 }))).toBe(
+      'card.battery_load_discharging',
+    );
+  });
+
+  it('laesst sich auch von einer vollen Batterie nicht vom Entladen abbringen', () => {
+    expect(batteryStatusKey(battery({ status: 'on_ok', powerW: -800, full: true }))).toBe(
+      'card.battery_load_discharging',
+    );
+  });
+
+  it('meldet wartet, wenn kein Ueberschuss uebrig ist', () => {
+    expect(batteryStatusKey(battery({ status: 'off_insufficient', powerW: 0 }))).toBe(
+      'card.battery_load_waiting',
+    );
+  });
+
+  it('geht bei fehlendem Messwert nicht von einer Entladung aus', () => {
+    expect(batteryStatusKey(battery({ status: 'unavailable', powerW: null }))).toBe(
+      'status.unavailable',
+    );
   });
 });
 
