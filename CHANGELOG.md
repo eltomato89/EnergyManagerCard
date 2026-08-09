@@ -2,6 +2,23 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.6.0-beta.4] — 2026-08-09
+
+### Geändert
+
+- **Der Vertrag nennt keine Versionspaare mehr, sondern eine Untergrenze**: „Karte X, erprobt gegen
+  Integration ab Y". Ein Paar hätte bei jedem einseitigen Release nachgezogen werden müssen — und
+  einseitige Releases sind laut derselben Seite der Normalfall. Die Zeile bleibt nun richtig, wenn
+  die Integration allein erscheint.
+
+- Der Release-Workflow prüft, dass die im Vertrag genannte Kartenfassung zum Tag passt. Bisher hing
+  das daran, dass beim Veröffentlichen jemand daran denkt — dieselbe Absicherung, die die
+  Integration für ihre `manifest.json` schon hat.
+
+- Das Attribut `battery_priority` ist im Vertrag als reine Diagnose vermerkt. Die Karte bedient den
+  Rang über die gleichnamige number-Entität; das Attribut war bisher weder dokumentiert noch
+  genutzt.
+
 ## [0.6.0-beta.3] — 2026-08-09
 
 ### Dokumentation

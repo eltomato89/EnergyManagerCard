@@ -96,7 +96,14 @@ Integration braucht, nennt hier ihre Mindestversion.
 | Integrationsmodus (Verbraucher, Ampel, Rang, Sperrzeiten) | ≥ 0.4.0        | ≥ 0.1.0     |
 | Batteriezeile als verschiebbare Last                      | ≥ 0.6.0-beta.1 | ≥ 0.4.0b1   |
 
-Die aktuellen Vorabfassungen `0.6.0-beta.3` (Karte) und `0.4.0b4` (Integration) gehören zusammen.
+<!-- version-pair -->
+
+**Aktueller Stand:** Karte `0.6.0-beta.4`, erprobt gegen Integration ab `0.4.0b4`.
+
+Bewusst eine Untergrenze und kein Paar: Eine Integrationsfassung, die allein erscheint, macht die
+Zeile damit nicht falsch — sonst müsste sie bei jedem einseitigen Release nachgezogen werden, und
+genau das wird einmal vergessen. Dass die genannte Kartenfassung stimmt, prüft der Release-Workflow
+der Karte gegen den Tag.
 
 ## Attribute, auf die sich die Karte verlässt
 
@@ -122,7 +129,9 @@ Am Überschuss-Sensor des Hubs: `grid_w`, `battery_w`, `battery_correction_w`, `
 Nimmt die Batterie als verschiebbare Last teil (siehe unten), kommen am
 Überschuss-Sensor dazu: `battery_load` (`true`), `battery_rank`, `battery_status`,
 `battery_max_charge_w`, `battery_claim_w`, `battery_headroom_w`, `battery_charging_w`,
-`battery_full` und `battery_soc_entity` (für den Detail-Dialog der Batteriezeile).
+`battery_full` und `battery_soc_entity` (für den Detail-Dialog der Batteriezeile). Dazu
+`battery_priority` als reine Diagnose — den Rang bedient die Karte über die gleichnamige
+number-Entität, nicht über dieses Attribut.
 
 `battery_claim_w` ist die Leistung, die insgesamt für die Batterie zurückgelegt ist — einschließlich
 einer eingetragenen `battery_reserve_w`, die schon vor dem ersten Verbraucher abgezogen wurde.

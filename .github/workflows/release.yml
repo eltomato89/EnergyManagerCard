@@ -25,6 +25,20 @@ jobs:
 
       - run: npm run build
 
+      # Der Vertrag nennt die Fassung, gegen die er geschrieben ist. Von Hand
+      # nachgezogen wird sie genau einmal vergessen -- danach steht dort eine
+      # Kartenfassung, die es nicht gibt. Geprueft wird nur die Karte: Die
+      # genannte Integration ist eine Untergrenze und bleibt richtig, auch wenn
+      # die Integration allein eine neue Fassung veroeffentlicht.
+      - name: Vertrag nennt die veroeffentlichte Kartenfassung
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          DOKU=$(grep -A3 '<!-- version-pair -->' docs/integration-contract.md \
+                 | grep -o '`[^`]*`' | head -1 | tr -d '`')
+          test -n "$DOKU" || { echo "Zeile hinter <!-- version-pair --> nicht gefunden"; exit 1; }
+          test "$DOKU" = "$VERSION" \
+            || { echo "integration-contract.md nennt $DOKU, Tag ist $VERSION"; exit 1; }
+
       # Ohne dieses Flag landet eine Vorabfassung als regulaeres Release: GitHub
       # setzt sie auf "Latest", und HACS bietet sie damit allen an statt nur
       # denen, die Betas eingeschaltet haben. Massstab ist der Tag selbst --
