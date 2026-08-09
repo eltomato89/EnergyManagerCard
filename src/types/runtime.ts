@@ -111,6 +111,14 @@ export interface DeviceView {
   kind?: 'consumer' | 'battery';
   /** Ladestand in Prozent — nur fuer kind 'battery'. */
   soc?: number | null;
+  /**
+   * Ladestand am oberen Anschlag — nur fuer kind 'battery'.
+   *
+   * Kommt als `battery_full` von der Integration, statt hier aus dem Ladestand
+   * abgeleitet zu werden: Wo die Grenze liegt, entscheidet die Integration, und
+   * eine zweite Schwelle in der Karte liefe irgendwann auseinander.
+   */
+  full?: boolean;
   /** Rang in der Prioritaetsreihenfolge, 0-basiert (0 = hoechste). */
   index: number;
   /** Position im devices-Array. Fuer Umsortieren und stabile Keys noetig. */

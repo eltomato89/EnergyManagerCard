@@ -13,6 +13,11 @@ The card is not meant to be used without the integration. It still runs — it t
 surplus from sensors you configure yourself — but without loads there is little point to it.
 Configurations from earlier versions keep working; see [Legacy configurations](#legacy-configurations).
 
+Card and integration are versioned **independently** — the numbers are deliberately not kept in
+lockstep, because the two sides share an attribute contract, not a release cadence. Minimum
+integration versions per feature, and the reasoning behind that choice, are in the
+[interface contract](docs/integration-contract.md#versionierung-getrennte-nummern-dokumentierte-mindestversion).
+
 ![The card in the light and the dark theme](docs/images/preview.png)
 
 <sub>Shown: 2.4 kW export plus 600 W battery charging make 3.0 kW of available surplus. The wallbox

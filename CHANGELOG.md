@@ -2,6 +2,17 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.6.0-beta.2] — 2026-08-09
+
+### Geändert
+
+- **„Voll" kommt jetzt von der Integration**, statt in der Karte aus dem Ladestand abgeleitet zu
+  werden. Das Attribut `battery_full` gab es bereits; die Karte prüfte daneben selbst auf
+  `soc >= 100`. Zwei Schwellen für dieselbe Aussage laufen früher oder später auseinander.
+
+- Der Schnittstellenvertrag hält `battery_headroom_w` fest und beschreibt, dass `battery_claim_w`
+  die bereits abgezogene `battery_reserve_w` einschließt.
+
 ## [0.5.2] — 2026-07-27
 
 ### Geändert

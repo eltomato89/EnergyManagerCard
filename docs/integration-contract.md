@@ -61,6 +61,37 @@ Findet sich kein Hub, rechnet die Karte selbst. Dasselbe bei `use_integration: f
 Diese Schlüssel sind Teil der Zusage. Werden sie in der Integration umbenannt, findet die Karte die
 Rolle nicht mehr.
 
+## Versionierung: getrennte Nummern, dokumentierte Mindestversion
+
+Beide Projekte tragen **eigene Versionsnummern**. Eine gemeinsame Nummer wäre naheliegend — beide
+werden bisher am selben Tag veröffentlicht, und wer eine Batteriezeile sieht, will wissen, welche
+Integration dazugehört. Sie ist trotzdem verworfen, und zwar aus vier Gründen:
+
+1. **Die Karte läuft ohne Integration.** Für diese Konfigurationen wäre eine Nummer, die vor allem
+   „passt zu Integration X" bedeutet, eine Aussage über etwas, das gar nicht installiert ist.
+2. **Gleichstand erzwingt Leerreleases.** Eine Korrektur nur an der Karte bräuchte dann eine
+   Integrationsversion ohne Inhalt — oder die Nummern laufen beim ersten Ausnahmefall auseinander.
+   Ein Versprechen, das einmal gebrochen wird, ist schlechter als keines.
+3. **Gekoppelt sind die Attribute, nicht die Releases.** Was beide Seiten einhalten müssen, steht in
+   diesem Dokument. Eine Versionsgleichheit würde eine harte Kopplung behaupten, die es nicht gibt.
+4. **Die Karte fragt Attribute ab, nie Versionen.** Fehlt `battery_load`, entfällt die
+   Batteriezeile; fehlt der Hub, rechnet die Karte selbst. Eine ältere Integration führt damit zu
+   weniger Anzeige, nicht zu einem Fehler — genau das, was eine Versionsprüfung erreichen soll.
+
+Hinzu kommt, dass die Nummern nicht deckungsgleich zu machen wären, ohne eine der beiden Historien
+zu verbiegen: Die Karte ist zwei Minor-Versionen weiter, weil sie vor der Integration existierte und
+eine zurückgezogene Fassung hinter sich hat.
+
+**Stattdessen gilt:** Neue Attribute kommen additiv dazu, und jede Kartenfunktion, die eine
+Integration braucht, nennt hier ihre Mindestversion.
+
+| Kartenfunktion                                            | Karte          | Integration |
+| --------------------------------------------------------- | -------------- | ----------- |
+| Integrationsmodus (Verbraucher, Ampel, Rang, Sperrzeiten) | ≥ 0.4.0        | ≥ 0.1.0     |
+| Batteriezeile als verschiebbare Last                      | ≥ 0.6.0-beta.1 | ≥ 0.4.0b1   |
+
+Die aktuellen Vorabfassungen `0.6.0-beta.2` (Karte) und `0.4.0b3` (Integration) gehören zusammen.
+
 ## Attribute, auf die sich die Karte verlässt
 
 Das ist der Kern des Vertrags: Die Karte stellt einen Verbraucher **allein aus den Attributen des
@@ -84,8 +115,14 @@ Am Überschuss-Sensor des Hubs: `grid_w`, `battery_w`, `battery_correction_w`, `
 
 Nimmt die Batterie als verschiebbare Last teil (siehe unten), kommen am
 Überschuss-Sensor dazu: `battery_load` (`true`), `battery_rank`, `battery_status`,
-`battery_max_charge_w`, `battery_claim_w`, `battery_charging_w`, `battery_full` und
-`battery_soc_entity` (für den Detail-Dialog der Batteriezeile).
+`battery_max_charge_w`, `battery_claim_w`, `battery_headroom_w`, `battery_charging_w`,
+`battery_full` und `battery_soc_entity` (für den Detail-Dialog der Batteriezeile).
+
+`battery_claim_w` ist die Leistung, die insgesamt für die Batterie zurückgelegt ist — einschließlich
+einer eingetragenen `battery_reserve_w`, die schon vor dem ersten Verbraucher abgezogen wurde.
+`battery_headroom_w` ist, was danach für tiefer priorisierte Verbraucher übrig bleibt. Ob die
+Batterie voll ist, sagt `battery_full`; die Karte leitet das nicht selbst aus dem Ladestand ab, sonst
+lägen zwei Schwellen nebeneinander.
 
 `errors` verwendet Unterstriche (`grid_unavailable`); die Karte übersetzt sie in ihre eigene
 Schreibweise mit Bindestrichen. Ein Testfall in `test/integration.test.ts` hält das fest.
@@ -110,8 +147,8 @@ der Prioritätsreihenfolge teil — sonst bleibt sie wie bisher nur ein Korrektu
 
 Die Integration hängt sie dann als eigenen Rang in dieselbe Budget-Kaskade wie die Verbraucher:
 Wer **über** der Batterie steht, bekommt den Überschuss zuerst und bleibt eingeschaltet; die
-Batterie reserviert an ihrem Rang bis zu ihrer Ladeleistung; nur der Rest steht Verbrauchern
-**unter** ihr zur Verfügung. Das ist reine Verteilung — die Batterie wird nicht angesteuert.
+Batterie legt an ihrem Rang bis zu ihrer Ladeleistung zurück, abzüglich einer bereits
+abgezogenen `battery_reserve_w`; nur der Rest steht Verbrauchern **unter** ihr zur Verfügung. Das ist reine Verteilung — die Batterie wird nicht angesteuert.
 
 Die Karte stellt sie als eigene Zeile dar (`kind: 'battery'`), gebaut allein aus den
 `battery_*`-Attributen des Überschuss-Sensors und der `battery_priority`-Entität am Hub. Die Zeile
@@ -167,6 +204,10 @@ Anschließend gilt in beiden Modi:
 available = S_roh − battery_reserve_w
 wenn soc < battery_min_soc:  available = min(available, 0)
 ```
+
+`battery_reserve_w` wird auf `battery_max_charge_w` **angerechnet**, nicht addiert: Nimmt die
+Batterie als verschiebbare Last teil, fordert sie an ihrem Rang nur noch die Differenz an. Sonst
+zögen zwei Felder mit derselben Bedeutung den Verbrauchern die Summe aus beidem ab.
 
 Kein Clamping auf ≥ 0. Ein negativer Wert bedeutet ein **Defizit gegenüber der Erzeugung** — und
 ausdrücklich _nicht_ Netzbezug in gleicher Höhe, denn die Batterie kann einen Teil davon stützen.

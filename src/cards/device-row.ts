@@ -273,9 +273,7 @@ export class EnergyManagerDeviceRow extends LitElement {
     const view = this.view;
     switch (view.status) {
       case 'on_ok':
-        return view.soc !== null && view.soc !== undefined && view.soc >= 100
-          ? 'card.battery_load_full'
-          : 'card.battery_load_charging';
+        return view.full ? 'card.battery_load_full' : 'card.battery_load_charging';
       case 'on_deficit':
         return 'card.battery_load_reduced';
       case 'unavailable':

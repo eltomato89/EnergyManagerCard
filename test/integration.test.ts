@@ -329,6 +329,8 @@ const BATTERY_ATTRS = {
   battery_charging_w: 4200,
   battery_soc: 55,
   battery_soc_entity: 'sensor.akku_soc',
+  battery_full: false,
+  battery_headroom_w: 1200,
 };
 
 describe('batteryRowFromIntegration', () => {
@@ -354,6 +356,16 @@ describe('batteryRowFromIntegration', () => {
     expect(row?.powerW).toBe(4200);
     expect(row?.isOn).toBe(true);
     expect(row?.soc).toBe(55);
+    expect(row?.full).toBe(false);
+  });
+
+  it('uebernimmt "voll" von der Integration statt es selbst abzuleiten', () => {
+    // Wo die Grenze liegt, entscheidet die Integration. Eine zweite Schwelle in
+    // der Karte liefe irgendwann auseinander.
+    const hass = withBatteryHelper(
+      withIntegration({ ...BATTERY_ATTRS, battery_soc: 97, battery_full: true }),
+    );
+    expect(batteryRowFromIntegration(hass, findIntegration(hass)!)?.full).toBe(true);
   });
 
   it('reiht die Batterie an ihrem Rang in die Liste ein', () => {

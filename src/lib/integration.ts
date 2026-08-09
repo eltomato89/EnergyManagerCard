@@ -285,6 +285,7 @@ export function batteryRowFromIntegration(
     status,
     headroomW: num(attrs.battery_claim_w),
     soc: num(attrs.battery_soc),
+    full: attrs.battery_full === true,
     lock: { kind: 'none', remainingS: 0 },
   };
 }
