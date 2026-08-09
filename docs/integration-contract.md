@@ -64,23 +64,29 @@ Rolle nicht mehr.
 ## Versionierung: getrennte Nummern, dokumentierte Mindestversion
 
 Beide Projekte tragen **eigene Versionsnummern**. Eine gemeinsame Nummer wäre naheliegend — beide
-werden bisher am selben Tag veröffentlicht, und wer eine Batteriezeile sieht, will wissen, welche
-Integration dazugehört. Sie ist trotzdem verworfen, und zwar aus vier Gründen:
+werden meist am selben Tag veröffentlicht, und wer eine Batteriezeile sieht, will wissen, welche
+Integration dazugehört. Sie ist trotzdem verworfen, und zwar aus drei Gründen:
 
-1. **Die Karte läuft ohne Integration.** Für diese Konfigurationen wäre eine Nummer, die vor allem
-   „passt zu Integration X" bedeutet, eine Aussage über etwas, das gar nicht installiert ist.
-2. **Gleichstand erzwingt Leerreleases.** Eine Korrektur nur an der Karte bräuchte dann eine
-   Integrationsversion ohne Inhalt — oder die Nummern laufen beim ersten Ausnahmefall auseinander.
-   Ein Versprechen, das einmal gebrochen wird, ist schlechter als keines.
-3. **Gekoppelt sind die Attribute, nicht die Releases.** Was beide Seiten einhalten müssen, steht in
+1. **Einseitige Releases sind der Normalfall, nicht die Ausnahme.** In der bisherigen gemeinsamen
+   Historie stehen fünf Paare, die binnen zwei Minuten erschienen — und drei Fassungen, die es nur
+   auf einer Seite gab: Karte `0.4.1` sowie Integration `0.3.0` und `0.3.1`. Gleichstand hätte jedes
+   Mal ein leeres Release auf der anderen Seite erzwungen. Oder die Nummern wären beim ersten
+   Ausnahmefall auseinandergelaufen — ein Versprechen, das einmal gebrochen wird, ist schlechter als
+   keines.
+2. **Gekoppelt sind die Attribute, nicht die Releases.** Was beide Seiten einhalten müssen, steht in
    diesem Dokument. Eine Versionsgleichheit würde eine harte Kopplung behaupten, die es nicht gibt.
-4. **Die Karte fragt Attribute ab, nie Versionen.** Fehlt `battery_load`, entfällt die
-   Batteriezeile; fehlt der Hub, rechnet die Karte selbst. Eine ältere Integration führt damit zu
-   weniger Anzeige, nicht zu einem Fehler — genau das, was eine Versionsprüfung erreichen soll.
+3. **Die Karte fragt Attribute ab, nie Versionen.** Fehlt `battery_load`, entfällt die
+   Batteriezeile. Eine ältere Integration führt damit zu weniger Anzeige statt zu einem Fehler —
+   genau das, was eine Versionsprüfung erreichen soll, nur ohne Nummernvergleich.
 
 Hinzu kommt, dass die Nummern nicht deckungsgleich zu machen wären, ohne eine der beiden Historien
 zu verbiegen: Die Karte ist zwei Minor-Versionen weiter, weil sie vor der Integration existierte und
-eine zurückgezogene Fassung hinter sich hat.
+eine zurückgezogene Fassung hinter sich hat. Die Integration müsste von 0.4 auf 0.6 springen, ohne
+dass das etwas bedeutete.
+
+**Kein Grund ist**, dass die Karte ohne Integration läuft. Das ist Bestandsschutz für ältere
+Konfigurationen und ausdrücklich kein vorgesehener Betriebsmodus — die Versionierung muss ihn nicht
+abbilden.
 
 **Stattdessen gilt:** Neue Attribute kommen additiv dazu, und jede Kartenfunktion, die eine
 Integration braucht, nennt hier ihre Mindestversion.
