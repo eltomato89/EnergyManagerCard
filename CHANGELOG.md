@@ -2,6 +2,23 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.6.0] — 2026-08-11
+
+Reguläre Fassung der Batterie-Reihe: Alles aus `0.6.0-beta.1` bis `0.6.0-beta.6` erreicht damit auch
+die Instanzen, die in HACS keine Vorabfassungen eingeschaltet haben. Am Code ändert sich gegenüber
+`0.6.0-beta.6` nichts.
+
+### Neu
+
+- **Die Hausbatterie erscheint als eigene Zeile unter den Verbrauchern** — nachgetragen aus
+  `0.6.0-beta.1`, wo der Eintrag fehlte. Die Karte baut sie aus den `battery_*`-Attributen des
+  Überschuss-Sensors und zeigt sie an ihrem Rang; sortieren lässt sie sich wie ein Verbraucher, der
+  Rang geht an die number-Entität `battery_priority`. Einen Schalter hat die Zeile nicht — die
+  Batterie wird eingeplant, nicht geschaltet —, und der Detail-Dialog führt zum Ladestandssensor.
+
+- Nur im Integrationsmodus: Fehlt das Attribut `battery_load`, entfällt die Zeile. Eine ältere
+  Integration führt damit zu weniger Anzeige statt zu einem Fehler.
+
 ## [0.6.0-beta.6] — 2026-08-09
 
 ### Neu

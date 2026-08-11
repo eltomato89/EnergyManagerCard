@@ -91,14 +91,14 @@ abbilden.
 **Stattdessen gilt:** Neue Attribute kommen additiv dazu, und jede Kartenfunktion, die eine
 Integration braucht, nennt hier ihre Mindestversion.
 
-| Kartenfunktion                                            | Karte          | Integration |
-| --------------------------------------------------------- | -------------- | ----------- |
-| Integrationsmodus (Verbraucher, Ampel, Rang, Sperrzeiten) | ≥ 0.4.0        | ≥ 0.1.0     |
-| Batteriezeile als verschiebbare Last                      | ≥ 0.6.0-beta.1 | ≥ 0.4.0b1   |
+| Kartenfunktion                                            | Karte   | Integration |
+| --------------------------------------------------------- | ------- | ----------- |
+| Integrationsmodus (Verbraucher, Ampel, Rang, Sperrzeiten) | ≥ 0.4.0 | ≥ 0.1.0     |
+| Batteriezeile als verschiebbare Last                      | ≥ 0.6.0 | ≥ 0.4.0     |
 
 <!-- version-pair -->
 
-**Aktueller Stand:** Karte `0.6.0-beta.6`, erprobt gegen Integration ab `0.4.0b4`.
+**Aktueller Stand:** Karte `0.6.0`, erprobt gegen Integration ab `0.4.0`.
 
 Bewusst eine Untergrenze und kein Paar: Eine Integrationsfassung, die allein erscheint, macht die
 Zeile damit nicht falsch — sonst müsste sie bei jedem einseitigen Release nachgezogen werden, und
