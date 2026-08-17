@@ -249,6 +249,7 @@ export function viewsFromIntegration(
       lock: lockFromEntity(hass, device.roles[ROLE_LOCKED_UNTIL], now),
       levels: levelsFromAttributes(attrs),
       blockedBy: typeof attrs.blocked_by === 'string' ? attrs.blocked_by : undefined,
+      manualRemainingS: remainingSeconds(attrs.manual_until, now),
     });
   }
 
@@ -257,6 +258,20 @@ export function viewsFromIntegration(
 
   // Nach Rang sortieren — die Integration bestimmt die Reihenfolge.
   return views.sort((a, b) => a.index - b.index);
+}
+
+/**
+ * Verbleibende Sekunden bis zu einem ISO-Zeitstempel, oder 0.
+ *
+ * Die Integration liefert den Endzeitpunkt und nicht die Restdauer: Ein
+ * Zeitstempel bleibt richtig, waehrend eine Restdauer mit jeder Sekunde
+ * veraltet — die Karte zeichnet nicht jede Sekunde neu.
+ */
+function remainingSeconds(value: unknown, now: number): number {
+  if (typeof value !== 'string') return 0;
+  const until = Date.parse(value);
+  if (!Number.isFinite(until)) return 0;
+  return Math.max(0, Math.ceil((until - now) / 1000));
 }
 
 /**

@@ -27,6 +27,8 @@
     "priority": "Priorität {index}",
     "locked_runtime": "Mindestlaufzeit noch {time}",
     "locked_off": "Sperrzeit noch {time}",
+    "manual_override": "Manuell übersteuert, noch {time}",
+    "manual_hint": "Jemand hat dieses Gerät von Hand geschaltet. So lange hält sich die Automatik fern.",
     "needs": "benötigt {power}",
     "max_power": "max. {power}",
     "level_of": "Stufe {index}/{count}",

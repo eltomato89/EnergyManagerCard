@@ -149,3 +149,31 @@ describe('HANDS_OFF_BLOCKERS', () => {
     }
   });
 });
+
+describe('Manuelle Uebersteuerung', () => {
+  it('rechnet den Zeitstempel in verbleibende Sekunden um', () => {
+    // Die Integration liefert den Endzeitpunkt, nicht die Restdauer: Ein
+    // Zeitstempel bleibt richtig, waehrend eine Restdauer mit jeder Sekunde
+    // veraltet — und die Karte zeichnet nicht jede Sekunde neu.
+    const bis = new Date(NOW + 90_000).toISOString();
+
+    expect(view({ manual_until: bis }).manualRemainingS).toBe(90);
+  });
+
+  it('ist 0, wenn die Sperre abgelaufen ist', () => {
+    const vorbei = new Date(NOW - 5_000).toISOString();
+
+    expect(view({ manual_until: vorbei }).manualRemainingS).toBe(0);
+  });
+
+  it('ist 0 ohne Sperre', () => {
+    expect(view({ manual_until: null }).manualRemainingS).toBe(0);
+    expect(view({}).manualRemainingS).toBe(0);
+  });
+
+  it('daempft den Statusbalken', () => {
+    // Der Grund gehoert zu denen, bei denen die Automatik absichtlich nichts
+    // tut — anders als die Zeitbedingungen des Normalbetriebs.
+    expect(HANDS_OFF_BLOCKERS.has('manual')).toBe(true);
+  });
+});

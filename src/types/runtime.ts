@@ -193,6 +193,17 @@ export interface DeviceView {
    * Untaetigkeit zu erklaeren waere.
    */
   blockedBy?: string;
+  /**
+   * Verbleibende Sekunden einer manuellen Uebersteuerung; 0 oder fehlend = keine.
+   *
+   * Nach einem Eingriff von aussen haelt sich die Automatik befristet fern.
+   * Befristet und nicht dauerhaft, weil es Fehlerkennungen gibt, die nicht
+   * wegzufiltern sind — ein Geraet, das seinen eigenen Zustand aendert.
+   *
+   * Optional, weil es das Konzept ohne Integration nicht gibt: Dort schaltet
+   * niemand automatisch, den ein Eingriff von Hand uebersteuern koennte.
+   */
+  manualRemainingS?: number;
 }
 
 /**

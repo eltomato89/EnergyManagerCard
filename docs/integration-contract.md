@@ -166,6 +166,16 @@ sie nicht höher": Nicht der Überschuss fehlt, das Gerät nimmt nicht mehr. Die
 ab — ob eine Last dem Sollwert folgt, ergibt sich erst aus dem Verlauf über die Zeit, und den kennt
 nur die Integration.
 
+Nach einem Eingriff von außen hält sich die Automatik befristet fern; `manual_until` nennt den
+**Endzeitpunkt**, nicht die Restdauer. Ein Zeitstempel bleibt richtig, während eine Restdauer mit
+jeder Sekunde veraltet, und die Karte zeichnet nicht jede Sekunde neu. Fehlt das Attribut oder ist es
+`null`, liegt keine Übersteuerung an.
+
+Befristet und nicht dauerhaft, und das ist eine Zusage an den Nutzer: Es gibt eine Klasse von
+Fehlerkennungen, die nicht wegzufiltern ist — Geräte, die ihren eigenen Zustand ändern. Dort läuft
+eine befristete Sperre von selbst ab. Der `managed`-Schalter wird von der Integration **nie**
+geschrieben; er bleibt Nutzerkonfiguration.
+
 ## Der Statusbalken bei untätiger Automatik
 
 Die Karte dämpft den Statusbalken einer Zeile auf Grau, wenn `blocked_by` einen Grund nennt, bei dem

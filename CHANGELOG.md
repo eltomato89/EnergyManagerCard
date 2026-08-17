@@ -20,6 +20,10 @@ Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   hinter der Stufenangabe, dessen Tooltip die tatsächlich erreichte Leistung nennt. Ohne ihn liest
   sich die kürzere Leiter wie ein Gerät mit weniger Stufen.
 
+- **Countdown bei manueller Übersteuerung.** Hat jemand ein Gerät von Hand geschaltet, hält sich die
+  Automatik befristet fern; die Zeile sagt, wie lange noch. Als eigene Unterzeile wie die Sperrzeit:
+  Der Zustand ist vorübergehend, und ohne die verbleibende Zeit liest er sich wie eine Einstellung.
+
 - **Gedämpfter Statusbalken, wenn die Automatik absichtlich nichts tut** (`not_managed`,
   `unavailable`, `forced`, `manual`). Sonst behauptet die Ampel „könnte laufen", während nichts
   geschieht. Die Zeitbedingungen des Normalbetriebs sind ausdrücklich nicht dabei: Sie laufen vor und

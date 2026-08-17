@@ -5,6 +5,7 @@ import {
   mdiArrowDown,
   mdiArrowUp,
   mdiDragHorizontalVariant,
+  mdiHandBackRight,
   mdiLockClock,
 } from '@mdi/js';
 import { DEVICE_ROW_TAG, OPTIMISTIC_TIMEOUT_MS } from '../const';
@@ -325,7 +326,8 @@ export class EnergyManagerDeviceRow extends LitElement {
     if (!view.managed) parts.push(this.localize('card.not_managed'));
 
     const hasLock = view.lock.kind !== 'none';
-    if (parts.length === 0 && !hasLock && !view.levels) return nothing;
+    const manuell = view.manualRemainingS ?? 0;
+    if (parts.length === 0 && !hasLock && !view.levels && manuell === 0) return nothing;
 
     // Die Sperrzeit steht in einer eigenen Zeile statt angehängt: sonst bleibt
     // beim Umbruch ein Trennpunkt am Zeilenende hängen, und die Sperre ist
@@ -339,6 +341,18 @@ export class EnergyManagerDeviceRow extends LitElement {
             </div>`
       }
       ${this.renderLadder()}
+      ${
+        // Nach einem Eingriff von aussen haelt sich die Automatik befristet
+        // fern. Als eigene Unterzeile mit Countdown, wie die Sperrzeit: Der
+        // Zustand ist voruebergehend, und ohne die verbleibende Zeit liest er
+        // sich wie eine Einstellung.
+        manuell > 0
+          ? html`<div class="secondary manual" title=${this.localize('card.manual_hint')}>
+              <ha-svg-icon .path=${mdiHandBackRight}></ha-svg-icon>
+              ${this.localize('card.manual_override', { time: formatDuration(manuell) })}
+            </div>`
+          : nothing
+      }
       ${
         hasLock
           ? html`<div
@@ -648,8 +662,17 @@ export class EnergyManagerDeviceRow extends LitElement {
         --mdc-icon-size: 13px;
       }
 
-      .lock ha-svg-icon {
+      .lock ha-svg-icon,
+      .manual ha-svg-icon {
         --mdc-icon-size: 14px;
+      }
+
+      .manual {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+        color: var(--warning-color, #ffa726);
       }
 
       .switch-wrap {

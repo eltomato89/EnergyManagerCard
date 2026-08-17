@@ -27,6 +27,8 @@
     "priority": "Priority {index}",
     "locked_runtime": "Minimum runtime, {time} remaining",
     "locked_off": "Lockout, {time} remaining",
+    "manual_override": "Manually overridden, {time} left",
+    "manual_hint": "Someone switched this device by hand. The automation keeps away for this long.",
     "needs": "requires {power}",
     "max_power": "max. {power}",
     "level_of": "Level {index}/{count}",
