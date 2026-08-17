@@ -2,6 +2,37 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [Unveröffentlicht]
+
+### Hinzugefügt
+
+- **Stufenleiter für regelbare Verbraucher.** Ein Verbraucher, den die Integration in Stufen fährt,
+  bekommt in seiner Zeile ein Segmentband — ein Segment je Stufe, gefüllt bis zur gestellten — und
+  eine Zweitzeile in der Form „4,8 kW von 11,0 kW · Stufe 5/11". Ohne die Leiter liest sich eine
+  gedrosselte Wallbox wie eine, bei der der Überschuss nicht reicht.
+
+  Das Raster kommt vollständig aus den Attributen der Integration. Die Karte kennt weder die
+  Steuerentität noch die Umrechnung von Ampere in Watt — lägen sie hier auch, liefen beide Seiten
+  auseinander. Fehlen die Attribute, entfällt die Leiter; eine ältere Integration führt damit zu
+  weniger Anzeige statt zu einem Fehler.
+
+- **Hinweis, wenn die Leiter begrenzt ist**, weil das Gerät dem Sollwert nicht folgt: ein Symbol
+  hinter der Stufenangabe, dessen Tooltip die tatsächlich erreichte Leistung nennt. Ohne ihn liest
+  sich die kürzere Leiter wie ein Gerät mit weniger Stufen.
+
+- **Gedämpfter Statusbalken, wenn die Automatik absichtlich nichts tut** (`not_managed`,
+  `unavailable`, `forced`, `manual`). Sonst behauptet die Ampel „könnte laufen", während nichts
+  geschieht. Die Zeitbedingungen des Normalbetriebs sind ausdrücklich nicht dabei: Sie laufen vor und
+  nach jedem gewöhnlichen Schaltvorgang, der Balken würde dauernd grau blinken. Der Ampeltext bleibt
+  in allen Fällen unverändert.
+
+### Behoben
+
+- **Ein Attribut, das die Integration bewusst als `null` meldet, wurde als gemessene Null gelesen.**
+  `Number(null)` ist 0 und nicht NaN; die Prüfung auf eine endliche Zahl griff deshalb nicht. Folge:
+  Ein Verbraucher ohne Leistungssensor zeigte „0 W" statt seiner Nennleistung oder seines Bedarfs,
+  und derselbe Fehler betraf jedes weitere Attribut, das leer sein darf.
+
 ## [0.6.0] — 2026-08-11
 
 Reguläre Fassung der Batterie-Reihe: Alles aus `0.6.0-beta.1` bis `0.6.0-beta.6` erreicht damit auch

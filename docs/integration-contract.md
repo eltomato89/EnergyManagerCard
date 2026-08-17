@@ -95,6 +95,8 @@ Integration braucht, nennt hier ihre Mindestversion.
 | --------------------------------------------------------- | ------- | ----------- |
 | Integrationsmodus (Verbraucher, Ampel, Rang, Sperrzeiten) | ≥ 0.4.0 | ≥ 0.1.0     |
 | Batteriezeile als verschiebbare Last                      | ≥ 0.6.0 | ≥ 0.4.0     |
+| Stufenleiter regelbarer Verbraucher                       | ≥ 0.7.0 | ≥ 0.5.0     |
+| Gedämpfter Statusbalken bei untätiger Automatik           | ≥ 0.7.0 | ≥ 0.1.0     |
 
 <!-- version-pair -->
 
@@ -122,6 +124,63 @@ Am Status-Sensor je Verbraucher:
 | `managed`, `is_on`                    | Zustand                                             |
 | `power_w`, `required_w`, `headroom_w` | Zweitzeile und Ampelbegründung                      |
 | `min_power`, `max_power`              | Skalierung der Überschussleiste                     |
+| `consumer_type`                       | Verhaltenstyp: `switch` oder `modulating`           |
+
+`consumer_type` ist der Verhaltenstyp des Verbrauchers. Fehlt das Attribut, gilt `switch` — eine
+ältere Integration führt damit zu derselben Darstellung wie bisher. `modulating` ist vorgesehen für
+Verbraucher mit einer Steuerentität; solange die Integration sie nicht ansteuert, liefert sie den
+Wert nicht aus.
+
+Zur Diagnose kommen `last_foreign_change` (ISO-Zeitstempel) und `last_foreign_to` (bool) dazu: wann
+zuletzt jemand **anders als die Integration** diesen Verbraucher geschaltet hat und wohin. Die Karte
+muss darauf nichts stützen — die Werte sind dafür da, im Betrieb abzulesen, wie häufig der Fall bei
+einem Gerät auftritt. Bei Geräten, die intern takten (`climate`, `water_heater`), ist er der
+Regelfall und nicht die Ausnahme.
+
+### Regelbare Verbraucher
+
+Ist ein Verbraucher regelbar, kommen am Status-Sensor dazu: `control_entity`, `level_source`
+(`number_w`, `number_a` oder `select`), `level_count`, `min_level_w`, `max_level_w`, `level_w`,
+`level_index` (1-basiert wie `rank`) und `setpoint_w`.
+
+Bei einem rein schaltbaren Verbraucher **fehlen diese Attribute ganz**, statt mit `null` befüllt zu
+sein. Daran — und nicht an `consumer_type` — erkennt die Karte, dass es etwas zu regeln gibt. Eine
+ältere Integration liefert sie ebenfalls nicht und führt damit zu weniger Anzeige statt zu einem
+Fehler; dieselbe Regel wie bei der Batteriezeile.
+
+**Das Raster ist die Sache der Integration.** Die Karte leitet es nicht ab: Sie kennt weder die
+Attribute der Steuerentität noch die Umrechnung von Ampere in Watt. Läge beides an zwei Stellen,
+liefe es auseinander — genau der Fehler, den die Paritätsprüfung für die Überschussformel verhindert.
+
+`level_w` ist die gestellte Stufe, `setpoint_w` die, auf die die Automatik gehen würde. Weichen sie
+voneinander ab, steht ein Stufenwechsel an, und `blocked_by` sagt, warum er noch nicht stattgefunden
+hat. `level_w` und `level_index` sind `null`, wenn keine Stufe zu lesen ist — etwa bei einer
+Auswahlliste in der Aus-Stellung. Das ist etwas anderes als 0 W und muss als `null` durchkommen.
+
+`required_w` ist bei einem regelbaren Verbraucher die **kleinste Stufe**, ausgewiesen über
+`required_source: ladder`.
+
+`observed_max_w` ist die höchste Leistung, die das Gerät seit dem Einschalten erreicht hat, und
+`level_capped` sagt, ob die Leiter deswegen beschnitten ist. Beides ist die Antwort auf „warum geht
+sie nicht höher": Nicht der Überschuss fehlt, das Gerät nimmt nicht mehr. Die Karte leitet das nicht
+ab — ob eine Last dem Sollwert folgt, ergibt sich erst aus dem Verlauf über die Zeit, und den kennt
+nur die Integration.
+
+## Der Statusbalken bei untätiger Automatik
+
+Die Karte dämpft den Statusbalken einer Zeile auf Grau, wenn `blocked_by` einen Grund nennt, bei dem
+die Automatik den Verbraucher **absichtlich liegen lässt**: `not_managed`, `unavailable`, `forced`,
+`manual`. Sonst behauptet die Ampel „könnte laufen", und niemand rechnet damit, dass trotzdem nichts
+geschieht.
+
+Die Zeitbedingungen des Normalbetriebs gehören ausdrücklich **nicht** dazu — `settling`,
+`turn_on_delay`, `turn_off_delay`, `min_runtime`, `min_off_time`, `level_hold`. Sie laufen bei jedem
+gewöhnlichen Schaltvorgang: die Einschaltverzögerung davor, das Beruhigungsfenster danach. Wären sie
+dabei, würde der Balken im Normalbetrieb dauernd grau blinken. Grau heißt „hier greift die Automatik
+nicht ein", nicht „sie wartet gerade".
+
+Der **Ampeltext** bleibt in allen Fällen unverändert: Was die Energielage hergibt, ist weiterhin
+ablesbar. Nur der Balken sagt, ob damit auch etwas geschieht.
 
 Am Überschuss-Sensor des Hubs: `grid_w`, `battery_w`, `battery_correction_w`, `battery_soc`,
 `coverage`, `smoothing_window`, `degraded`, `errors`.
@@ -154,6 +213,24 @@ Die Service-Domain leitet sie aus der Entitäts-ID ab (`number` oder `input_numb
 Ohne Integration gilt die alte Regel: erst `devices[].priority_entity`, dann der Array-Index. Ein
 `priority`-Zahlenfeld in der Karten-Config gibt es bewusst nicht — es wäre eine dritte Quelle, die
 beim Sortieren sofort veraltet.
+
+### Die Verteilung ist greedy, und das bleibt sie
+
+**Ein Verbraucher gibt niemals Leistung an einen niedriger priorisierten ab, auch wenn dadurch
+Überschuss ungenutzt bleibt.** Das Budget läuft von oben nach unten durch die Rangfolge; wer oben
+steht, nimmt so viel er kann.
+
+Bei rein schaltbaren Verbrauchern fällt das nicht auf, weil niemand etwas teilweise abgeben kann.
+Sobald ein Verbraucher in Stufen fährt, ist der Fall sichtbar:
+
+> 4,5 kW Überschuss. Rang 1 ein Heizstab, regelbar von 1,4 bis 3,6 kW. Rang 2 eine Wallbox, die ab
+> 1,4 kW laufen kann. Greedy gibt dem Heizstab 3,6 kW; die verbleibenden 0,9 kW reichen der Wallbox
+> nicht, sie bleibt aus. 0,9 kW gehen ins Netz. Mit 3,1 kW am Heizstab wäre alles genutzt.
+
+Das ist **dokumentiertes Verhalten, kein Fehler.** Die Alternative wäre ein Optimierer über alle
+Ränge — damit wäre die Rangfolge keine Reihenfolge mehr, sondern ein Gewicht, und die Frage „warum
+läuft dieses Gerät nicht" hätte keine Antwort mehr in einem Satz. Wer den Fall vermeiden will, setzt
+über `min_power`/`max_power` engere Grenzen; das ist der vorgesehene Weg.
 
 ## Batterie als verschiebbare Last
 
