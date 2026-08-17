@@ -94,6 +94,45 @@ export type DeviceStatus =
 
 export type LockKind = 'none' | 'min_runtime' | 'min_off_time';
 
+/**
+ * Die Stufen eines regelbaren Verbrauchers.
+ *
+ * Nur mit Integration vorhanden: Das Raster stammt aus der Steuerentitaet, und
+ * die Karte leitet es nicht selbst ab — sonst laege dieselbe Umrechnung an zwei
+ * Stellen und liefe auseinander.
+ */
+export interface LevelState {
+  /** Gestellte Stufe in W, oder null wenn nicht lesbar. */
+  w: number | null;
+  /**
+   * Stufe, auf die die Automatik gehen wuerde. Weicht sie von `w` ab, steht ein
+   * Stufenwechsel an — und `blockedBy` sagt, warum er noch nicht geschehen ist.
+   */
+  setpointW: number | null;
+  /** Position der gestellten Stufe, 1-basiert wie `rank`. Null wenn unbekannt. */
+  index: number | null;
+  count: number;
+  minW: number;
+  maxW: number;
+  /** Herkunft des Rasters: number_w, number_a oder select. */
+  source: string;
+  /**
+   * Hoechste Leistung, die das Geraet seit dem Einschalten erreicht hat.
+   *
+   * Nicht dasselbe wie der Sollwert: Ein Fahrzeug laedt mit 10 A, obwohl 16 A
+   * angeboten sind.
+   */
+  observedMaxW: number | null;
+  /**
+   * Ist die Leiter deswegen beschnitten?
+   *
+   * Die Antwort auf "warum geht sie nicht hoeher": Nicht der Ueberschuss fehlt,
+   * das Geraet nimmt nicht mehr. Ohne diesen Hinweis saehe eine gekappte Leiter
+   * aus wie ein Geraet mit weniger Stufen.
+   */
+  capped: boolean;
+}
+
 export interface LockState {
   kind: LockKind;
   /** Verbleibende Sekunden; 0 = keine Sperre. */
@@ -143,4 +182,32 @@ export interface DeviceView {
   /** Verbleibendes Budget nach diesem Geraet, oder null. */
   headroomW: number | null;
   lock: LockState;
+  /**
+   * Die Stufen, sofern der Verbraucher regelbar ist. Fehlt das Feld, ist er nur
+   * schaltbar — daran erkennt die Zeile, dass es nichts zu regeln gibt.
+   */
+  levels?: LevelState;
+  /**
+   * Warum die Automatik diesen Verbraucher gerade nicht anfasst, aus
+   * `blocked_by`. Nur mit Integration; ohne sie gibt es keine Automatik, deren
+   * Untaetigkeit zu erklaeren waere.
+   */
+  blockedBy?: string;
 }
+
+/**
+ * Blockierungsgruende, bei denen die Automatik den Verbraucher **absichtlich**
+ * liegen laesst — im Unterschied zu den Zeitbedingungen des Normalbetriebs.
+ *
+ * Nur diese daempfen den Statusbalken. Waere `settling` oder `turn_on_delay`
+ * dabei, wuerde der Balken bei jedem gewoehnlichen Schaltvorgang kurz grau: Die
+ * Verzoegerung laeuft vor jedem Einschalten, das Beruhigungsfenster nach jedem.
+ * Grau heisst hier "hier greift die Automatik nicht ein", nicht "sie wartet
+ * gerade".
+ */
+export const HANDS_OFF_BLOCKERS: ReadonlySet<string> = new Set([
+  'not_managed',
+  'unavailable',
+  'forced',
+  'manual',
+]);

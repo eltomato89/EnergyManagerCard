@@ -1,6 +1,12 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { mdiArrowDown, mdiArrowUp, mdiDragHorizontalVariant, mdiLockClock } from '@mdi/js';
+import {
+  mdiArrowCollapseRight,
+  mdiArrowDown,
+  mdiArrowUp,
+  mdiDragHorizontalVariant,
+  mdiLockClock,
+} from '@mdi/js';
 import { DEVICE_ROW_TAG, OPTIMISTIC_TIMEOUT_MS } from '../const';
 import { batteryStatusKey } from '../lib/device-status';
 import { batteryFlow, batteryFrame, FRAME_COUNT } from '../lib/battery-icon';
@@ -12,6 +18,7 @@ import { statusColor, statusOpacity, themeVariables } from '../styles';
 import type { SecondaryInfo } from '../types/config';
 import type { FrontendLocaleData, HomeAssistant } from '../types/hass';
 import type { DeviceView } from '../types/runtime';
+import { HANDS_OFF_BLOCKERS } from '../types/runtime';
 
 /** Dauer eines Einzelbilds der Lade-/Entlade-Animation. Fuenf Bilder = 2 s. */
 const FILL_FRAME_MS = 400;
@@ -106,10 +113,7 @@ export class EnergyManagerDeviceRow extends LitElement {
 
     return html`
       <div class="row">
-        <div
-          class="status"
-          style=${`background:${statusColor(view.status)};opacity:${statusOpacity(view.status)}`}
-        ></div>
+        <div class="status" style=${this._statusStyle()}></div>
 
         ${this.reordering ? this.renderHandle() : this.renderPriority()}
 
@@ -146,6 +150,70 @@ export class EnergyManagerDeviceRow extends LitElement {
             : this._isBattery
               ? nothing
               : this.renderSwitch(checked, automation)
+        }
+      </div>
+    `;
+  }
+
+  /**
+   * Farbe und Deckkraft des Statusbalkens.
+   *
+   * Greift die Automatik hier absichtlich nicht ein, wird der Balken grau — die
+   * Ampel sagt sonst "koennte laufen", und niemand rechnet damit, dass trotzdem
+   * nichts geschieht. Der Ampeltext in der Zweitzeile bleibt unveraendert: Was
+   * die Energielage hergibt, ist weiterhin ablesbar.
+   *
+   * Nur fuer die Gruende, bei denen die Automatik den Verbraucher liegen laesst,
+   * nicht fuer die Zeitbedingungen des Normalbetriebs — siehe
+   * HANDS_OFF_BLOCKERS.
+   */
+  private _statusStyle(): string {
+    const view = this.view;
+    const untaetig = view.blockedBy !== undefined && HANDS_OFF_BLOCKERS.has(view.blockedBy);
+    const color = untaetig ? 'var(--emc-unavailable)' : statusColor(view.status);
+    return `background:${color};opacity:${statusOpacity(view.status)}`;
+  }
+
+  /**
+   * Die Stufenleiter: ein Segment je Stufe, gefuellt bis zur gestellten.
+   *
+   * Sie kostet wenig Hoehe und beantwortet, was die Zahlen allein nicht sagen —
+   * ohne sie liest sich eine gedrosselte Wallbox wie eine, bei der der
+   * Ueberschuss nicht reicht.
+   */
+  private renderLadder() {
+    const levels = this.view.levels;
+    if (!levels) return nothing;
+
+    const gefuellt = levels.index ?? 0;
+    const segmente = Array.from({ length: levels.count }, (_unused, i) => i < gefuellt);
+
+    return html`
+      <div
+        class="ladder"
+        role="img"
+        aria-label=${this.localize('card.level_of', {
+          index: gefuellt,
+          count: levels.count,
+        })}
+      >
+        ${segmente.map((an) => html`<i class=${an ? 'seg on' : 'seg'}></i>`)}
+        <span class="cap"
+          >${this.localize('card.level_of', { index: gefuellt, count: levels.count })}</span
+        >
+        ${
+          // Ist die Leiter gekappt, fehlt nicht der Ueberschuss — das Geraet
+          // nimmt nicht mehr. Ohne diesen Hinweis liest sich die kuerzere Leiter
+          // wie ein Geraet mit weniger Stufen.
+          levels.capped
+            ? html`<ha-svg-icon
+                class="capped"
+                .path=${mdiArrowCollapseRight}
+                title=${this.localize('card.level_capped', {
+                  power: formatPower(levels.observedMaxW ?? levels.maxW, this.locale),
+                })}
+              ></ha-svg-icon>`
+            : nothing
         }
       </div>
     `;
@@ -219,7 +287,21 @@ export class EnergyManagerDeviceRow extends LitElement {
     const view = this.view;
 
     if (this.secondaryInfo === 'power' || this.secondaryInfo === 'both') {
-      if (view.powerW !== null) {
+      const levels = view.levels;
+      if (levels) {
+        // Bei einem regelbaren Verbraucher ist die Leistung allein
+        // nichtssagend: "4,8 kW" verraet nicht, ob das viel oder wenig ist.
+        // Gemessen zaehlt vor gestellt — was fliesst, ist die Auskunft.
+        const ist = view.powerW ?? levels.w;
+        parts.push(
+          ist === null
+            ? this.localize('card.max_power', { power: formatPower(levels.maxW, this.locale) })
+            : this.localize('card.level_power', {
+                power: formatPower(ist, this.locale),
+                max: formatPower(levels.maxW, this.locale),
+              }),
+        );
+      } else if (view.powerW !== null) {
         parts.push(formatPower(view.powerW, this.locale));
       } else if (view.config.max_power !== undefined) {
         parts.push(
@@ -243,7 +325,7 @@ export class EnergyManagerDeviceRow extends LitElement {
     if (!view.managed) parts.push(this.localize('card.not_managed'));
 
     const hasLock = view.lock.kind !== 'none';
-    if (parts.length === 0 && !hasLock) return nothing;
+    if (parts.length === 0 && !hasLock && !view.levels) return nothing;
 
     // Die Sperrzeit steht in einer eigenen Zeile statt angehängt: sonst bleibt
     // beim Umbruch ein Trennpunkt am Zeilenende hängen, und die Sperre ist
@@ -256,6 +338,7 @@ export class EnergyManagerDeviceRow extends LitElement {
               ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}
             </div>`
       }
+      ${this.renderLadder()}
       ${
         hasLock
           ? html`<div
@@ -524,6 +607,45 @@ export class EnergyManagerDeviceRow extends LitElement {
         align-items: center;
         gap: 3px;
         white-space: nowrap;
+      }
+
+      /* Ein Segment je Stufe. Die Segmente teilen die verfuegbare Breite unter
+         sich auf, statt eine feste zu haben: Eine Wallbox hat elf Stufen, ein
+         Heizstab drei, und beide sollen gleich breit endend aussehen. */
+      .ladder {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin-top: 3px;
+        max-width: 180px;
+      }
+
+      .seg {
+        flex: 1 1 0;
+        min-width: 3px;
+        height: 5px;
+        border-radius: 1px;
+        background: var(--divider-color, #e0e0e0);
+      }
+
+      .seg.on {
+        background: var(--emc-on-ok);
+      }
+
+      .cap {
+        flex: 0 0 auto;
+        margin-inline-start: 6px;
+        color: var(--secondary-text-color);
+        font-size: 0.75em;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .capped {
+        flex: 0 0 auto;
+        margin-inline-start: 4px;
+        color: var(--secondary-text-color);
+        --mdc-icon-size: 13px;
       }
 
       .lock ha-svg-icon {

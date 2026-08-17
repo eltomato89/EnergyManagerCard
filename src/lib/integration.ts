@@ -1,6 +1,13 @@
 import type { DeviceConfig } from '../types/config';
 import type { HassEntity, HomeAssistant } from '../types/hass';
-import type { DeviceStatus, DeviceView, LockState, Reading, SurplusResult } from '../types/runtime';
+import type {
+  DeviceStatus,
+  DeviceView,
+  LevelState,
+  LockState,
+  Reading,
+  SurplusResult,
+} from '../types/runtime';
 
 /**
  * Anbindung an die Energy-Manager-Integration.
@@ -130,8 +137,18 @@ export function trackedFromIntegration(hass: HomeAssistant, handle: IntegrationH
   return ids;
 }
 
-/** Zahlwert eines Attributs, oder null. */
+/**
+ * Zahlwert eines Attributs, oder null.
+ *
+ * `null` und der leere String muessen ausdruecklich abgefangen werden:
+ * `Number(null)` ist **0**, nicht NaN. Ohne diese Pruefung wuerde ein Attribut,
+ * das die Integration bewusst als `null` meldet, als gemessene Null gelesen —
+ * ein Verbraucher ohne Leistungssensor zeigte "0 W" statt seiner Nennleistung,
+ * und eine Auswahlliste in der Aus-Stellung stuende auf "0 W" statt auf
+ * "unbekannt".
+ */
 function num(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null;
   const parsed = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
@@ -230,6 +247,8 @@ export function viewsFromIntegration(
       status,
       headroomW: num(attrs.headroom_w),
       lock: lockFromEntity(hass, device.roles[ROLE_LOCKED_UNTIL], now),
+      levels: levelsFromAttributes(attrs),
+      blockedBy: typeof attrs.blocked_by === 'string' ? attrs.blocked_by : undefined,
     });
   }
 
@@ -238,6 +257,35 @@ export function viewsFromIntegration(
 
   // Nach Rang sortieren — die Integration bestimmt die Reihenfolge.
   return views.sort((a, b) => a.index - b.index);
+}
+
+/**
+ * Die Stufen eines regelbaren Verbrauchers, aus den Attributen des
+ * Ampel-Sensors.
+ *
+ * `undefined`, sobald das Raster fehlt: Die Integration laesst die Angaben bei
+ * einem rein schaltbaren Verbraucher ganz weg, und daran — nicht an
+ * `consumer_type` — erkennt die Zeile, dass es etwas zu regeln gibt. Eine
+ * aeltere Integration liefert sie ebenfalls nicht und fuehrt damit zu weniger
+ * Anzeige statt zu einem Fehler.
+ */
+function levelsFromAttributes(attrs: Record<string, unknown>): LevelState | undefined {
+  const count = num(attrs.level_count);
+  const minW = num(attrs.min_level_w);
+  const maxW = num(attrs.max_level_w);
+  if (count === null || count <= 0 || minW === null || maxW === null) return undefined;
+
+  return {
+    w: num(attrs.level_w),
+    setpointW: num(attrs.setpoint_w),
+    index: num(attrs.level_index),
+    count,
+    minW,
+    maxW,
+    source: typeof attrs.level_source === 'string' ? attrs.level_source : '',
+    observedMaxW: num(attrs.observed_max_w),
+    capped: attrs.level_capped === true,
+  };
 }
 
 /**
