@@ -1,6 +1,7 @@
 import type { DeviceConfig } from '../types/config';
 import type { HassEntity, HomeAssistant } from '../types/hass';
 import type {
+  DailyState,
   DeviceStatus,
   DeviceView,
   LevelState,
@@ -250,6 +251,7 @@ export function viewsFromIntegration(
       levels: levelsFromAttributes(attrs),
       blockedBy: typeof attrs.blocked_by === 'string' ? attrs.blocked_by : undefined,
       manualRemainingS: remainingSeconds(attrs.manual_until, now),
+      daily: dailyFromAttributes(attrs),
     });
   }
 
@@ -258,6 +260,24 @@ export function viewsFromIntegration(
 
   // Nach Rang sortieren — die Integration bestimmt die Reihenfolge.
   return views.sort((a, b) => a.index - b.index);
+}
+
+/**
+ * Der Tagesfortschritt, aus den Attributen des Ampel-Sensors.
+ *
+ * `undefined` ohne eingetragenes Ziel: Die Integration laesst die Angaben dann
+ * ganz weg, und daran erkennt die Zeile, dass es nichts zu zeigen gibt.
+ */
+function dailyFromAttributes(attrs: Record<string, unknown>): DailyState | undefined {
+  const targetKwh = num(attrs.daily_target_kwh);
+  if (targetKwh === null || targetKwh <= 0) return undefined;
+
+  return {
+    targetKwh,
+    doneKwh: num(attrs.daily_done_kwh) ?? 0,
+    forecastKwh: num(attrs.daily_forecast_kwh),
+    mustRun: attrs.must_run === true,
+  };
 }
 
 /**

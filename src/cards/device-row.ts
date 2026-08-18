@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from 'lit';
+import { LitElement, css, html, nothing, svg } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import {
   mdiArrowCollapseRight,
@@ -12,7 +12,7 @@ import { DEVICE_ROW_TAG, OPTIMISTIC_TIMEOUT_MS } from '../const';
 import { batteryStatusKey } from '../lib/device-status';
 import { batteryFlow, batteryFrame, FRAME_COUNT } from '../lib/battery-icon';
 import type { BatteryFlow } from '../lib/battery-icon';
-import { formatDuration, formatPercent, formatPower } from '../lib/format';
+import { formatDuration, formatEnergy, formatPercent, formatPower } from '../lib/format';
 import { fireEvent, fireMoreInfo } from '../lib/events';
 import type { LocalizeFn } from '../localize/localize';
 import { statusColor, statusOpacity, themeVariables } from '../styles';
@@ -220,6 +220,61 @@ export class EnergyManagerDeviceRow extends LitElement {
     `;
   }
 
+  /**
+   * Der Tagesfortschritt als Ring plus Text.
+   *
+   * Der Ring traegt den **Fortschritt**, die Farbe die **Dringlichkeit**. Das
+   * ist der Punkt: 58 % um zehn Uhr bei blauem Himmel ist entspannt, 58 % um
+   * vier Uhr bei Bewoelkung ist der Moment, in dem das Geraet auf Netzstrom
+   * laeuft. Ein Ring allein zeigt Zaehler und Nenner, nicht aber den Termin.
+   */
+  private renderDaily() {
+    const daily = this.view.daily;
+    if (!daily) return nothing;
+
+    const anteil = daily.targetKwh > 0 ? Math.min(daily.doneKwh / daily.targetKwh, 1) : 0;
+    const fehlt = Math.max(daily.targetKwh - daily.doneKwh, 0);
+    const fertig = fehlt <= 0;
+
+    return html`
+      <div class="secondary daily ${daily.mustRun ? 'urgent' : ''}">
+        ${this.renderRing(anteil, fertig, daily.mustRun)}
+        ${
+          fertig
+            ? this.localize('card.daily_done')
+            : daily.mustRun
+              ? this.localize('card.daily_short', {
+                  energy: formatEnergy(fehlt, this.locale),
+                })
+              : this.localize('card.daily_progress', {
+                  done: formatEnergy(daily.doneKwh, this.locale),
+                  target: formatEnergy(daily.targetKwh, this.locale),
+                })
+        }
+      </div>
+    `;
+  }
+
+  /**
+   * Der Ring selbst. Acht Stufen wie beim Batteriesymbol — feiner waere hier
+   * keine Aussage, und `mdi:circle-slice-*` bringt genau diese Abstufung mit.
+   */
+  private renderRing(anteil: number, fertig: boolean, dringend: boolean) {
+    const UMFANG = 44;
+    const stufe = Math.round(anteil * 8) / 8;
+    const farbe = fertig ? 'var(--emc-on-ok)' : dringend ? 'var(--emc-on-deficit)' : 'currentColor';
+
+    return svg`<svg class="ring" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="7" fill="none" stroke="var(--divider-color, #e0e0e0)" stroke-width="5"></circle>
+      <circle
+        cx="10" cy="10" r="7" fill="none"
+        stroke=${farbe} stroke-width="5"
+        stroke-dasharray=${`${stufe * UMFANG} ${UMFANG}`}
+        transform="rotate(-90 10 10)"
+      ></circle>
+    </svg>`;
+  }
+
   private renderPriority() {
     if (!this.showPriority) return nothing;
     return html`<span
@@ -327,7 +382,9 @@ export class EnergyManagerDeviceRow extends LitElement {
 
     const hasLock = view.lock.kind !== 'none';
     const manuell = view.manualRemainingS ?? 0;
-    if (parts.length === 0 && !hasLock && !view.levels && manuell === 0) return nothing;
+    if (parts.length === 0 && !hasLock && !view.levels && !view.daily && manuell === 0) {
+      return nothing;
+    }
 
     // Die Sperrzeit steht in einer eigenen Zeile statt angehängt: sonst bleibt
     // beim Umbruch ein Trennpunkt am Zeilenende hängen, und die Sperre ist
@@ -340,7 +397,7 @@ export class EnergyManagerDeviceRow extends LitElement {
               ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}
             </div>`
       }
-      ${this.renderLadder()}
+      ${this.renderLadder()} ${this.renderDaily()}
       ${
         // Nach einem Eingriff von aussen haelt sich die Automatik befristet
         // fern. Als eigene Unterzeile mit Countdown, wie die Sperrzeit: Der
@@ -665,6 +722,23 @@ export class EnergyManagerDeviceRow extends LitElement {
       .lock ha-svg-icon,
       .manual ha-svg-icon {
         --mdc-icon-size: 14px;
+      }
+
+      .daily {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+      }
+
+      .daily.urgent {
+        color: var(--warning-color, #ffa726);
+      }
+
+      .ring {
+        flex: 0 0 auto;
+        width: 14px;
+        height: 14px;
       }
 
       .manual {

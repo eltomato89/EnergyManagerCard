@@ -133,6 +133,28 @@ export interface LevelState {
   capped: boolean;
 }
 
+/**
+ * Der Tagesfortschritt eines Verbrauchers mit Tagesziel.
+ *
+ * Nur mit Integration und nur bei eingetragenem Ziel. Die Karte rechnet nichts
+ * davon: Ob sich das Fehlende noch mit Sonne ausgeht, haengt an Prognose,
+ * Sonnenaufgang und Zaehlerstand — alles Dinge, die die Integration kennt und
+ * die Karte nicht.
+ */
+export interface DailyState {
+  targetKwh: number;
+  doneKwh: number;
+  /** Verbleibende Prognose, oder null ohne brauchbaren Sensor. */
+  forecastKwh: number | null;
+  /**
+   * Laeuft der Verbraucher gerade unabhaengig vom Ueberschuss?
+   *
+   * Der einzige Fall, in dem die Automatik bewusst Netzstrom in Kauf nimmt —
+   * und die Antwort auf "warum zieht der gerade aus dem Netz".
+   */
+  mustRun: boolean;
+}
+
 export interface LockState {
   kind: LockKind;
   /** Verbleibende Sekunden; 0 = keine Sperre. */
@@ -204,6 +226,11 @@ export interface DeviceView {
    * niemand automatisch, den ein Eingriff von Hand uebersteuern koennte.
    */
   manualRemainingS?: number;
+  /**
+   * Tagesziel und Fortschritt, sofern eines eingetragen ist. Fehlt das Feld,
+   * gibt es kein Ziel — daran erkennt die Zeile, dass nichts zu zeigen ist.
+   */
+  daily?: DailyState;
 }
 
 /**

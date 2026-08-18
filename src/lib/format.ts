@@ -42,3 +42,18 @@ export function formatDuration(seconds: number): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
+
+/**
+ * Energie in kWh, mit einer Nachkommastelle.
+ *
+ * Bewusst keine Umschaltung auf Wh oder MWh: Tagesziele bewegen sich im
+ * einstelligen bis zweistelligen kWh-Bereich, und eine wechselnde Einheit
+ * machte zwei Zeilen derselben Karte unvergleichbar.
+ */
+export function formatEnergy(kwh: number, locale?: FrontendLocaleData): string {
+  const lang = locale?.language || 'de';
+  return `${new Intl.NumberFormat(lang, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(kwh)} kWh`;
+}

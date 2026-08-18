@@ -177,3 +177,35 @@ describe('Manuelle Uebersteuerung', () => {
     expect(HANDS_OFF_BLOCKERS.has('manual')).toBe(true);
   });
 });
+
+describe('Tagesziel', () => {
+  it('uebernimmt Ziel, Fortschritt und Prognose', () => {
+    const daily = view({
+      daily_target_kwh: 3,
+      daily_done_kwh: 1.2,
+      daily_forecast_kwh: 5,
+      must_run: false,
+    }).daily;
+
+    expect(daily).toEqual({ targetKwh: 3, doneKwh: 1.2, forecastKwh: 5, mustRun: false });
+  });
+
+  it('fehlt ohne eingetragenes Ziel', () => {
+    // Die Integration laesst die Angaben dann ganz weg. Daran erkennt die Zeile,
+    // dass es nichts zu zeigen gibt.
+    expect(view({}).daily).toBeUndefined();
+    expect(view({ daily_target_kwh: 0 }).daily).toBeUndefined();
+  });
+
+  it('nimmt eine fehlende Prognose als null, nicht als 0', () => {
+    // 0 hiesse "es kommt nichts mehr" und liesse jedes Tagesziel sofort auf
+    // Netzstrom laufen. Ohne Sensor greift die Regel dagegen gar nicht.
+    const daily = view({ daily_target_kwh: 3, daily_forecast_kwh: null }).daily;
+
+    expect(daily?.forecastKwh).toBeNull();
+  });
+
+  it('uebernimmt must_run', () => {
+    expect(view({ daily_target_kwh: 3, must_run: true }).daily?.mustRun).toBe(true);
+  });
+});

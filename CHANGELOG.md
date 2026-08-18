@@ -20,6 +20,11 @@ Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   hinter der Stufenangabe, dessen Tooltip die tatsächlich erreichte Leistung nennt. Ohne ihn liest
   sich die kürzere Leiter wie ein Gerät mit weniger Stufen.
 
+- **Tagesziel als Ring in der Zeile.** Hat ein Verbraucher ein Tagesziel, zeigt ein achtstufiger Ring
+  den Fortschritt und die Farbe die Dringlichkeit: neutral, solange die Prognose den Rest deckt,
+  warnend ab dem Moment, in dem das Gerät auf Netzstrom laufen wird. Der Ring allein zeigt Zähler und
+  Nenner, nicht aber den Termin — und der entscheidet.
+
 - **Countdown bei manueller Übersteuerung.** Hat jemand ein Gerät von Hand geschaltet, hält sich die
   Automatik befristet fern; die Zeile sagt, wie lange noch. Als eigene Unterzeile wie die Sperrzeit:
   Der Zustand ist vorübergehend, und ohne die verbleibende Zeit liest er sich wie eine Einstellung.

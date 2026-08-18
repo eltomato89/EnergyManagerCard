@@ -176,6 +176,24 @@ Fehlerkennungen, die nicht wegzufiltern ist — Geräte, die ihren eigenen Zusta
 eine befristete Sperre von selbst ab. Der `managed`-Schalter wird von der Integration **nie**
 geschrieben; er bleibt Nutzerkonfiguration.
 
+### Tagesziel
+
+Hat ein Verbraucher ein Tagesziel, kommen `daily_target_kwh`, `daily_done_kwh`, `daily_forecast_kwh`
+und `must_run` dazu; ohne Ziel fehlen sie ganz. **Immer in kWh**, auch wenn das Ziel als Stunden
+eingetragen wurde — die Umrechnung ist Sache der Integration, denn sie hängt an derselben
+Nennleistung, deren Herkunft `required_source` ausweist.
+
+`daily_forecast_kwh` ist `null`, wenn kein brauchbarer Prognosesensor konfiguriert ist. Das ist etwas
+anderes als 0: 0 hieße „es kommt nichts mehr" und ließe jedes Tagesziel sofort auf Netzstrom laufen.
+Ohne Prognose greift die Regel gar nicht.
+
+`must_run` ist der einzige Fall, in dem die Automatik bewusst Netzstrom in Kauf nimmt — und damit die
+Antwort auf „warum zieht das Gerät gerade aus dem Netz". Die Karte leitet das nicht ab: Ob sich das
+Fehlende noch mit Sonne ausgeht, hängt an Prognose, Sonnenaufgang und Zählerstand.
+
+Der Tag beginnt mit dem **Sonnenaufgang**, nicht um Mitternacht. Bei einer Anlage, deren Ertrag an
+der Sonne hängt, ist das der Schnitt, der die Sache trifft.
+
 ## Der Statusbalken bei untätiger Automatik
 
 Die Karte dämpft den Statusbalken einer Zeile auf Grau, wenn `blocked_by` einen Grund nennt, bei dem
