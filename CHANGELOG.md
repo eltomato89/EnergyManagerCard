@@ -2,7 +2,7 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
-## [Unveröffentlicht]
+## [0.7.0-beta.1] — 2026-08-18
 
 ### Hinzugefügt
 

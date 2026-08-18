@@ -100,7 +100,7 @@ Integration braucht, nennt hier ihre Mindestversion.
 
 <!-- version-pair -->
 
-**Aktueller Stand:** Karte `0.6.0`, erprobt gegen Integration ab `0.4.0`.
+**Aktueller Stand:** Karte `0.7.0-beta.1`, erprobt gegen Integration ab `0.5.0b1`.
 
 Bewusst eine Untergrenze und kein Paar: Eine Integrationsfassung, die allein erscheint, macht die
 Zeile damit nicht falsch — sonst müsste sie bei jedem einseitigen Release nachgezogen werden, und
