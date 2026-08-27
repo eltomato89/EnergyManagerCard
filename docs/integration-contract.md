@@ -97,10 +97,11 @@ Integration braucht, nennt hier ihre Mindestversion.
 | Batteriezeile als verschiebbare Last                      | ≥ 0.6.0 | ≥ 0.4.0     |
 | Stufenleiter regelbarer Verbraucher                       | ≥ 0.7.0 | ≥ 0.5.0     |
 | Gedämpfter Statusbalken bei untätiger Automatik           | ≥ 0.7.0 | ≥ 0.1.0     |
+| Tagesziel in Stunden statt kWh                            | ≥ 0.7.0 | ≥ 0.5.0b3   |
 
 <!-- version-pair -->
 
-**Aktueller Stand:** Karte `0.7.0-beta.2`, erprobt gegen Integration ab `0.5.0b1`.
+**Aktueller Stand:** Karte `0.7.0-beta.3`, erprobt gegen Integration ab `0.5.0b1`.
 
 Bewusst eine Untergrenze und kein Paar: Eine Integrationsfassung, die allein erscheint, macht die
 Zeile damit nicht falsch — sonst müsste sie bei jedem einseitigen Release nachgezogen werden, und
