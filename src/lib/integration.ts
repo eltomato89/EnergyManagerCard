@@ -37,16 +37,6 @@ const ROLE_MANAGED = 'managed';
 const ROLE_AUTOMATION = 'automation';
 const ROLE_MIN_SOC = 'min_soc';
 
-/**
- * Stabiler Schluessel der Batteriezeile ohne eigenes Geraet.
- *
- * Nur noch fuer eine Integration vor 0.5.0b4, wo die Batterie am Hub hing und
- * es genau eine gab. Ab dort hat jeder Speicher ein Geraet, und seine
- * Subentry-ID ist die Zeilen-ID — sonst waeren zwei Zeilen nicht zu
- * unterscheiden.
- */
-export const BATTERY_ROW_ID = '__battery__';
-
 interface RoleMap {
   /** Entitaets-IDs je Rolle. */
   [role: string]: string;
