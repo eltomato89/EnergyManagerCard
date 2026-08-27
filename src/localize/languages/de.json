@@ -30,7 +30,7 @@
     "manual_override": "Manuell übersteuert, noch {time}",
     "manual_hint": "Jemand hat dieses Gerät von Hand geschaltet. So lange hält sich die Automatik fern.",
     "daily_progress": "{done} von {target}",
-    "daily_short": "{energy} fehlen, Prognose unzureichend",
+    "daily_short": "{missing} fehlen, Prognose unzureichend",
     "daily_done": "Tagesziel erreicht",
     "needs": "benötigt {power}",
     "max_power": "max. {power}",
@@ -48,7 +48,8 @@
     "battery_load_discharging": "entlädt",
     "battery_load_full": "voll",
     "battery_load_reduced": "gedrosselt",
-    "battery_load_waiting": "wartet"
+    "battery_load_waiting": "wartet",
+    "picker_description": "PV-Überschuss anzeigen und Verbraucher nach Priorität schalten. Die Reihenfolge im Editor gibt die Priorität für die Automatik vor."
   },
   "status": {
     "on_ok": "In Betrieb, gedeckt",

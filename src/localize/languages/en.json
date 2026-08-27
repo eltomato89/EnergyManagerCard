@@ -30,7 +30,7 @@
     "manual_override": "Manually overridden, {time} left",
     "manual_hint": "Someone switched this device by hand. The automation keeps away for this long.",
     "daily_progress": "{done} of {target}",
-    "daily_short": "{energy} short, forecast insufficient",
+    "daily_short": "{missing} short, forecast insufficient",
     "daily_done": "Daily target reached",
     "needs": "requires {power}",
     "max_power": "max. {power}",
@@ -48,7 +48,8 @@
     "battery_load_discharging": "discharging",
     "battery_load_full": "full",
     "battery_load_reduced": "throttled",
-    "battery_load_waiting": "waiting"
+    "battery_load_waiting": "waiting",
+    "picker_description": "Shows the PV surplus and switches loads by priority. The order in the editor sets the priority the automation follows."
   },
   "status": {
     "on_ok": "Running, covered",
