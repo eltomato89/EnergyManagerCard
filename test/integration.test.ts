@@ -406,3 +406,66 @@ describe('batteryRowFromIntegration', () => {
     expect(batteryRowFromIntegration(hass, findIntegration(hass)!)).toBeNull();
   });
 });
+
+describe('Speichergeraete', () => {
+  /**
+   * Seit Integration 0.5.0b4 hat auch ein Speicher einen Ampel-Sensor. Ohne
+   * Unterscheidung landete er in derselben Liste wie die Verbraucher — und
+   * zwar als Zeile mit Schalter, aber ohne Schalt-Entitaet.
+   */
+  function hassMitSpeicher(kind: string | undefined) {
+    return makeHass(
+      {
+        'sensor.energy_manager_surplus': { state: 2000, unit: 'W', attributes: {} },
+        'sensor.wallbox_status': {
+          state: 'on_ok',
+          attributes: {
+            switch_entity: 'switch.wallbox',
+            consumer_id: 'sub-1',
+            consumer_name: 'Wallbox',
+            rank: 1,
+          },
+        },
+        'sensor.hausbatterie_status': {
+          state: 'on_ok',
+          attributes: {
+            ...(kind === undefined ? {} : { kind }),
+            consumer_id: 'sub-2',
+            consumer_name: 'Hausbatterie',
+          },
+        },
+      },
+      {
+        'sensor.energy_manager_surplus': {
+          platform: 'energy_manager',
+          translation_key: 'surplus',
+          device_id: 'hub',
+        },
+        'sensor.wallbox_status': {
+          platform: 'energy_manager',
+          translation_key: 'status',
+          device_id: 'wallbox',
+        },
+        'sensor.hausbatterie_status': {
+          platform: 'energy_manager',
+          translation_key: 'status',
+          device_id: 'akku',
+        },
+      },
+    );
+  }
+
+  it('zaehlen nicht als Verbraucher', () => {
+    const handle = findIntegration(hassMitSpeicher('battery'));
+
+    expect(handle?.devices.map((d) => d.deviceId)).toEqual(['wallbox']);
+  });
+
+  it('werden am Attribut erkannt, nicht an der fehlenden Schalt-Entitaet', () => {
+    // Fehlt `kind`, ist das ein Fehler und keine Aussage — dann bleibt es beim
+    // bisherigen Verhalten, statt aus einer Luecke zu schliessen.
+    const handle = findIntegration(hassMitSpeicher(undefined));
+
+    expect(handle?.devices.map((d) => d.deviceId)).toEqual(['wallbox', 'akku']);
+  });
+});

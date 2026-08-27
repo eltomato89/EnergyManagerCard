@@ -102,6 +102,11 @@ export function findIntegration(hass: HomeAssistant | undefined): IntegrationHan
     // der Hub hat ihn auch, wird aber zuvor aussortiert.
     if (deviceId === hubDeviceId) continue;
     if (!roles[ROLE_STATUS]) continue;
+    // Seit Integration 0.5.0b4 hat auch ein Speicher einen Ampelzustand. Er ist
+    // kein Verbraucher: Er wird nicht geschaltet, und eine Zeile mit
+    // Schalter-Anzeige ohne Schalt-Entitaet waere kaputt statt unvollstaendig.
+    // Bis die Karte Speicherzeilen selbst baut, bleibt er hier aussen vor.
+    if (isBatteryDevice(hass, roles[ROLE_STATUS])) continue;
     devices.push({ deviceId, roles });
   }
 
@@ -111,6 +116,19 @@ export function findIntegration(hass: HomeAssistant | undefined): IntegrationHan
     batteryPriorityEntity: hub[ROLE_BATTERY_PRIORITY],
     devices,
   };
+}
+
+/**
+ * Gehoert dieser Ampel-Sensor zu einem Speicher?
+ *
+ * Am Attribut `kind` und nicht an einer fehlenden `switch_entity`: Die Art
+ * einer Zeile soll ablesbar sein und nicht aus einer Luecke geschlossen —
+ * fehlt sie, ist das ein Fehler und keine Aussage. Eine aeltere Integration
+ * kennt `kind` nicht und hat auch keine Speichergeraete.
+ */
+function isBatteryDevice(hass: HomeAssistant, statusEntity: string | undefined): boolean {
+  if (!statusEntity) return false;
+  return hass.states[statusEntity]?.attributes?.kind === 'battery';
 }
 
 /**

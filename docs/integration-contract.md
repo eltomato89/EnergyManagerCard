@@ -42,21 +42,32 @@ umbenennen. Referenz: `src/lib/integration.ts`.
 1. Alle Einträge mit `platform === 'energy_manager'` einsammeln, nach `device_id` gruppieren.
 2. Die Rolle jeder Entität steht in ihrem `translation_key`.
 3. Das Gerät mit `translation_key === 'surplus'` ist der **Hub**.
-4. Jedes weitere Gerät mit einem `status` ist ein **Verbraucher**.
+4. Jedes weitere Gerät mit einem `status` ist ein **Verbraucher** — es sei denn, dessen Attribut
+   `kind` lautet `battery`, dann ist es ein **Speicher**.
+
+Die Art einer Zeile steht damit in einem Attribut und wird nicht aus einer Lücke geschlossen. Aus
+der fehlenden `switch_entity` zu folgern, es müsse ein Speicher sein, hieße einen Fehler für eine
+Aussage zu halten. Eine ältere Integration kennt `kind` nicht — sie hat aber auch keine
+Speichergeräte.
 
 Findet sich kein Hub, rechnet die Karte selbst. Dasselbe bei `use_integration: false`.
 
 ### Die Rollen
 
-| `translation_key`  | Ort         | Wofür die Karte sie nutzt                           |
-| ------------------ | ----------- | --------------------------------------------------- |
-| `surplus`          | Hub         | Überschuss und alle Kennzahlen (siehe Attribute)    |
-| `automation`       | Hub         | Hauptschalter im Kartenkopf                         |
-| `battery_priority` | Hub         | Rang der Batterie als verschiebbare Last (optional) |
-| `status`           | Verbraucher | Ampelzustand **und alle Angaben zum Verbraucher**   |
-| `priority`         | Verbraucher | Rang; wird beim Sortieren geschrieben               |
-| `managed`          | Verbraucher | Teilnahme an der Automatik; der Toggle in der Zeile |
-| `locked_until`     | Verbraucher | Sperrzeit-Countdown                                 |
+| `translation_key` | Ort         | Wofür die Karte sie nutzt                           |
+| ----------------- | ----------- | --------------------------------------------------- |
+| `surplus`         | Hub         | Überschuss und alle Kennzahlen (siehe Attribute)    |
+| `automation`      | Hub         | Hauptschalter im Kartenkopf                         |
+| `status`          | Verbraucher | Ampelzustand **und alle Angaben zum Verbraucher**   |
+| `priority`        | Verbraucher | Rang; wird beim Sortieren geschrieben               |
+| `managed`         | Verbraucher | Teilnahme an der Automatik; der Toggle in der Zeile |
+| `locked_until`    | Verbraucher | Sperrzeit-Countdown                                 |
+| `status`          | Speicher    | Ampelzustand **und alle Angaben zum Speicher**      |
+| `priority`        | Speicher    | Rang; wird beim Sortieren geschrieben               |
+| `min_soc`         | Speicher    | Ladevorranggrenze; regelbar (nur mit Ladestand)     |
+
+Verbraucher und Speicher teilen sich `status` und `priority` — dieselbe Rolle an einem anderen
+Gerät. Das ist Absicht: Eine Zeile ist eine Zeile, und was sie unterscheidet, steht in `kind`.
 
 Diese Schlüssel sind Teil der Zusage. Werden sie in der Integration umbenannt, findet die Karte die
 Rolle nicht mehr.
@@ -98,6 +109,7 @@ Integration braucht, nennt hier ihre Mindestversion.
 | Stufenleiter regelbarer Verbraucher                       | ≥ 0.7.0 | ≥ 0.5.0     |
 | Gedämpfter Statusbalken bei untätiger Automatik           | ≥ 0.7.0 | ≥ 0.1.0     |
 | Tagesziel in Stunden statt kWh                            | ≥ 0.7.0 | ≥ 0.5.0b3   |
+| Mehrere Speicher, je einer mit eigenem Gerät              | offen   | ≥ 0.5.0b4   |
 
 <!-- version-pair -->
 
@@ -230,10 +242,32 @@ Am Überschuss-Sensor des Hubs: `grid_w`, `battery_w`, `battery_correction_w`, `
 
 `battery_min_soc` steht dort unabhängig davon, ob die Batterie als verschiebbare Last teilnimmt —
 die Grenze wirkt in der Überschussformel und damit immer. 0 heißt, dass die Regel nicht greift. Sie
-ist keine Einstellung des Eintrags, sondern eine Stellgröße hinter einer eigenen
-number-Entität am Hub, die die Karte bislang nicht bedient: Bei guter Vorhersage darf ein Verbraucher schon am Vormittag bei niedrigem
-Ladestand anlaufen, an einem trüben Tag nicht. Gibt es keinen Ladestandssensor, gibt es weder
-Entität noch Wirkung.
+ist keine Einstellung des Eintrags, sondern eine Stellgröße hinter der `min_soc`-Entität am
+Speichergerät: Bei guter Vorhersage darf ein Verbraucher schon am Vormittag bei niedrigem Ladestand
+anlaufen, an einem trüben Tag nicht. Gibt es keinen Ladestandssensor, gibt es weder Entität noch
+Wirkung.
+
+Am Überschuss-Sensor steht sie weiterhin, damit eine Anzeige die Formel nachvollziehen kann, ohne
+die Speicher einzeln zu lesen. Sobald es mehrere gibt, ist sie die des Speichers, mit dem gerechnet
+wird — die verlässliche Angabe je Speicher steht an dessen eigenem Sensor.
+
+### Am Ampel-Sensor eines Speichers
+
+`kind` (`battery`), `consumer_id`, `consumer_name`, `soc_entity`, `soc`, `min_soc`, `mode`,
+`reserve_w`, `max_charge_w` und `shiftable`. Nimmt der Speicher an der Reihenfolge teil, kommen
+`rank`, `priority`, `claim_w`, `charging_w`, `headroom_w` und `full` dazu.
+
+`shiftable` ist der Unterschied zwischen einem Speicher, der in der Reihenfolge steht, und einem,
+der bloß ein Korrekturterm in der Bilanz ist: Ohne eingetragene Ladeleistung hat er weder Rang noch
+Anspruch, und genau daran erkennt eine Anzeige, dass sie ihm keine Zeile in der Reihenfolge geben
+darf. Dass er dennoch einen Sensor hat, ist kein Widerspruch — er ist konfiguriert, er ist nur
+nicht verschiebbar.
+
+`consumer_id` und `consumer_name` heißen so, obwohl ein Speicher kein Verbraucher ist: Eine Anzeige
+liest die Zeile eines Speichers mit demselben Code wie die eines Verbrauchers, und zwei Namen für
+dasselbe Feld wären dort zwei Fälle statt einem.
+
+### Am Überschuss-Sensor, für die Batteriezeile
 
 Nimmt die Batterie als verschiebbare Last teil (siehe unten), kommen am
 Überschuss-Sensor dazu: `battery_load` (`true`), `battery_rank`, `battery_status`,
