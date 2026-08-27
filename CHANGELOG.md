@@ -2,6 +2,26 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [Unveröffentlicht]
+
+### Behoben
+
+- **Die Beschreibung im Kartenkatalog stand fest auf Deutsch** und damit auch in einer englischen
+  Oberfläche. Sie kommt jetzt aus den Sprachdateien. Die Sprache stammt dort aus dem Browser und
+  nicht aus `hass`: Der Katalog wird beim Laden des Moduls gefüllt, lange bevor die Karte eine
+  Instanz und damit `hass.language` hat — der eine Text, bei dem sich das nicht vermeiden lässt.
+
+### Geändert
+
+- **Ein Tagesziel steht jetzt in der Einheit da, in der es eingetragen wurde.** Bei einem
+  schaltbaren Verbraucher sind das Stunden — „1,5 von 8,0 h" statt „0,8 von 4,0 kWh". Die kWh sind
+  die Größe, mit der die Automatik rechnet, aber niemand trägt sie ein: Wer „8 h" hinschreibt, soll
+  sein Ziel auch wiedererkennen, ohne im Kopf durch die Nennleistung zu teilen.
+
+  Umgerechnet wird in der Integration, mit derselben Basis, aus der sie das Ziel selbst gemacht hat
+  — sonst liefe der Ring gegen eine andere Marke, als die Automatik verfolgt. Fehlen die neuen
+  Attribute (ältere Integration, modulierender Verbraucher), bleibt es bei kWh.
+
 ## [0.7.0-beta.2] — 2026-08-27
 
 ### Behoben
