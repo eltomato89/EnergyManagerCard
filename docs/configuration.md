@@ -5,29 +5,29 @@ graphical editor — `devices[]` cannot, see below.
 
 > **With the [Energy Manager Integration](https://github.com/eltomato89/EnergyManagerIntegration)
 > almost none of this is needed** — and the integration is how the card is meant to be used. Meter
-> source, battery, smoothing and `devices` all come from there; what remains are the display
+> source, batteries, smoothing and `devices` all come from there; what remains are the display
 > options in the first table. Everything marked _legacy configurations only_ exists so that setups
 > from earlier versions keep working.
 
 ## Card
 
-| Option             | Type       | Default        | Meaning                                                                                                               |
-| ------------------ | ---------- | -------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `type`             | string     | —              | `custom:energy-manager-card`                                                                                          |
-| `title`            | string     | —              | Card heading                                                                                                          |
-| `use_integration`  | bool       | `true`         | Use the integration as the data source if installed. `false` forces the card's own calculation                        |
-| `meter_mode`       | string     | derived        | `grid` or `split`. Without a value, `grid` as soon as `grid_entity` is set. Mandatory without the integration         |
-| `devices`          | list       | —              | Loads, **YAML only**. Not needed with the integration — see below                                                     |
-| `scale_max`        | number (W) | derived        | Upper end of the bar. Without a value, from Σ `max_power`, at least 3000                                              |
-| `compact`          | bool       | `false`        | Tighter spacing                                                                                                       |
-| `show_surplus_bar` | bool       | `true`         | Show the surplus bar                                                                                                  |
-| `show_battery`     | bool       | if battery set | Show the battery badge                                                                                                |
-| `show_priority`    | bool       | `true`         | Priority number per row                                                                                               |
-| `secondary_info`   | string     | `both`         | `power`, `status` or `both`                                                                                           |
-| `switch_action`    | string     | `auto`         | What the toggle does: `device`, `automation` or `auto` (automation as soon as an `auto_entity` is set)                |
-| `allow_reorder`    | bool       | derived        | Reordering from the dashboard. Always possible with the integration; without it, every load needs a `priority_entity` |
-| `update_interval`  | number (s) | `5`            | Sampling and display interval                                                                                         |
-| `smoothing_window` | number (s) | `60`           | Averaging window; `0` disables smoothing                                                                              |
+| Option             | Type       | Default | Meaning                                                                                                               |
+| ------------------ | ---------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| `type`             | string     | —       | `custom:energy-manager-card`                                                                                          |
+| `title`            | string     | —       | Card heading                                                                                                          |
+| `use_integration`  | bool       | `true`  | Use the integration as the data source if installed. `false` forces the card's own calculation                        |
+| `meter_mode`       | string     | derived | `grid` or `split`. Without a value, `grid` as soon as `grid_entity` is set. Mandatory without the integration         |
+| `devices`          | list       | —       | Loads, **YAML only**. Not needed with the integration — see below                                                     |
+| `scale_max`        | number (W) | derived | Upper end of the bar. Without a value, from Σ `max_power`, at least 3000                                              |
+| `compact`          | bool       | `false` | Tighter spacing                                                                                                       |
+| `show_surplus_bar` | bool       | `true`  | Show the surplus bar                                                                                                  |
+| `show_battery`     | bool       | derived | Battery badge. Shown by default when a state of charge is reported — with the integration only with a single battery  |
+| `show_priority`    | bool       | `true`  | Priority number per row                                                                                               |
+| `secondary_info`   | string     | `both`  | `power`, `status` or `both`                                                                                           |
+| `switch_action`    | string     | `auto`  | What the toggle does: `device`, `automation` or `auto` (automation as soon as an `auto_entity` is set)                |
+| `allow_reorder`    | bool       | derived | Reordering from the dashboard. Always possible with the integration; without it, every load needs a `priority_entity` |
+| `update_interval`  | number (s) | `5`     | Sampling and display interval                                                                                         |
+| `smoothing_window` | number (s) | `60`    | Averaging window; `0` disables smoothing                                                                              |
 
 ### Meter source, mode `grid` — legacy configurations only
 
@@ -46,6 +46,10 @@ graphical editor — `devices[]` cannot, see below.
 
 ### Home battery — legacy configurations only
 
+Without the integration the card handles **exactly one** battery, and `battery_min_soc` blocks the
+surplus outright below that state of charge. That is the old rule and it stays as it is. Several
+batteries, a row per battery and an adjustable limit come from the integration — see below.
+
 | Option                     | Type       | Default       | Meaning                                                                                  |
 | -------------------------- | ---------- | ------------- | ---------------------------------------------------------------------------------------- |
 | `battery_soc_entity`       | entity     | —             | State of charge in %                                                                     |
@@ -57,19 +61,38 @@ graphical editor — `devices[]` cannot, see below.
 | `battery_min_soc`          | 0–100      | —             | Below this, charging takes precedence and no surplus is reported                         |
 | `battery_reserve_w`        | number (W) | `0`           | Always reserved for the battery                                                          |
 
-### Battery as a shiftable load
+### Batteries in the priority order — with the integration
 
-With the integration, entering a **maximum charge power** (`battery_max_charge_w`, in the
-integration's battery settings) turns the house battery into a load that takes part in the priority
-order: the card then shows it as its own row with a rank. Loads ranked **above** the battery are
-served first and stay on; the battery reserves up to its charge power at its rank; only what is left
-goes to loads ranked **below** it. The row has no switch — the battery is not commanded, only
-scheduled — but it can be dragged to any position like a load. See
-[integration-contract.md](integration-contract.md#batterie-als-verschiebbare-last). Standalone
-(without the integration) the card does not synthesise this row.
+Each battery is an entry of its own there, with its own device, and there can be **several**. The
+card builds **one row per battery**, from that battery's own traffic-light sensor
+(attribute `kind` = `battery`) — the row is named after the battery, not after a fixed label.
+Standalone (without the integration) the card does not synthesise such rows.
 
-The second line of that row reads `1.2 kW · charging · 62 %`: measured power, what the battery is
-doing, state of charge. The power is shown as a magnitude — the direction is in the word next to it,
+A row exists only for a battery with a **maximum charge power** entered (attribute `shiftable`).
+Only then does the battery take part in the priority order: loads ranked **above** it are served
+first and stay on; the battery reserves up to its charge power at its rank; only what is left goes
+to loads ranked **below** it. Without that figure a battery is merely a correction term in the
+balance, and a rank would promise scheduling that does not take place. The row has no switch — the
+battery is not commanded, only scheduled — but it can be dragged to any position like a load. See
+[integration-contract.md](integration-contract.md#batterie-als-verschiebbare-last).
+
+Where a load has its toggle, the row carries the **charge priority limit** (`min_soc`) as a
+percentage. Tapping it opens Home Assistant's dialog for that `number` entity, whose slider HA
+brings along; the card adds no control of its own, since holding a second state against the
+write-back is the same class of error as optimistic switching. While the limit is taking effect, the
+value is highlighted and the second line says so. Without a state of charge sensor there is no
+entity and the place stays empty — a limit would have nothing to compare against.
+
+That limit is a claim within the order: a battery below it moves ahead of all loads. It is not the
+blanket block that `battery_min_soc` is in the card's own calculation above.
+
+**The battery badge in the header** appears only with exactly one battery. With several, the
+integration reports no overall state of charge — that would need the capacities, and 5 kWh at 20 %
+plus 10 kWh at 80 % is not 50 %. The rows show the individual states of charge instead.
+
+The second line of a row reads `1.2 kW · charging · 62 %` under the name of the battery: measured
+power, what the battery is doing, state of charge — followed by `charging first` while the priority
+limit is taking effect. The power is shown as a magnitude — the direction is in the word next to it,
 and a minus sign in a line that can also read "waiting" is too easily taken for a deficit. A reading
 of 0 W is shown rather than omitted; "0 W · waiting" is a statement, a missing figure is not.
 

@@ -4,7 +4,8 @@ Zeigt den aktuellen **PV-Überschuss** und listet Verbraucher **nach Priorität*
 erkennbar, ob der Überschuss für ein Gerät reicht — und mit einem Klick schaltbar.
 
 - Bidirektionaler Netzsensor **oder** getrennte Sensoren für Erzeugung und Verbrauch
-- Optionale Hausbatterie: Ladeleistung zählt als umlenkbarer Überschuss
+- Optionale Hausspeicher, auch mehrere: Ladeleistung zählt als umlenkbarer Überschuss, und jeder
+  Speicher mit eingetragener Ladeleistung bekommt eine eigene Zeile in der Reihenfolge
 - Zeitgewichtete Glättung gegen Wolkenflackern
 - Ampel mit kaskadierender Budgetverteilung: bei 2 kW Überschuss steht von fünf 1,5-kW-Geräten
   genau eines auf grün

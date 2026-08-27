@@ -113,7 +113,7 @@ Integration braucht, nennt hier ihre Mindestversion.
 
 <!-- version-pair -->
 
-**Aktueller Stand:** Karte `0.7.0-beta.3`, erprobt gegen Integration ab `0.5.0b1`.
+**Aktueller Stand:** Karte `0.7.0-beta.4`, erprobt gegen Integration ab `0.5.0b1`.
 
 Bewusst eine Untergrenze und kein Paar: Eine Integrationsfassung, die allein erscheint, macht die
 Zeile damit nicht falsch — sonst müsste sie bei jedem einseitigen Release nachgezogen werden, und
@@ -237,19 +237,16 @@ nicht ein", nicht „sie wartet gerade".
 Der **Ampeltext** bleibt in allen Fällen unverändert: Was die Energielage hergibt, ist weiterhin
 ablesbar. Nur der Balken sagt, ob damit auch etwas geschieht.
 
-Am Überschuss-Sensor des Hubs: `grid_w`, `battery_w`, `battery_correction_w`, `battery_soc`,
-`battery_min_soc`, `coverage`, `smoothing_window`, `degraded`, `errors`.
+Am Überschuss-Sensor des Hubs: `grid_w`, `battery_w`, `battery_correction_w`, `coverage`,
+`smoothing_window`, `degraded`, `errors`. Dazu `battery_soc`, **solange es genau einen Speicher
+gibt** — bei mehreren bräuchte ein Gesamtwert ihre Kapazitäten, und der wäre geraten.
 
-`battery_min_soc` steht dort unabhängig davon, ob die Batterie als verschiebbare Last teilnimmt —
-die Grenze wirkt in der Überschussformel und damit immer. 0 heißt, dass die Regel nicht greift. Sie
-ist keine Einstellung des Eintrags, sondern eine Stellgröße hinter der `min_soc`-Entität am
-Speichergerät: Bei guter Vorhersage darf ein Verbraucher schon am Vormittag bei niedrigem Ladestand
-anlaufen, an einem trüben Tag nicht. Gibt es keinen Ladestandssensor, gibt es weder Entität noch
-Wirkung.
+`battery_w` ist die Leistung aller Speicher zusammen, `battery_correction_w` ihr Beitrag zur
+Bilanz. Alles über einen einzelnen Speicher steht an dessen eigenem Sensor; am Hub hätte bei zweien
+nur einer Platz, und welcher das wäre, ließe sich nicht sagen.
 
-Am Überschuss-Sensor steht sie weiterhin, damit eine Anzeige die Formel nachvollziehen kann, ohne
-die Speicher einzeln zu lesen. Sobald es mehrere gibt, ist sie die des Speichers, mit dem gerechnet
-wird — die verlässliche Angabe je Speicher steht an dessen eigenem Sensor.
+Die Ladevorranggrenze steht hier **nicht mehr**: Sie ist keine Größe der Formel, sondern eine
+Stellgröße je Speicher hinter dessen `min_soc`-Entität.
 
 ### Am Ampel-Sensor eines Speichers
 
@@ -385,13 +382,20 @@ das wie ein Rechenfehler aus.
 Anschließend gilt in beiden Modi:
 
 ```
-available = S_roh − battery_reserve_w
-wenn soc < battery_min_soc:  available = min(available, 0)
+available = S_roh − Summe der reserve_w
 ```
 
-`battery_reserve_w` wird auf `battery_max_charge_w` **angerechnet**, nicht addiert: Nimmt die
-Batterie als verschiebbare Last teil, fordert sie an ihrem Rang nur noch die Differenz an. Sonst
-zögen zwei Felder mit derselben Bedeutung den Verbrauchern die Summe aus beidem ab.
+Die Ladestandsregel stand früher hier und deckelte `available` auf 0. Sie ist in die Reihenfolge
+gewandert: Ein Speicher unter seiner Vorranggrenze rückt vor alle Verbraucher und fordert dort. Für
+eine einzelne Batterie ohne eingetragene Ladeleistung ist das dasselbe Ergebnis — mit dem
+Unterschied, dass der Überschuss ausgewiesen wird und die Zeile des Speichers zeigt, wer ihn hat.
+
+**Die Karte behält die alte Regel in ihrer eigenen Rechnung**, also im Betrieb ohne Integration.
+Dort gibt es genau eine Batterie und keine Reihenfolge, in die sich ein Anspruch einhängen ließe.
+
+`reserve_w` wird auf `max_charge_w` **angerechnet**, nicht addiert: Nimmt der Speicher als
+verschiebbare Last teil, fordert er an seinem Rang nur noch die Differenz an. Sonst zögen zwei
+Felder mit derselben Bedeutung den Verbrauchern die Summe aus beidem ab.
 
 Kein Clamping auf ≥ 0. Ein negativer Wert bedeutet ein **Defizit gegenüber der Erzeugung** — und
 ausdrücklich _nicht_ Netzbezug in gleicher Höhe, denn die Batterie kann einen Teil davon stützen.

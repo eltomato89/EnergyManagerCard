@@ -54,10 +54,11 @@ With the Energy Manager integration installed, this is enough:
 type: custom:energy-manager-card
 ```
 
-Meter sensors, battery, smoothing and the list of loads all come from the integration; the editor
-hides those fields and points there instead. Loads are maintained under **Settings → Devices &
-Services → Energy Manager → Add load**. That way there is exactly one place for every setting —
-keeping the same list in two places would inevitably let them drift apart.
+Meter sensors, batteries, smoothing and the list of loads all come from the integration; the editor
+hides those fields and points there instead. Loads and batteries are maintained under **Settings →
+Devices & Services → Energy Manager**, each of them as an entry of its own. That way there is
+exactly one place for every setting — keeping the same list in two places would inevitably let them
+drift apart.
 
 The card header additionally gets the **main switch of the automation**. With it off, nothing is
 switched.
@@ -106,12 +107,51 @@ with `min_runtime: 900`.
 These fields are set on the load in the integration, and they are enforced there. The card shows
 the resulting countdown from the integration's exact timestamp.
 
-## Home battery
+## Home batteries
 
-Optional. Charging power always counts as _divertible_ power towards the surplus: what is currently
-flowing into the battery could go to a load instead.
+Optional, and there can be **more than one**. With the integration each battery is an entry of its
+own with its own device. Without the integration the card handles exactly one battery from sensors
+you configure yourself; those options are unchanged, see
+[Legacy configurations](#legacy-configurations).
 
-How **discharging** is treated is controlled by `battery_mode`:
+Charging power always counts as _divertible_ power towards the surplus: what is currently flowing
+into a battery could go to a load instead. With several batteries that is their combined charging
+power.
+
+### One row per battery
+
+The card builds **one row per battery**, from that battery's own traffic-light sensor. The row
+carries the name of the battery — with several of them a fixed label "Battery" would no longer say
+which one is meant.
+
+Only a battery with a **maximum charge power** entered gets a row. Without that figure it takes no
+part in the priority order and remains a correction term in the balance; a row with a rank would
+promise scheduling that does not take place.
+
+Loads ranked **above** a battery are served first and stay on; the battery reserves up to its charge
+power at its rank; only what is left goes to loads ranked **below** it. The row has no switch — a
+battery is not commanded, only scheduled — but it can be dragged to any position like a load.
+
+Where a load has its toggle, a battery row shows the **charge priority limit** as a percentage.
+Tapping it opens Home Assistant's dialog for the `number` entity behind it, which brings the slider
+along; the card adds no control of its own. While the limit is taking effect, the value is
+highlighted and the second line of the row says so.
+
+The limit is a **claim within the order**, not a blanket block on the surplus: a battery below its
+limit moves ahead of all loads and is served first, and whatever is left over still goes to the
+loads.
+
+### The battery badge in the header
+
+The badge appears only when there is **exactly one** battery. With several, the integration reports
+no overall state of charge any more — a meaningful figure would need the capacities, and 5 kWh at
+20 % plus 10 kWh at 80 % is not 50 %. Instead of a guessed number the individual states of charge
+are shown in the rows.
+
+### Charging, discharging and the surplus
+
+How **discharging** is treated is set per battery — in the integration on the battery's entry, in
+the card's own configuration as `battery_mode`:
 
 | Mode                    | Formula                   | Meaning                                                                                    |
 | ----------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
@@ -129,15 +169,18 @@ The difference is substantial. Example: 463 W PV, 842 W house consumption, batte
 plainly contradicts the meter reading. Choose `full` if you want to reserve the battery for the
 evening.
 
-Further options:
+Two further settings belong to each battery in the integration:
 
-- `battery_min_soc` — below this, charging takes precedence and no surplus is reported
-- `battery_reserve_w` — power always reserved for the battery
+- **charge priority limit** — up to this state of charge the battery is served ahead of the loads.
+  It is the value in the row and can be adjusted there; 0 switches the rule off. Without a state of
+  charge sensor there is neither an entity nor an effect.
+- **reserve power** — power kept for the battery at all times, deducted before the first load.
 
 Below the large figure the card also shows the **actual meter readings** ("Grid 7 W import ·
-Battery 386 W discharging"), so that the calculated surplus and the real grid flow are not confused.
+Battery 386 W discharging" — with several batteries their combined power), so that the calculated
+surplus and the real grid flow are not confused.
 
-If the battery sensor fails, the card carries on without it but marks the value as uncertain rather
+If a battery sensor fails, the card carries on without it but marks the value as uncertain rather
 than presenting a wrong result as reliable.
 
 ## Smoothing
@@ -195,6 +238,15 @@ consumption_entity: sensor.house_consumption
 ```
 
 Both yield the same surplus — the formula is verified against both paths.
+
+**Home battery.** Without the integration the card handles **exactly one** battery, from
+`battery_soc_entity` and `battery_power_entity` (or `battery_charge_entity` /
+`battery_discharge_entity`), with `battery_mode`, `battery_min_soc` and `battery_reserve_w`. These
+options are unchanged and keep working.
+
+`battery_min_soc` acts here under the old rule: below that state of charge the card reports no
+surplus at all, so charging blocks the loads instead of taking a rank ahead of them. There is no
+battery row, no rank and no adjustable limit in the card — those come from the integration.
 
 **Loads and their priority.** Priority and automation participation each need one helper per load.
 Those helpers were the very reason the integration was built: two real HA helpers per load,

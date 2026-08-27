@@ -1,32 +1,40 @@
-# 0.7.0-beta.3 — pre-release
+# 0.7.0-beta.4 — pre-release
 
-Two small things: a daily target that finally speaks the unit you typed, and a catalogue
-entry that speaks your language.
+One row per battery, and the charging-priority threshold adjustable right in it.
+
+**This release belongs together with integration `0.5.0b4`.** The figures about a battery moved
+from the hub to the battery's own device — with an older integration this card shows no battery
+row, and with an older card the new integration shows none either.
 
 ## Changed
 
-- **A daily target is now shown in the unit it was entered in.** For a switchable load that
-  is hours — "1.7 of 4.0 h" instead of "0.6 of 1.4 kWh". The kWh are what the automation
-  computes with, but nobody types them: reading the target back in kWh forced you to divide
-  by the rated power to recognise the "4 h" you had entered.
+- **One row per battery.** The row used to be built from the `battery_*` attributes of the
+  surplus sensor, where exactly one fitted. Every battery now has its own device with its own
+  traffic-light sensor, and the row comes from there — the same way a load's row does. It
+  carries the battery's name instead of a fixed "Battery".
 
-  The conversion happens in the integration, using the same basis it made the target from —
-  the card would need the rated power and the same rule, and both would drift. Needs
-  integration `0.5.0b3`; on an older one the row stays with kWh, and so does a modulating
-  load, where hours are no statement at all. The progress ring is unchanged: a ratio does not
-  depend on the unit.
+- **The charging-priority threshold is adjustable in the row**, where a load has its switch.
+  Tapping it opens the entity's dialog with the slider Home Assistant brings along for a
+  `number` — no control of our own, and so no second piece of state fighting the write-back.
+  While the threshold is in force the value is highlighted and the second line says so: that is
+  the answer to "why is no load getting anything".
 
-  These are full-load hours, not the clock at the switch. Running below its rated power, a
-  device advances more slowly than time does — the automation compares energy against
-  forecast, and the row shows what the automation does.
+- **The badge in the header appears only with a single battery.** With several, the integration
+  reports no combined state of charge — it would need the capacities — and the rows show the
+  individual ones instead.
+
+- A battery **without a maximum charge power** gets no row. It is not part of the order then,
+  and a rank would be a claim the automation does not honour.
 
 ## Fixed
 
-- **The description in the card catalogue was hardcoded in German** and appeared that way in
-  an English interface too. It now comes from the language files, using the browser language:
-  the catalogue is filled when the module loads, long before the card has an instance and
-  thus a `hass.language`.
+- **Battery devices were drawn as loads.** They have a traffic-light sensor too now, and the
+  rule "every further device with a status" took them along — as a row with a switch, without a
+  switch entity. They are told apart by the `kind` attribute rather than by the missing switch
+  entity: a gap is a fault, not a statement.
 
-Everything else from `0.7.0-beta.1` and `0.7.0-beta.2` is unchanged: the step ladder for
-modulating loads, the daily target ring, the manual-override countdown, and the dimmed status
-bar when the automation deliberately stays away.
+## Unchanged
+
+The card's own battery options (`battery_soc_entity`, `battery_min_soc` and the rest) still work
+as before for installations running without the integration — one battery, and the threshold
+still as a blanket block on the surplus.
