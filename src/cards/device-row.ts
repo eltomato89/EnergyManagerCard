@@ -186,6 +186,23 @@ export class EnergyManagerDeviceRow extends LitElement {
     const levels = this.view.levels;
     if (!levels) return nothing;
 
+    // Eine Leiter mit einer Stufe ist keine Leiter: ein Segment ueber die volle
+    // Breite und "Stufe 1/1" sagen nichts. Das passiert, wenn das Geraet nicht
+    // einmal seine kleinste Stufe erreicht — meist eine falsche Konfiguration,
+    // etwa eine Wallbox mit falscher Phasenzahl. Statt der Leiter gehoert dann
+    // im Klartext dort hin, woran es liegt.
+    if (levels.count < 2) {
+      return levels.observedMaxW === null
+        ? nothing
+        : html`<div class="secondary daily urgent">
+            <ha-svg-icon .path=${mdiArrowCollapseRight}></ha-svg-icon>
+            ${this.localize('card.level_below_minimum', {
+              power: formatPower(levels.observedMaxW, this.locale),
+              min: formatPower(levels.minW, this.locale),
+            })}
+          </div>`;
+    }
+
     const gefuellt = levels.index ?? 0;
     const segmente = Array.from({ length: levels.count }, (_unused, i) => i < gefuellt);
 

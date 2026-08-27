@@ -37,6 +37,7 @@
     "level_of": "Stufe {index}/{count}",
     "level_power": "{power} von {max}",
     "level_capped": "Begrenzt: das Gerät nimmt höchstens {power}",
+    "level_below_minimum": "erreicht nur {power} der Mindeststufe {min}",
     "degraded": "Batteriewert fehlt; Überschuss ungenau",
     "reorder_drag": "Zum Sortieren ziehen",
     "reorder_up": "Nach oben",

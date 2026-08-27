@@ -37,6 +37,7 @@
     "level_of": "Level {index}/{count}",
     "level_power": "{power} of {max}",
     "level_capped": "Limited: the device draws at most {power}",
+    "level_below_minimum": "reaches only {power} of its {min} minimum",
     "degraded": "Battery reading missing; surplus imprecise",
     "reorder_drag": "Drag to reorder",
     "reorder_up": "Move up",

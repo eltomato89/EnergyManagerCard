@@ -2,6 +2,16 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [Unveröffentlicht]
+
+### Behoben
+
+- **Eine Leiter mit einer Stufe wurde als Leiter gezeichnet.** Ein Segment über die volle Breite und
+  „Stufe 1/1" sagen nichts und lesen sich wie ein Gerät mit genau einer Stufe. Tatsächlich entsteht
+  das, wenn ein Gerät seine kleinste Stufe nicht erreicht — meist eine falsche Konfiguration, etwa
+  eine Wallbox mit falscher Phasenzahl. Dort steht jetzt im Klartext, welche Leistung das Gerät
+  wirklich schafft und welche seine Mindeststufe wäre.
+
 ## [0.7.0-beta.1] — 2026-08-18
 
 ### Hinzugefügt

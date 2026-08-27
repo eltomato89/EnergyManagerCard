@@ -209,3 +209,26 @@ describe('Tagesziel', () => {
     expect(view({ daily_target_kwh: 3, must_run: true }).daily?.mustRun).toBe(true);
   });
 });
+
+describe('Leiter mit einer Stufe', () => {
+  it('wird als solche erkannt', () => {
+    // Erreicht ein Geraet nicht einmal seine kleinste Stufe, kappt die
+    // Integration auf eine Stufe. Ein Segment ueber die volle Breite und
+    // "Stufe 1/1" saehe aus wie ein Geraet mit einer Stufe — tatsaechlich ist
+    // es meist eine falsche Konfiguration.
+    const levels = view({
+      level_source: 'number_a',
+      level_count: 1,
+      min_level_w: 4140,
+      max_level_w: 4140,
+      level_w: 4140,
+      level_index: 1,
+      observed_max_w: 1779,
+      level_capped: true,
+    }).levels;
+
+    expect(levels?.count).toBe(1);
+    expect(levels?.observedMaxW).toBe(1779);
+    expect(levels?.capped).toBe(true);
+  });
+});
