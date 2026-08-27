@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, formatPercent, formatPower } from '../src/lib/format';
+import { formatDuration, formatHours, formatPercent, formatPower } from '../src/lib/format';
 
 const DE = { language: 'de', number_format: 'comma_decimal', time_format: '24' };
 
@@ -44,5 +44,18 @@ describe('formatDuration', () => {
 
   it('faellt nicht ins Negative', () => {
     expect(formatDuration(-10)).toBe('0:00');
+  });
+});
+
+describe('formatHours', () => {
+  it('zeigt eine Nachkommastelle', () => {
+    expect(formatHours(1.5, DE)).toBe('1,5 h');
+    expect(formatHours(8, DE)).toBe('8,0 h');
+  });
+
+  it('bleibt auch bei langen Zielen bei Stunden', () => {
+    // Keine Umschaltung auf Tage: Zwei Zeilen derselben Karte waeren sonst
+    // nicht mehr vergleichbar — dieselbe Regel wie bei den kWh.
+    expect(formatHours(30, DE)).toBe('30,0 h');
   });
 });

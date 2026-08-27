@@ -187,7 +187,40 @@ describe('Tagesziel', () => {
       must_run: false,
     }).daily;
 
-    expect(daily).toEqual({ targetKwh: 3, doneKwh: 1.2, forecastKwh: 5, mustRun: false });
+    expect(daily).toEqual({
+      targetKwh: 3,
+      doneKwh: 1.2,
+      forecastKwh: 5,
+      targetH: null,
+      doneH: null,
+      mustRun: false,
+    });
+  });
+
+  it('uebernimmt die Stunden eines schaltbaren Verbrauchers', () => {
+    // Eingetragen sind dort Stunden. Die Umrechnung macht die Integration —
+    // sie kennt die angenommene Leistung, mit der sie das Ziel selbst in kWh
+    // umgerechnet hat, und die Karte kennt sie nicht.
+    const daily = view({
+      daily_target_kwh: 3,
+      daily_done_kwh: 0.5,
+      daily_target_h: 6,
+      daily_done_h: 1,
+    }).daily;
+
+    expect(daily?.targetH).toBe(6);
+    expect(daily?.doneH).toBe(1);
+    // Die kWh bleiben daneben stehen: damit rechnet die Automatik.
+    expect(daily?.targetKwh).toBe(3);
+  });
+
+  it('nimmt Stunden nur, wenn beide Werte da sind', () => {
+    // Ein Ziel in Stunden neben einem Fortschritt in kWh waere schlechter als
+    // beides in kWh: Die Zeile stellt sie nebeneinander.
+    const daily = view({ daily_target_kwh: 3, daily_target_h: 6 }).daily;
+
+    expect(daily?.targetH).toBeNull();
+    expect(daily?.doneH).toBeNull();
   });
 
   it('fehlt ohne eingetragenes Ziel', () => {

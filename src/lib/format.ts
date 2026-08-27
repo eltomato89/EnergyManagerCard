@@ -57,3 +57,18 @@ export function formatEnergy(kwh: number, locale?: FrontendLocaleData): string {
     maximumFractionDigits: 1,
   }).format(kwh)} kWh`;
 }
+
+/**
+ * Stunden, mit einer Nachkommastelle.
+ *
+ * Nicht als h:mm wie die Sperrzeit-Countdown: Dort laeuft eine Uhr ab, hier
+ * steht eine Menge neben einer zweiten ("1,5 von 8 h"), und zwei Zeitangaben
+ * im Format 1:30 lesen sich in einer Reihe wie Uhrzeiten.
+ */
+export function formatHours(hours: number, locale?: FrontendLocaleData): string {
+  const lang = locale?.language || 'de';
+  return `${new Intl.NumberFormat(lang, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(hours)} h`;
+}

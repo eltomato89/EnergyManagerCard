@@ -147,6 +147,21 @@ export interface DailyState {
   /** Verbleibende Prognose, oder null ohne brauchbaren Sensor. */
   forecastKwh: number | null;
   /**
+   * Dieselben Groessen in Stunden — nur bei einem schaltbaren Verbraucher.
+   *
+   * Dort traegt der Nutzer sein Ziel in Stunden ein, und in Stunden gehoert es
+   * ihm auch zurueckgegeben. Die Umrechnung macht die Integration: Sie kennt
+   * die angenommene Leistung, mit der sie das Ziel selbst in kWh umgerechnet
+   * hat, und nur mit **derselben** Basis stimmt der Ring mit dem ueberein, was
+   * die Automatik verfolgt.
+   *
+   * `null` bei einer modulierenden Last: Sechs Stunden auf der kleinsten Stufe
+   * und sechs auf der groessten erfuellen ein Stundenziel gleich gut und
+   * unterscheiden sich um ein Vielfaches.
+   */
+  targetH: number | null;
+  doneH: number | null;
+  /**
    * Laeuft der Verbraucher gerade unabhaengig vom Ueberschuss?
    *
    * Der einzige Fall, in dem die Automatik bewusst Netzstrom in Kauf nimmt —

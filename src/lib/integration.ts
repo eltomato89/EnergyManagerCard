@@ -272,10 +272,19 @@ function dailyFromAttributes(attrs: Record<string, unknown>): DailyState | undef
   const targetKwh = num(attrs.daily_target_kwh);
   if (targetKwh === null || targetKwh <= 0) return undefined;
 
+  // Beide oder keins: Die Zeile zeigt Ziel und Fortschritt nebeneinander, und
+  // ein Ziel in Stunden neben einem Fortschritt in kWh waere schlechter als
+  // beides in kWh.
+  const targetH = num(attrs.daily_target_h);
+  const doneH = num(attrs.daily_done_h);
+  const inStunden = targetH !== null && doneH !== null;
+
   return {
     targetKwh,
     doneKwh: num(attrs.daily_done_kwh) ?? 0,
     forecastKwh: num(attrs.daily_forecast_kwh),
+    targetH: inStunden ? targetH : null,
+    doneH: inStunden ? doneH : null,
     mustRun: attrs.must_run === true,
   };
 }

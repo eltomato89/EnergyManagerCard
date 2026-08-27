@@ -12,7 +12,13 @@ import { DEVICE_ROW_TAG, OPTIMISTIC_TIMEOUT_MS } from '../const';
 import { batteryStatusKey } from '../lib/device-status';
 import { batteryFlow, batteryFrame, FRAME_COUNT } from '../lib/battery-icon';
 import type { BatteryFlow } from '../lib/battery-icon';
-import { formatDuration, formatEnergy, formatPercent, formatPower } from '../lib/format';
+import {
+  formatDuration,
+  formatEnergy,
+  formatHours,
+  formatPercent,
+  formatPower,
+} from '../lib/format';
 import { fireEvent, fireMoreInfo } from '../lib/events';
 import type { LocalizeFn } from '../localize/localize';
 import { statusColor, statusOpacity, themeVariables } from '../styles';
@@ -253,6 +259,14 @@ export class EnergyManagerDeviceRow extends LitElement {
     const fehlt = Math.max(daily.targetKwh - daily.doneKwh, 0);
     const fertig = fehlt <= 0;
 
+    // Bei einem schaltbaren Verbraucher ist das Ziel in Stunden eingetragen —
+    // dann steht es auch in Stunden da, sonst muesste der Nutzer sein eigenes
+    // Ziel erst umrechnen, um es wiederzuerkennen. Der Anteil bleibt derselbe:
+    // Er ist ein Verhaeltnis und haengt nicht an der Einheit.
+    const inStunden = daily.targetH !== null && daily.doneH !== null;
+    const zeige = (kwh: number, stunden: number) =>
+      inStunden ? formatHours(stunden, this.locale) : formatEnergy(kwh, this.locale);
+
     return html`
       <div class="secondary daily ${daily.mustRun ? 'urgent' : ''}">
         ${this.renderRing(anteil, fertig, daily.mustRun)}
@@ -261,11 +275,11 @@ export class EnergyManagerDeviceRow extends LitElement {
             ? this.localize('card.daily_done')
             : daily.mustRun
               ? this.localize('card.daily_short', {
-                  energy: formatEnergy(fehlt, this.locale),
+                  missing: zeige(fehlt, Math.max((daily.targetH ?? 0) - (daily.doneH ?? 0), 0)),
                 })
               : this.localize('card.daily_progress', {
-                  done: formatEnergy(daily.doneKwh, this.locale),
-                  target: formatEnergy(daily.targetKwh, this.locale),
+                  done: zeige(daily.doneKwh, daily.doneH ?? 0),
+                  target: zeige(daily.targetKwh, daily.targetH ?? 0),
                 })
         }
       </div>

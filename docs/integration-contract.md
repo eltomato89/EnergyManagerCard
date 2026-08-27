@@ -179,9 +179,23 @@ geschrieben; er bleibt Nutzerkonfiguration.
 ### Tagesziel
 
 Hat ein Verbraucher ein Tagesziel, kommen `daily_target_kwh`, `daily_done_kwh`, `daily_forecast_kwh`
-und `must_run` dazu; ohne Ziel fehlen sie ganz. **Immer in kWh**, auch wenn das Ziel als Stunden
-eingetragen wurde — die Umrechnung ist Sache der Integration, denn sie hängt an derselben
-Nennleistung, deren Herkunft `required_source` ausweist.
+und `must_run` dazu; ohne Ziel fehlen sie ganz. Diese vier sind **immer in kWh**, auch wenn das Ziel
+als Stunden eingetragen wurde — es ist die Größe, mit der die Automatik rechnet, und die Umrechnung
+ist Sache der Integration: Sie hängt an derselben Nennleistung, deren Herkunft `required_source`
+ausweist.
+
+Bei einem **schaltbaren** Verbraucher kommen `daily_target_h` und `daily_done_h` hinzu — dieselben
+Größen in der Einheit, in der das Ziel eingetragen wurde. Ohne sie müsste eine Anzeige durch die
+Nennleistung teilen, um dem Nutzer sein eigenes Ziel wiederzuerkennen zu geben, und dazu die
+Nennleistung kennen. Bei einer **modulierenden** Last fehlen sie: Sechs Stunden auf der kleinsten
+Stufe und sechs auf der größten erfüllen ein Stundenziel gleich gut und unterscheiden sich um ein
+Vielfaches. Sie fehlen ebenso, wenn keine Basis vorliegt — an ihrem Vorhandensein erkennt eine
+Anzeige, dass Stunden die gemeinte Einheit sind, und die beiden kommen nur gemeinsam.
+
+Es sind **Vollaststunden**, nicht die Uhr am Schalter: Läuft das Gerät unterhalb seiner
+Nennleistung, kommen sie langsamer voran als die Zeit. Die tatsächliche Einschaltdauer wäre die
+anschaulichere Zahl, stünde aber neben der Entscheidung statt davor — verglichen wird Energie mit
+Prognose, und die Anzeige soll zeigen, was die Automatik tut.
 
 `daily_forecast_kwh` ist `null`, wenn kein brauchbarer Prognosesensor konfiguriert ist. Das ist etwas
 anderes als 0: 0 hieße „es kommt nichts mehr" und ließe jedes Tagesziel sofort auf Netzstrom laufen.
@@ -211,7 +225,14 @@ Der **Ampeltext** bleibt in allen Fällen unverändert: Was die Energielage herg
 ablesbar. Nur der Balken sagt, ob damit auch etwas geschieht.
 
 Am Überschuss-Sensor des Hubs: `grid_w`, `battery_w`, `battery_correction_w`, `battery_soc`,
-`coverage`, `smoothing_window`, `degraded`, `errors`.
+`battery_min_soc`, `coverage`, `smoothing_window`, `degraded`, `errors`.
+
+`battery_min_soc` steht dort unabhängig davon, ob die Batterie als verschiebbare Last teilnimmt —
+die Grenze wirkt in der Überschussformel und damit immer. 0 heißt, dass die Regel nicht greift. Sie
+ist keine Einstellung des Eintrags, sondern eine Stellgröße hinter einer eigenen
+number-Entität am Hub, die die Karte bislang nicht bedient: Bei guter Vorhersage darf ein Verbraucher schon am Vormittag bei niedrigem
+Ladestand anlaufen, an einem trüben Tag nicht. Gibt es keinen Ladestandssensor, gibt es weder
+Entität noch Wirkung.
 
 Nimmt die Batterie als verschiebbare Last teil (siehe unten), kommen am
 Überschuss-Sensor dazu: `battery_load` (`true`), `battery_rank`, `battery_status`,
