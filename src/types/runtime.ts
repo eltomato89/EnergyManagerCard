@@ -195,6 +195,23 @@ export interface DeviceView {
    * eine zweite Schwelle in der Karte liefe irgendwann auseinander.
    */
   full?: boolean;
+  /**
+   * Ladevorranggrenze in Prozent — nur fuer kind 'battery'.
+   *
+   * 0 heisst, dass die Regel nicht greift. `null` heisst, dass es sie nicht
+   * gibt: ohne Ladestandssensor haette sie nichts zu vergleichen.
+   */
+  minSoc?: number | null;
+  /** Die Entitaet dahinter, damit die Zeile sie bedienbar machen kann. */
+  minSocEntity?: string;
+  /**
+   * Laedt dieser Speicher gerade mit Vorrang, weil sein Ladestand zu tief ist?
+   *
+   * Die Antwort auf "warum bekommt gerade kein Verbraucher etwas". Die Karte
+   * leitet das nicht aus Ladestand und Grenze ab — wo genau die Regel greift,
+   * entscheidet die Integration.
+   */
+  belowThreshold?: boolean;
   /** Rang in der Prioritaetsreihenfolge, 0-basiert (0 = hoechste). */
   index: number;
   /** Position im devices-Array. Fuer Umsortieren und stabile Keys noetig. */

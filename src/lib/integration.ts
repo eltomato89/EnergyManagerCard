@@ -35,9 +35,16 @@ const ROLE_LOCKED_UNTIL = 'locked_until';
 const ROLE_PRIORITY = 'priority';
 const ROLE_MANAGED = 'managed';
 const ROLE_AUTOMATION = 'automation';
-const ROLE_BATTERY_PRIORITY = 'battery_priority';
+const ROLE_MIN_SOC = 'min_soc';
 
-/** Stabiler Schluessel der Batteriezeile — sie hat keine Verbraucher-ID. */
+/**
+ * Stabiler Schluessel der Batteriezeile ohne eigenes Geraet.
+ *
+ * Nur noch fuer eine Integration vor 0.5.0b4, wo die Batterie am Hub hing und
+ * es genau eine gab. Ab dort hat jeder Speicher ein Geraet, und seine
+ * Subentry-ID ist die Zeilen-ID — sonst waeren zwei Zeilen nicht zu
+ * unterscheiden.
+ */
 export const BATTERY_ROW_ID = '__battery__';
 
 interface RoleMap {
@@ -55,14 +62,16 @@ export interface IntegrationHandle {
   surplusEntity: string;
   /** Der Hauptschalter, sofern vorhanden. */
   automationEntity?: string;
-  /**
-   * Die Prioritaets-Entitaet der Batterie am Hub. Nur vorhanden, wenn die
-   * Batterie als verschiebbare Last teilnimmt — dann bekommt die Batteriezeile
-   * darueber ihren Rang und laesst sich mitsortieren.
-   */
-  batteryPriorityEntity?: string;
   /** Ein Eintrag je Verbraucher. */
   devices: IntegrationDevice[];
+  /**
+   * Ein Eintrag je Speicher.
+   *
+   * Getrennt von den Verbrauchern, obwohl beide einen Ampelzustand tragen: Ein
+   * Speicher wird nicht geschaltet, und eine Zeile mit Schalter waere fuer ihn
+   * falsch. Leer bei einer Integration vor 0.5.0b4.
+   */
+  batteries: IntegrationDevice[];
 }
 
 /**
@@ -96,6 +105,7 @@ export function findIntegration(hass: HomeAssistant | undefined): IntegrationHan
 
   const hub = byDevice.get(hubDeviceId) as RoleMap;
   const devices: IntegrationDevice[] = [];
+  const batteries: IntegrationDevice[] = [];
 
   for (const [deviceId, roles] of byDevice) {
     // Ein Verbraucher ist daran erkennbar, dass er einen Ampelzustand hat —
@@ -105,16 +115,18 @@ export function findIntegration(hass: HomeAssistant | undefined): IntegrationHan
     // Seit Integration 0.5.0b4 hat auch ein Speicher einen Ampelzustand. Er ist
     // kein Verbraucher: Er wird nicht geschaltet, und eine Zeile mit
     // Schalter-Anzeige ohne Schalt-Entitaet waere kaputt statt unvollstaendig.
-    // Bis die Karte Speicherzeilen selbst baut, bleibt er hier aussen vor.
-    if (isBatteryDevice(hass, roles[ROLE_STATUS])) continue;
+    if (isBatteryDevice(hass, roles[ROLE_STATUS])) {
+      batteries.push({ deviceId, roles });
+      continue;
+    }
     devices.push({ deviceId, roles });
   }
 
   return {
     surplusEntity: hub[ROLE_SURPLUS],
     automationEntity: hub[ROLE_AUTOMATION],
-    batteryPriorityEntity: hub[ROLE_BATTERY_PRIORITY],
     devices,
+    batteries,
   };
 }
 
@@ -140,9 +152,9 @@ function isBatteryDevice(hass: HomeAssistant, statusEntity: string | undefined):
 export function trackedFromIntegration(hass: HomeAssistant, handle: IntegrationHandle): string[] {
   const ids = [handle.surplusEntity];
   if (handle.automationEntity) ids.push(handle.automationEntity);
-  // Der Rang der Batterie kann sich beim Sortieren aendern; die Zeile muss
-  // dann neu zeichnen. Der Ladestand steckt schon im Ueberschuss-Sensor.
-  if (handle.batteryPriorityEntity) ids.push(handle.batteryPriorityEntity);
+  // Rang und Ladevorranggrenze eines Speichers aendern sich beim Sortieren und
+  // beim Verstellen; seine Zeile muss dann neu zeichnen.
+  for (const battery of handle.batteries) ids.push(...Object.values(battery.roles));
 
   for (const device of handle.devices) {
     ids.push(...Object.values(device.roles));
@@ -273,8 +285,7 @@ export function viewsFromIntegration(
     });
   }
 
-  const battery = batteryRowFromIntegration(hass, handle);
-  if (battery) views.push(battery);
+  views.push(...batteryRowsFromIntegration(hass, handle));
 
   // Nach Rang sortieren — die Integration bestimmt die Reihenfolge.
   return views.sort((a, b) => a.index - b.index);
@@ -351,53 +362,66 @@ function levelsFromAttributes(attrs: Record<string, unknown>): LevelState | unde
 }
 
 /**
- * Die Hausbatterie als verschiebbare Last, aus den Attributen des
- * Ueberschuss-Sensors.
+ * Eine Zeile je Speicher, aus dessen eigenem Ampel-Sensor.
  *
- * Nur wenn die Integration sie als Last fuehrt (`battery_load`) UND ihre
- * Prioritaets-Entitaet vorliegt — ohne die liesse sich die Zeile nicht
- * mitsortieren, und ein Rang ohne Rueckschreibweg waere irrefuehrend.
+ * Aufgebaut wie eine Verbraucherzeile — dieselben Felder aus demselben Sensor.
+ * Was sie unterscheidet, steht in `kind`: Ein Speicher wird nicht geschaltet,
+ * also traegt seine Zeile keinen Schalter.
+ *
+ * Nur Speicher, die an der Reihenfolge teilnehmen (`shiftable`). Ohne
+ * eingetragene Ladeleistung ist ein Speicher bloss ein Korrekturterm in der
+ * Bilanz; eine Zeile mit Rang waere dort eine Behauptung, die die Automatik
+ * nicht einloest.
  */
-export function batteryRowFromIntegration(
+export function batteryRowsFromIntegration(
   hass: HomeAssistant,
   handle: IntegrationHandle,
-): DeviceView | null {
-  if (!handle.batteryPriorityEntity) return null;
+): DeviceView[] {
+  const rows: DeviceView[] = [];
 
-  const attrs = (hass.states[handle.surplusEntity]?.attributes ?? {}) as Record<string, unknown>;
-  if (attrs.battery_load !== true) return null;
+  for (const battery of handle.batteries) {
+    const statusObj = hass.states[battery.roles[ROLE_STATUS]];
+    if (!statusObj) continue;
 
-  const status = String(attrs.battery_status ?? 'unavailable') as DeviceStatus;
-  const rank = num(attrs.battery_rank);
-  const chargingW = num(attrs.battery_charging_w);
-  const socEntity = attrs.battery_soc_entity ? String(attrs.battery_soc_entity) : '';
+    const attrs = statusObj.attributes as Record<string, unknown>;
+    if (attrs.shiftable !== true) continue;
 
-  return {
-    config: {
-      id: BATTERY_ROW_ID,
-      // Der Ladestandssensor: darueber oeffnet die Zeile den Detail-Dialog.
-      switch_entity: socEntity,
-      priority_entity: handle.batteryPriorityEntity,
-    },
-    kind: 'battery',
-    index: rank === null ? Number.MAX_SAFE_INTEGER : rank - 1,
-    configIndex: -1,
-    name: '',
-    icon: undefined,
-    // "An" heisst hier: laedt gerade. Nur fuer die gedaempfte Darstellung.
-    isOn: chargingW !== null && chargingW > 0,
-    available: status !== 'unavailable',
-    // Die Batterie nimmt immer teil, solange sie als Last gefuehrt wird.
-    managed: true,
-    autoSwitchable: false,
-    powerW: chargingW,
-    requiredW: num(attrs.battery_max_charge_w) ?? 0,
-    status,
-    headroomW: num(attrs.battery_claim_w),
-    soc: num(attrs.battery_soc),
-    full: attrs.battery_full === true,
-    lock: { kind: 'none', remainingS: 0 },
-  };
+    const status = String(statusObj.state) as DeviceStatus;
+    const rank = num(attrs.rank);
+    const chargingW = num(attrs.charging_w);
+
+    rows.push({
+      config: {
+        id: String(attrs.consumer_id ?? battery.deviceId),
+        // Der Ladestandssensor: darueber oeffnet die Zeile den Detail-Dialog.
+        switch_entity: attrs.soc_entity ? String(attrs.soc_entity) : '',
+        priority_entity: battery.roles[ROLE_PRIORITY],
+      },
+      kind: 'battery',
+      index: rank === null ? Number.MAX_SAFE_INTEGER : rank - 1,
+      configIndex: -1,
+      name: String(attrs.consumer_name ?? ''),
+      icon: undefined,
+      // "An" heisst hier: laedt gerade. Nur fuer die gedaempfte Darstellung.
+      isOn: chargingW !== null && chargingW > 0,
+      available: status !== 'unavailable',
+      // Ein Speicher nimmt immer teil, solange er als Last gefuehrt wird.
+      managed: true,
+      autoSwitchable: false,
+      powerW: chargingW,
+      requiredW: num(attrs.max_charge_w) ?? 0,
+      status,
+      headroomW: num(attrs.claim_w),
+      soc: num(attrs.soc),
+      full: attrs.full === true,
+      minSoc: num(attrs.min_soc),
+      minSocEntity: battery.roles[ROLE_MIN_SOC],
+      belowThreshold: attrs.below_threshold === true,
+      lock: { kind: 'none', remainingS: 0 },
+    });
+  }
+
+  return rows;
 }
 
 /**

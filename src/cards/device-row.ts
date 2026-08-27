@@ -4,6 +4,7 @@ import {
   mdiArrowCollapseRight,
   mdiArrowDown,
   mdiArrowUp,
+  mdiBatteryArrowUp,
   mdiDragHorizontalVariant,
   mdiHandBackRight,
   mdiLockClock,
@@ -145,7 +146,7 @@ export class EnergyManagerDeviceRow extends LitElement {
         </div>
 
         <div class="text" @click=${this._openMoreInfo}>
-          <div class="name">${this._isBattery ? this.localize('card.battery') : view.name}</div>
+          <div class="name">${this._name()}</div>
           ${this._isBattery ? this.renderBatterySecondary() : this.renderSecondary()}
         </div>
 
@@ -155,7 +156,7 @@ export class EnergyManagerDeviceRow extends LitElement {
           this.reordering
             ? this.renderArrows()
             : this._isBattery
-              ? nothing
+              ? this.renderMinSoc()
               : this.renderSwitch(checked, automation)
         }
       </div>
@@ -485,6 +486,11 @@ export class EnergyManagerDeviceRow extends LitElement {
     if (view.soc !== null && view.soc !== undefined) {
       parts.push(formatPercent(view.soc, this.locale));
     }
+    // Warum bekommt gerade kein Verbraucher etwas? Weil dieser Speicher
+    // vorgeht. Ohne diesen Hinweis sieht die Zeile aus wie jede andere.
+    if (view.belowThreshold) {
+      parts.push(this.localize('card.battery_priority_active'));
+    }
 
     return html`<div class="secondary">
       ${parts.map((part, i) => html`${i > 0 ? ' · ' : ''}${part}`)}
@@ -604,6 +610,44 @@ export class EnergyManagerDeviceRow extends LitElement {
     this._optimistic = undefined;
   }
 
+  /** Der Name des Speichers; bei einer aelteren Integration ein fester Text. */
+  private _name(): string {
+    if (!this._isBattery) return this.view.name;
+    return this.view.name || this.localize('card.battery');
+  }
+
+  /**
+   * Die Ladevorranggrenze, dort wo bei einem Verbraucher der Schalter sitzt.
+   *
+   * Antippen oeffnet den Dialog der Entitaet — Home Assistant bringt fuer eine
+   * `number` den Schieberegler mit. Ein eigenes Bedienelement braeuchte eine
+   * zweite Zustandsfuehrung gegen das Zurueckschreiben, und das ist dieselbe
+   * Klasse Fehler wie beim optimistischen Schalten.
+   *
+   * Ohne Entitaet bleibt die Spalte leer: Dann gibt es keinen Ladestandssensor,
+   * und eine Grenze haette nichts zu vergleichen.
+   */
+  private renderMinSoc() {
+    const view = this.view;
+    if (!view.minSocEntity || view.minSoc === null || view.minSoc === undefined) return nothing;
+
+    return html`<button
+      class="min-soc ${view.belowThreshold ? 'active' : ''}"
+      title=${this.localize('card.min_soc_hint')}
+      @click=${this._openMinSoc}
+    >
+      <ha-svg-icon .path=${mdiBatteryArrowUp}></ha-svg-icon>
+      ${formatPercent(view.minSoc, this.locale)}
+    </button>`;
+  }
+
+  private _openMinSoc = (ev: Event): void => {
+    // Sonst oeffnet zusaetzlich der Detail-Dialog des Ladestandssensors, an dem
+    // die ganze Zeile haengt.
+    ev.stopPropagation();
+    if (this.view.minSocEntity) fireMoreInfo(this, this.view.minSocEntity);
+  };
+
   static override styles = [
     themeVariables,
     css`
@@ -709,6 +753,38 @@ export class EnergyManagerDeviceRow extends LitElement {
         align-items: center;
         gap: 3px;
         white-space: nowrap;
+      }
+
+      /* Die Ladevorranggrenze steht dort, wo bei einem Verbraucher der
+         Schalter sitzt — gleiche Spalte, gleiche Breite, damit die Zeilen
+         untereinander nicht auseinanderlaufen. */
+      .min-soc {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 4px 6px;
+        border: none;
+        border-radius: 6px;
+        background: none;
+        color: var(--secondary-text-color, #727272);
+        font: inherit;
+        font-size: 0.85em;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .min-soc:hover {
+        background: var(--divider-color, #e0e0e0);
+      }
+
+      /* Greift die Grenze gerade, ist sie kein Beiwerk mehr, sondern der
+         Grund, warum die Verbraucher darunter leer ausgehen. */
+      .min-soc.active {
+        color: var(--emc-on-deficit);
+      }
+
+      .min-soc ha-svg-icon {
+        --mdc-icon-size: 16px;
       }
 
       /* Ein Segment je Stufe. Die Segmente teilen die verfuegbare Breite unter

@@ -109,7 +109,7 @@ Integration braucht, nennt hier ihre Mindestversion.
 | Stufenleiter regelbarer Verbraucher                       | ≥ 0.7.0 | ≥ 0.5.0     |
 | Gedämpfter Statusbalken bei untätiger Automatik           | ≥ 0.7.0 | ≥ 0.1.0     |
 | Tagesziel in Stunden statt kWh                            | ≥ 0.7.0 | ≥ 0.5.0b3   |
-| Mehrere Speicher, je einer mit eigenem Gerät              | offen   | ≥ 0.5.0b4   |
+| Mehrere Speicher, je einer mit eigenem Gerät              | ≥ 0.7.0 | ≥ 0.5.0b4   |
 
 <!-- version-pair -->
 
@@ -267,20 +267,14 @@ nicht verschiebbar.
 liest die Zeile eines Speichers mit demselben Code wie die eines Verbrauchers, und zwei Namen für
 dasselbe Feld wären dort zwei Fälle statt einem.
 
-### Am Überschuss-Sensor, für die Batteriezeile
+`claim_w` ist die Leistung, die insgesamt für diesen Speicher zurückgelegt ist — einschließlich
+einer eingetragenen `reserve_w`, die schon vor dem ersten Verbraucher abgezogen wurde.
+`headroom_w` ist, was danach für tiefer priorisierte Verbraucher übrig bleibt. Ob er voll ist, sagt
+`full`, und ob die Vorranggrenze gerade greift, `below_threshold`; die Karte leitet beides nicht
+selbst aus dem Ladestand ab, sonst lägen zwei Schwellen nebeneinander.
 
-Nimmt die Batterie als verschiebbare Last teil (siehe unten), kommen am
-Überschuss-Sensor dazu: `battery_load` (`true`), `battery_rank`, `battery_status`,
-`battery_max_charge_w`, `battery_claim_w`, `battery_headroom_w`, `battery_charging_w`,
-`battery_full` und `battery_soc_entity` (für den Detail-Dialog der Batteriezeile). Dazu
-`battery_priority` als reine Diagnose — den Rang bedient die Karte über die gleichnamige
-number-Entität, nicht über dieses Attribut.
-
-`battery_claim_w` ist die Leistung, die insgesamt für die Batterie zurückgelegt ist — einschließlich
-einer eingetragenen `battery_reserve_w`, die schon vor dem ersten Verbraucher abgezogen wurde.
-`battery_headroom_w` ist, was danach für tiefer priorisierte Verbraucher übrig bleibt. Ob die
-Batterie voll ist, sagt `battery_full`; die Karte leitet das nicht selbst aus dem Ladestand ab, sonst
-lägen zwei Schwellen nebeneinander.
+Bis Integration 0.5.0b3 standen diese Angaben mit dem Präfix `battery_` am Überschuss-Sensor des
+Hubs, wo genau einer Platz hatte. Sie sind dort entfallen.
 
 `errors` verwendet Unterstriche (`grid_unavailable`); die Karte übersetzt sie in ihre eigene
 Schreibweise mit Bindestrichen. Ein Testfall in `test/integration.test.ts` hält das fest.
@@ -318,7 +312,7 @@ läuft dieses Gerät nicht" hätte keine Antwort mehr in einem Satz. Wer den Fal
 
 ## Batterie als verschiebbare Last
 
-Trägt der Nutzer in der Integration eine **maximale Ladeleistung** ein, nimmt die Hausbatterie an
+Trägt der Nutzer in der Integration eine **maximale Ladeleistung** ein, nimmt der Speicher an
 der Prioritätsreihenfolge teil — sonst bleibt sie wie bisher nur ein Korrekturterm im Überschuss.
 
 Die Integration hängt sie dann als eigenen Rang in dieselbe Budget-Kaskade wie die Verbraucher:
@@ -326,15 +320,29 @@ Wer **über** der Batterie steht, bekommt den Überschuss zuerst und bleibt eing
 Batterie legt an ihrem Rang bis zu ihrer Ladeleistung zurück, abzüglich einer bereits
 abgezogenen `battery_reserve_w`; nur der Rest steht Verbrauchern **unter** ihr zur Verfügung. Das ist reine Verteilung — die Batterie wird nicht angesteuert.
 
-Die Karte stellt sie als eigene Zeile dar (`kind: 'battery'`), gebaut allein aus den
-`battery_*`-Attributen des Überschuss-Sensors und der `battery_priority`-Entität am Hub. Die Zeile
-hat **keinen Schalter** (es gibt nichts zu schalten), aber einen Rang: über die
-`battery_priority`-number lässt sie sich mitsortieren, genau wie die Verbraucher. Der
-Detail-Dialog führt zum Ladestandssensor (`battery_soc_entity`).
+Die Karte stellt jeden Speicher als eigene Zeile dar (`kind: 'battery'`), gebaut aus dessen
+Ampel-Sensor — derselbe Weg wie bei einem Verbraucher. Die Zeile hat **keinen Schalter** (es gibt
+nichts zu schalten), aber einen Rang: über die `priority`-number lässt sie sich mitsortieren. An
+der Stelle des Schalters steht die **Ladevorranggrenze**; ein Tippen darauf öffnet den Dialog der
+`min_soc`-Entität, deren Schieberegler Home Assistant selbst mitbringt. Der Detail-Dialog der Zeile
+führt zum Ladestandssensor (`soc_entity`).
 
-Damit die Reihenfolge lückenlos bleibt, zählt die Integration die Batterie beim Vergeben der
-`rank`-Werte mit: die Verbraucher-Ränge lassen die Position der Batterie frei, sodass Karte und
-Automatik dieselbe Abfolge zeigen.
+Ein Speicher ohne eingetragene Ladeleistung bekommt keine Zeile: `shiftable` ist dann `false`, er
+steht nicht in der Reihenfolge, und ein Rang wäre eine Behauptung, die die Automatik nicht einlöst.
+
+Das Batterie-Badge im Kartenkopf setzt einen eindeutigen Ladestand voraus und erscheint deshalb nur
+bei genau einem Speicher. Bei mehreren liefert die Integration keinen mehr — ein Gesamtwert bräuchte
+die Kapazitäten —, und die Zeilen zeigen die einzelnen Ladestände.
+
+Damit die Reihenfolge lückenlos bleibt, zählt die Integration die Speicher beim Vergeben der
+`rank`-Werte mit: die Verbraucher-Ränge lassen ihre Positionen frei, sodass Karte und Automatik
+dieselbe Abfolge zeigen.
+
+**Unterhalb seiner Ladevorranggrenze steht ein Speicher vor allen Verbrauchern**, unabhängig von
+seinem Rang. Das löst die frühere globale Sperre ab, die den ausgewiesenen Überschuss auf 0
+deckelte: Bei mehreren Speichern wäre sie nicht mehr eindeutig, und sie verschwieg, wohin die
+Leistung geht. Mit eingetragener Ladeleistung fordert der Speicher genau diese und gibt den Rest
+weiter; ohne fordert er alles — und das ist die alte Sperre, nur sichtbar.
 
 ## Sperrzeiten — die eingelöste Zusage
 

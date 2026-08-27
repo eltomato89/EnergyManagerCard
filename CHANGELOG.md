@@ -2,6 +2,35 @@
 
 Dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [Unveröffentlicht]
+
+### Geändert
+
+- **Eine Zeile je Speicher.** Die Karte baute die Batteriezeile aus den `battery_*`-Attributen des
+  Überschuss-Sensors, wo genau eine Platz hatte. Seit Integration `0.5.0b4` hat jeder Speicher ein
+  eigenes Gerät mit eigenem Ampel-Sensor, und die Zeile entsteht daraus — auf demselben Weg wie die
+  eines Verbrauchers. Sie trägt jetzt den Namen des Speichers statt eines festen „Batterie".
+
+- **Die Ladevorranggrenze ist in der Zeile bedienbar**, dort wo bei einem Verbraucher der Schalter
+  sitzt. Antippen öffnet den Dialog der Entität mit dem Schieberegler, den Home Assistant für eine
+  `number` mitbringt — kein eigenes Bedienelement und damit keine zweite Zustandsführung gegen das
+  Zurückschreiben. Greift die Grenze gerade, steht es auch in der Zweitzeile: Das ist die Antwort
+  auf „warum bekommt gerade kein Verbraucher etwas".
+
+- **Das Batterie-Badge im Kopf erscheint nur noch bei genau einem Speicher.** Bei mehreren liefert
+  die Integration keinen Gesamtladestand mehr, weil er ohne die Kapazitäten geraten wäre; die
+  Zeilen zeigen stattdessen die einzelnen.
+
+- Ein Speicher **ohne eingetragene Ladeleistung** bekommt keine Zeile. Er steht dann nicht in der
+  Reihenfolge, und ein Rang wäre eine Behauptung, die die Automatik nicht einlöst.
+
+### Behoben
+
+- **Speichergeräte wurden als Verbraucher gezeichnet.** Seit Integration `0.5.0b4` haben sie
+  ebenfalls einen Ampel-Sensor, und die Erkennungsregel „jedes weitere Gerät mit einem `status`"
+  nahm sie mit — als Zeile mit Schalter, ohne Schalt-Entität. Unterschieden werden sie am Attribut
+  `kind` und nicht an der fehlenden Schalt-Entität: Eine Lücke ist ein Fehler, keine Aussage.
+
 ## [0.7.0-beta.3] — 2026-08-27
 
 ### Behoben

@@ -49,7 +49,9 @@
     "battery_load_full": "voll",
     "battery_load_reduced": "gedrosselt",
     "battery_load_waiting": "wartet",
-    "picker_description": "PV-Überschuss anzeigen und Verbraucher nach Priorität schalten. Die Reihenfolge im Editor gibt die Priorität für die Automatik vor."
+    "picker_description": "PV-Überschuss anzeigen und Verbraucher nach Priorität schalten. Die Reihenfolge im Editor gibt die Priorität für die Automatik vor.",
+    "battery_priority_active": "Ladevorrang",
+    "min_soc_hint": "Ladevorrang bis zu diesem Ladestand. Antippen zum Ändern."
   },
   "status": {
     "on_ok": "In Betrieb, gedeckt",
